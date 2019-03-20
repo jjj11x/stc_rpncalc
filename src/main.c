@@ -5,6 +5,7 @@
 #include "stc15.h"
 #include <stdint.h>
 #include "lcd.h"
+#include "key.h"
 #include "utils.h"
 
 #define FOSC 11059200
@@ -13,7 +14,7 @@
 #define WDT_CLEAR() (WDT_CONTR |= 1 << 4)
 void timer0_isr() __interrupt 1 __using 1
 {
-	P3_1 ^= 1;
+//	P3_1 ^= 1;
 }
 
 
@@ -40,8 +41,11 @@ char buf[17];
 int main()
 {
 	uint32_t i;
+	uint8_t* keys;
+	uint8_t key_i;
 	Timer0Init(); // display refresh & switch read
 	LCD_Open();
+	KeyInit();
 	P3_4 = 0; //turn on led backlight
 	LCD_OutString("Hello world !!!!");
 	LCD_GoTo(1,0);
@@ -51,6 +55,15 @@ int main()
 	// LOOP
 	while (1)
 	{
+		LCD_GoTo(0,0);
+		//scan keyboard
+		KeyScan();
+		keys = GetKeys();
+		for (key_i = 0; key_i < 5; key_i++){
+			LCD_OutNibble(keys[key_i]);
+		}
+
+		//counter
 		LCD_GoTo(1,7);
 		LCD_OutString(u32str(i, buf, 10));
 		i++;

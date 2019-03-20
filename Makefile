@@ -1,9 +1,9 @@
 SDCC ?= sdcc
 STCCODESIZE ?= 4089
-SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 0 --data-loc 0x30 
+SDCCOPTS ?= --std-c99 --code-size $(STCCODESIZE) --xram-size 0 --data-loc 0x30 
 FLASHFILE ?= main.hex
 
-SRC = src/lcd.c src/utils.c
+SRC = src/lcd.c src/key.c src/utils.c
 
 OBJ=$(patsubst src%.c,build%.rel, $(SRC))
 

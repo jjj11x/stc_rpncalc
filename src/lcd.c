@@ -150,13 +150,13 @@ static void LCD_OutChar(unsigned char c) {
 void LCD_Open(void) {
 	static int open_error = 0;
 	if (!OpenFlag) {
-		//set ports to output
-		//P2
+		//set ports to push-pull output M[1:0] = b01
+		//P2 entire port
 		P2M1 = 0;
 		P2M0 = 0xff;
-		//P3
-		P3M1 &= ~(0xfe);
-		P3M0 |= (0xfe);
+		//P3 pins 7:4
+		P3M1 &= ~(0xf0);
+		P3M0 |= (0xf0);
 
 		_delay_ms(30); // to allow LCD powerup
 		outCsrBlindNibble(0x03); // (DL=1 8-bit mode)
@@ -249,6 +249,15 @@ short TERMIO_PutChar(unsigned char letter) {
 	}
 
 	return 1;
+}
+
+void LCD_OutNibble(uint8_t x){
+	x &= 0xf; //ensure only bottom nibble
+	if (x <= 9){
+		TERMIO_PutChar(x + '0');
+	} else {
+		TERMIO_PutChar(x - 10 + 'a');
+	}
 }
 
 void LCD_Clear() {

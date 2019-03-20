@@ -12,6 +12,7 @@ void LCD_SingleLineGoTo(unsigned int row_to);
 
 void LCD_OutString(const char* string);
 short TERMIO_PutChar(unsigned char letter);
+void LCD_OutNibble(uint8_t x);
 
 unsigned char LCD_Timeout_Error(void);
 

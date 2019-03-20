@@ -18,6 +18,17 @@ __sbit __at (0xC5) P4_5 ;
 __sbit __at (0xC6) P4_6 ;
 __sbit __at (0xC7) P4_7 ;
 
+/*  P5  */
+__sfr __at (0xc8) P5   ;
+__sbit __at (0xc8) P5_0 ;
+__sbit __at (0xc9) P5_1 ;
+__sbit __at (0xca) P5_2 ;
+__sbit __at (0xcb) P5_3 ;
+__sbit __at (0xcc) P5_4 ;
+__sbit __at (0xcd) P5_5 ;
+__sbit __at (0xce) P5_6 ;
+__sbit __at (0xcf) P5_7 ;
+
 __sfr __at 0x94 P0M0;
 __sfr __at 0x93 P0M1;
 __sfr __at 0x92 P1M0; 

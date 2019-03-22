@@ -38,6 +38,13 @@ void KeyScan(void){
 
 	//scan top row
 	keys[0] = 0; //initially
+	//temporarily set P3[1:0] push pull output M[1:0]=b01
+	P3M0 |= 0x3;
+	P3 &= ~(0x3);
+	P3 |=   0x3;
+	//back to quasi-bidirectional w/ pullup M[1:0]=b00
+	P3M0 &= ~(0x3);
+	//read inputs
 	keys[0] += (P3_0 ? 0 : (1<<0)); //on
 	keys[0] += (P3_1 ? 0 : (1<<1));
 	keys[0] += (P5_4 ? 0 : (1<<2));

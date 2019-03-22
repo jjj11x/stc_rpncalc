@@ -1,6 +1,6 @@
 SDCC ?= sdcc
-STCCODESIZE ?= 4089
-SDCCOPTS ?= --std-c99 --code-size $(STCCODESIZE) --xram-size 0 --data-loc 0x30 
+STCCODESIZE ?= 13000
+SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 0 --stack-auto
 FLASHFILE ?= main.hex
 
 SRC = src/lcd.c src/key.c src/utils.c

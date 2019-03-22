@@ -95,6 +95,11 @@ int main()
 	KeyInit();
 	P3_4 = 0; //turn on led backlight
 
+	//set (P3_2) as push pull output
+	P3_2 = 1; //latch on
+	P3M1 &= ~(0x4);
+	P3M0 |= (0x4);
+
 	i = 0;
 	j = 0;
 	// LOOP
@@ -105,6 +110,10 @@ int main()
 		keys = DebugGetKeys();
 		for (key_i = 0; key_i < 5; key_i++){
 			LCD_OutNibble(keys[key_i]);
+		}
+		//turn off?
+		if (keys[0] == 8 && keys[4] == 8){
+			P3_2 = 0;
 		}
 
 		TERMIO_PutChar(',');

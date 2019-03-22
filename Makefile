@@ -3,7 +3,7 @@ STCCODESIZE ?= 13000
 SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 0 --stack-auto
 FLASHFILE ?= main.hex
 
-SRC = src/lcd.c src/key.c src/utils.c
+SRC = src/lcd.c src/key.c src/utils.c src/decn/decn.c
 
 OBJ=$(patsubst src%.c,build%.rel, $(SRC))
 

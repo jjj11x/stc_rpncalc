@@ -1,5 +1,15 @@
 #include <stdint.h>
+#include "utils.h"
 
+#ifdef DESKTOP
+void _delay_ms(uint8_t ms){
+	//TODO:
+}
+void _delay_us(uint8_t us)
+{
+	//TODO:
+}
+#else
 void _delay_ms(uint8_t ms)
 {
 	// delay function, tuned for 11.583 MHz clock
@@ -35,6 +45,7 @@ void _delay_us(uint8_t us)
 		djnz dpl, us_delay$
 	__endasm;
 }
+#endif
 
 char* u32str(uint32_t x, char* buf, uint8_t base)
 {

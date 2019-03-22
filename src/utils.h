@@ -11,8 +11,7 @@
 
 void _delay_ms(uint8_t ms);
 
-//TODO
-#define _delay_us(x) _delay_ms(1)
+void _delay_us(uint8_t us);
 
 char* u32str(uint32_t x, char* buf, uint8_t base);
 

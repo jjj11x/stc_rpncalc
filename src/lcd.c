@@ -237,6 +237,8 @@ short TERMIO_PutChar(unsigned char letter) {
 			to_row(0);
 		}
 	} else {
+		LCD_OutChar(letter);
+		col++;
 		if (col > MAX_CHARS_PER_LINE) {
 			if (row == 0) {
 				to_row(1);
@@ -244,11 +246,15 @@ short TERMIO_PutChar(unsigned char letter) {
 				to_row(0);
 			}
 		}
-		col++;
-		LCD_OutChar(letter);
 	}
 
 	return 1;
+}
+
+void LCD_ClearToEnd(void){
+	while (col != 0){
+		TERMIO_PutChar(' ');
+	}
 }
 
 void LCD_OutNibble(uint8_t x){

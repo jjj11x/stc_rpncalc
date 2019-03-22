@@ -24,6 +24,7 @@ char* u32str(uint32_t x, char* buf, uint8_t base)
 	//corner case
 	if (x == 0){
 		buf[i] = '0';
+		i++;
 	}
 	//get reversed string
 	while(x > 0){

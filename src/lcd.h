@@ -2,7 +2,7 @@
 #define LCD_H
 
 
-#define MAX_CHARS_PER_LINE 15
+#define MAX_CHARS_PER_LINE 16
 #define MAX_ROWS 2
 
 void LCD_Open(void);
@@ -13,6 +13,7 @@ void LCD_SingleLineGoTo(unsigned int row_to);
 void LCD_OutString(const char* string);
 short TERMIO_PutChar(unsigned char letter);
 void LCD_OutNibble(uint8_t x);
+void LCD_ClearToEnd(void);
 
 unsigned char LCD_Timeout_Error(void);
 

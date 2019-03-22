@@ -10,11 +10,42 @@
 
 #define FOSC 11059200
 
-// clear wdt
-#define WDT_CLEAR() (WDT_CONTR |= 1 << 4)
+
+static const char KEY_MAP[20] = {
+	'c', '<', 'r', 'm',
+	'/', '9', '8', '7',
+	'*', '6', '5', '4',
+	'-', '3', '2', '1',
+	'+', '=', '.', '0'
+};
+
+
+uint32_t NewKeyBuf[4];
+volatile uint8_t new_key_write_i;
+volatile uint8_t new_key_read_i;
+volatile uint8_t new_key_empty;
+#define INCR_NEW_KEY_I(i) i = (i + 1) & 3
+
+volatile uint8_t SecCount;
 void timer0_isr() __interrupt 1 __using 1
 {
-//	P3_1 ^= 1;
+	static uint8_t count = 0;
+	static uint8_t min_count = 0, hour_count = 0;
+
+	uint32_t new_keys;
+
+	//scan keyboard
+	KeyScan();
+	new_keys = GetNewKeys();
+	if (new_keys != 0){
+		if (!new_key_empty && (new_key_write_i == new_key_read_i)){
+			//do not overwrite keymap currently being processed
+			INCR_NEW_KEY_I(new_key_write_i);
+		}
+		NewKeyBuf[new_key_write_i] = new_keys;
+		INCR_NEW_KEY_I(new_key_write_i);
+		new_key_empty = 0;
+	}
 }
 
 
@@ -41,34 +72,56 @@ char buf[17];
 int main()
 {
 	uint32_t i;
-	uint8_t* keys;
+	uint8_t j;
+	const uint8_t* keys;
 	uint8_t key_i;
 	Timer0Init(); // display refresh & switch read
 	LCD_Open();
 	KeyInit();
 	P3_4 = 0; //turn on led backlight
-	LCD_OutString("Hello world !!!!");
-	LCD_GoTo(1,0);
-	LCD_OutString(".......");
 
 	i = 0;
+	j = 0;
 	// LOOP
 	while (1)
 	{
 		LCD_GoTo(0,0);
-		//scan keyboard
-		KeyScan();
-		keys = GetKeys();
+		//keyboard debug
+		keys = DebugGetKeys();
 		for (key_i = 0; key_i < 5; key_i++){
 			LCD_OutNibble(keys[key_i]);
 		}
 
+		TERMIO_PutChar(',');
 		//counter
-		LCD_GoTo(1,7);
-		LCD_OutString(u32str(i, buf, 10));
-		i++;
+		if (SecCount == 0){
+			LCD_OutString("  ");
+		} else if (SecCount < 10){
+			TERMIO_PutChar(' ');
+			LCD_OutString(u32str(SecCount, buf, 10));
+		} else {
+			LCD_OutString(u32str(SecCount, buf, 10));
+		}
 
-		WDT_CLEAR();
+		///new keys
+		if (!new_key_empty){
+			uint8_t i_key;
+			uint32_t new_keys = NewKeyBuf[new_key_read_i];
+			INCR_NEW_KEY_I(new_key_read_i);
+			if (new_key_read_i == new_key_write_i){
+				new_key_empty = 1;
+			}
+
+			LCD_GoTo(1,j);
+			for (i_key = 0; i_key < 20; i_key++){
+				if (new_keys & ((uint32_t) 1 << i_key)){
+					TERMIO_PutChar(KEY_MAP[i_key]);
+					j++;
+					j &= 0x0f;
+					break;
+				}
+			}
+		}
 	}
 }
 /* ------------------------------------------------------------------------- */

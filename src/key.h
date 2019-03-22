@@ -9,7 +9,8 @@
 
 void KeyInit(void);
 void KeyScan(void);
-uint8_t* GetKeys(void);
+const uint8_t* DebugGetKeys(void);
+const uint32_t GetNewKeys(void);
 
 
 #endif /* SRC_KEY_H_ */

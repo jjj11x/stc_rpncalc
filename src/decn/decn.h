@@ -9,44 +9,30 @@
 
 #include <stdint.h>
 
-#define DEC64_NUM_LSU 8
-#define DEC80_NUM_LSU 10
-
-//follow IEEE754 standard
-#define DEC64_MIN_EXP (-383)
-#define DEC64_MAX_EXP (384)
+#define DEC80_NUM_LSU 9
 
 //allow full range, but reserve -16384 for special numbers
 #define DEC80_MIN_EXP (-16383)
 #define DEC80_MAX_EXP   16383
 
-//decimal64 unpacked into 72 bits
-typedef struct {
-	int16_t exponent;
-	uint8_t lsu[DEC64_NUM_LSU]; //lus[0] holds most-significant 2 nibbles
-} dec64;
-
 //decimal80 unpacked into 80 bits
 // for computation
 typedef struct {
 	int16_t exponent; //MSBit is sign of dec80 number, bottom 15 bits are 2's Compl exponent
-	uint8_t lsu[DEC80_NUM_LSU]; //lus[0] holds most-significant 2 nibbles
+	uint8_t lsu[DEC80_NUM_LSU]; //lsu[0] holds most-significant 2 digits (base 100)
+	//implicit decimal point between (lsu[0]/100) and (lsu[0]%100)
 } dec80;
 
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits
 int16_t get_exponent(const dec80* x);
 
-void dec64to80(dec80* dest, const dec64* src);
-void dec80to64(dec64* dest, const dec80* src);
+//void dec64to80(dec80* dest, const dec64* src);
 
 void copy_decn(dec80* dest, const dec80* src);
 
-void build_dec64(dec64* dest, const char* signif_str, int16_t exponent);
-//void build_dec80(dec80* dest, const char* signif_str, int16_t exponent);
+void build_dec80(dec80* dest, const char* signif_str, int16_t exponent);
 
-void set_dec64_zero(dec64* dest);
 void set_dec80_zero(dec80* dest);
-void set_dec64_NaN(dec64* dest);
 void set_dec80_NaN(dec80* dest);
 
 void negate_decn(dec80* x);
@@ -56,6 +42,5 @@ void add_decn(dec80* acc, const dec80* x);
 //buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28
 void dec80_to_str(char* buf, const dec80* x);
-void dec64_to_str(char* buf, const dec64* x);
 
 #endif /* SRC_DEC_DECN_H_ */

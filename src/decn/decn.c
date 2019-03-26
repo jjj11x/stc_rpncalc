@@ -7,7 +7,7 @@
 
 #include "../utils.h"
 
-//#define DEBUG
+#define DEBUG
 #define DEBUG_ADD
 
 #ifndef DESKTOP
@@ -28,25 +28,6 @@
 #include "decn.h"
 
 
-void dec64to80(dec80* dest, const dec64* src){
-	uint8_t i;
-	dest->exponent = src->exponent;
-
-	//clear extra nibbles
-	for (i = DEC80_NUM_LSU - 1; i >= DEC64_NUM_LSU; i--){
-		dest->lsu[i] = 0;
-	}
-
-	//copy nibbles
-	for (i = 0; i < DEC64_NUM_LSU; i++){
-		dest->lsu[i] = src->lsu[i];
-	}
-}
-
-void dec80to64(dec64* dest, const dec80* src){
-	//TODO:
-	assert(0);
-}
 
 void copy_decn(dec80* dest, const dec80* src){
 	uint8_t i;
@@ -67,60 +48,55 @@ int16_t get_exponent(const dec80* x){
 	}
 }
 
-#define get_nibble(lsu, nibble) \
-	(((nibble) & 1) ? (((lsu)[(nibble)/2] >> 4) & 0x0f) : ((lsu)[(nibble)/2] & 0x0f))
 
-#define set_nibble(lsu, nibble, val) do { \
-	if ((nibble) & 1){ \
-		(lsu)[(nibble)/2] = ((lsu)[(nibble)/2] & 0x0f) | (((val) & 0xf) << 4); \
-	} else { \
-		(lsu)[(nibble)/2] = ((lsu)[(nibble)/2] & 0xf0) | ((val) & 0xf); \
-	} \
-} while (0)
-
-static void _zero_remaining_decn(dec80* dest, uint8_t nibble, uint8_t NUM_LSU){
-	while (nibble < NUM_LSU*2){
-		if (nibble & 1){ //odd
-			set_nibble(dest->lsu, nibble, 0);
-			nibble++;
-		} else {
-			dest->lsu[nibble/2] = 0;
-			nibble += 2;
-		}
+static void zero_remaining_dec80(dec80* dest, uint8_t digit100){
+	for ( ; digit100 < DEC80_NUM_LSU; digit100++){
+		dest->lsu[digit100] = 0;
 	}
-}
-
-static void zero_remaining_64(dec64* dest, uint8_t nibble){
-	_zero_remaining_decn((dec80*) dest, nibble, DEC64_NUM_LSU);
-}
-
-static void zero_remaining_80(dec80* dest, uint8_t nibble){
-	_zero_remaining_decn(dest, nibble, DEC80_NUM_LSU);
 }
 
 static void remove_leading_zeros(dec80* x){
-	uint8_t nibble;
+	uint8_t digit100;
+	uint8_t is_negative = (x->exponent < 0 ? 1 : 0);
+	uint8_t exponent = get_exponent(x);
 
-	//find first non-zero nibble
-	for (nibble = 0; nibble < DEC80_NUM_LSU*2; nibble++){
-		if (get_nibble(x->lsu, nibble) != 0){
+	//find first non-zero digit100
+	for (digit100 = 0; digit100 < DEC80_NUM_LSU; digit100++){
+		if (x->lsu[digit100] != 0){
 			break;
 		}
 	}
+	exponent -= digit100 * 2; //base 100
 
-	if (nibble < DEC80_NUM_LSU*2){ //found non-zero nibble
+	if (digit100 != 0 && digit100 < DEC80_NUM_LSU){ //found non-zero digit100
 		uint8_t i;
-		//copy nibbles
-		for (i = 0; nibble < DEC80_NUM_LSU*2; i++, nibble++){
-			set_nibble(x->lsu, i, get_nibble(x->lsu, nibble));
+		//copy digit100s
+		for (i = 0; digit100 < DEC80_NUM_LSU; i++, digit100++){
+			x->lsu[i] = x->lsu[digit100];
 		}
-		//zero out remaining nibbles, now that number left-aligned
-		zero_remaining_80(x, i);
+		//zero out remaining digit100s, now that number left-aligned
+		zero_remaining_dec80(x, i);
+		//write back exponent
+		if (is_negative){
+			x->exponent = exponent | 0x8000;
+		} else {
+			x->exponent = exponent & 0x7fff;
+		}
 	}
 }
 
+static void shift_right(dec80* x){
+	uint8_t high = 0, low = 0, old_low = 0;
+	uint8_t i;
+	for (i = 0; i < DEC80_NUM_LSU; i++){
+		high = x->lsu[i] / 10;
+		low = x->lsu[i] % 10;
+		x->lsu[i] = high + (old_low*10);
+		old_low = low;
+	}
+}
 
-void build_dec64(dec64* dest, const char* signif_str, int16_t exponent){
+void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 	enum {
 		SIGN_ZERO,
 		SIGN_ZERO_SEEN_POINT,
@@ -139,13 +115,14 @@ void build_dec64(dec64* dest, const char* signif_str, int16_t exponent){
 #define IS_NEG(curr_sign) ((curr_sign) >= SIGN_NEG)
 
 	uint8_t i = 0;
-	uint8_t nibble = 0;
+	uint8_t nibble_i = 0;
+	uint8_t save_nibble = 0;
 	int8_t num_lr_points = 0; //number of digits to the right (-) or left of decimal point
 	int8_t curr_sign = SIGN_ZERO;
 
 	//check first digit
 	if (signif_str[0] == '\0'){
-		set_dec64_zero(dest);
+		set_dec80_zero(dest);
 		return;
 	} else if (signif_str[0] == '-'){
 		curr_sign = SIGN_NEG_ZERO;
@@ -162,14 +139,18 @@ void build_dec64(dec64* dest, const char* signif_str, int16_t exponent){
 #ifdef DEBUG
 				printf("  ERROR: multiple '.'s in string\n");
 #endif
-				set_dec64_NaN(dest);
+				set_dec80_NaN(dest);
 				return;
 			}
 		} else if (signif_str[i] >= '1' && signif_str[i] <= '9'){
-			if (nibble < DEC64_NUM_LSU*2){
-				set_nibble(dest->lsu, nibble, signif_str[i] - '0');
+			if (nibble_i < DEC80_NUM_LSU*2){
+				if (nibble_i & 1) { //odd
+					dest->lsu[nibble_i/2] = save_nibble * 10 + (signif_str[i] - '0');
+				} else {
+					save_nibble = signif_str[i] - '0';
+				}
 			}
-			nibble++;
+			nibble_i++;
 			//track sign
 			if (curr_sign == SIGN_ZERO){
 				curr_sign = SIGN_POS;
@@ -181,26 +162,27 @@ void build_dec64(dec64* dest, const char* signif_str, int16_t exponent){
 				curr_sign = SIGN_NEG_SEEN_POINT;
 			}
 			//track number digits L/R of decimal point
-			if (SEEN_POINT(curr_sign)){
-				if (num_lr_points <= 0){
-					//seen decimal point, and no left count (or right count already exists)
-					num_lr_points--; //increase right count
-				}
-			} else { //haven't seen decimal point yet
+			if (!SEEN_POINT(curr_sign)){ //haven't seen decimal point yet
 				num_lr_points++; //increase left count
 			}
 		} else if (signif_str[i] == '0'){
 			//make sure not a leading zero
 			if (!IS_ZERO(curr_sign)){ //non-zero value
-				if (nibble < DEC64_NUM_LSU*2){
-					set_nibble(dest->lsu, nibble, 0);
+				if (nibble_i < DEC80_NUM_LSU*2){
+					if (nibble_i & 1) { //odd
+						dest->lsu[nibble_i/2] = save_nibble * 10 + 0;
+					} else {
+						save_nibble = 0;
+					}
 				}
-				nibble++;
+				nibble_i++;
 			}
 			//track number digits L/R of decimal point
 			if (SEEN_POINT(curr_sign)){
-				if (num_lr_points == 0){ //no left count exists
-					num_lr_points--; //increase right count
+				if (IS_ZERO(curr_sign)){ //tracking 0s to right of point
+					if (num_lr_points <= 0){ //no left count exists
+						num_lr_points--; //increase right count
+					}
 				}
 			} else { //haven't seen decimal point yet
 				if (!IS_ZERO(curr_sign)){ //not a leading zero
@@ -210,52 +192,67 @@ void build_dec64(dec64* dest, const char* signif_str, int16_t exponent){
 		} else if (signif_str[i] == '\0'){ //done
 			if (IS_ZERO(curr_sign)){
 				//zero
-				set_dec64_zero(dest);
+				set_dec80_zero(dest);
 				return;
 			} else {
-				//not zero, adjust exponent for left-aligned significand input
-				//          or for number of digits past decimal point
+				//not zero
 				int8_t new_exponent;
+				//write out saved nibble, if it exists
+				// (saved while nibble_i even, nibble_i then incremented to odd)
+				if (nibble_i & 1){ //odd
+					dest->lsu[nibble_i/2] = save_nibble * 10;
+					nibble_i++; //increment for zeroing out
+				}
+				//zero out any old data
+				zero_remaining_dec80(dest, nibble_i/2);
+				// adjust exponent for left-aligned significand input
+				// or for number of digits past decimal point
 				if (num_lr_points > 0){ //left count exists
-					assert(DEC64_NUM_LSU*2 > num_lr_points);
-					new_exponent = exponent - ((DEC64_NUM_LSU*2) - num_lr_points);
+					assert(DEC80_NUM_LSU*2 > num_lr_points);
+					new_exponent = exponent + (num_lr_points - 1); //1 digit left of implicit point
+					//check for overflow
+					if (new_exponent < exponent || exponent > DEC80_MAX_EXP){
+	#ifdef DEBUG
+						printf("   overflow (new_exp, exp)=(%d,%d)\n",
+						         new_exponent, exponent);
+	#endif
+						set_dec80_NaN(dest);
+						return;
+					}
 				} else if (num_lr_points < 0) { //right count exists
-					// (-num_past_point represents #digits right of decimal)
+					// (-num_past_point represents #0s right of decimal)
 					// (this ends up being a subtraction)
 					new_exponent = exponent + num_lr_points;
+					new_exponent -= 1; //decimal point after 1st non-zero number
+					//check for underflow
+					if (new_exponent > exponent || exponent < DEC80_MIN_EXP){
+	#ifdef DEBUG
+						printf("   underflow (new_exp, exp)=(%d,%d)\n",
+						         new_exponent, exponent);
+	#endif
+						set_dec80_NaN(dest);
+						return;
+					}
 				} else {
 					//no change
 					new_exponent = exponent;
 				}
-				//check for underflow
-				if (new_exponent > exponent || exponent < DEC64_MIN_EXP){
-#ifdef DEBUG
-					printf("   underflow (new_exp, exp)=(%d,%d)\n",
-					         new_exponent, exponent);
-#endif
-					set_dec64_NaN(dest);
-					return;
-				}
-				//check for overflow
-				if (exponent > DEC64_MAX_EXP){
-#ifdef DEBUG
-					printf("   overflow (new_exp, exp)=(%d,%d)\n",
-					         new_exponent, exponent);
-#endif
-					set_dec64_NaN(dest);
-					return;
-				}
 				exponent = new_exponent;
+				//set negative bit
 				if (IS_NEG(curr_sign)){
 					exponent |= 0x8000;
 				} else {
 					exponent &= 0x7fff;
 				}
 				dest->exponent = exponent;
-				zero_remaining_64(dest, i);
 #ifdef DEBUG
 				printf("   num_lr_points (%d), new_exp (%d), sign (%d), exp (%d)\n",
 				        num_lr_points, new_exponent, curr_sign, exponent);
+				printf("   ");
+				for (i = 0; i < DEC80_NUM_LSU; i++){
+					printf("%02d,", dest->lsu[i]);
+				}
+				printf("\n");
 #endif
 
 				return;
@@ -270,16 +267,6 @@ void build_dec64(dec64* dest, const char* signif_str, int16_t exponent){
 }
 
 
-void set_dec64_zero(dec64* dest){
-	uint8_t i;
-
-	//clear exponent
-	dest->exponent = 0;
-	//clear nibbles
-	for (i = 0; i < DEC64_NUM_LSU; i++){
-		dest->lsu[i] = 0;
-	}
-}
 
 void set_dec80_zero(dec80* dest){
 	uint8_t i;
@@ -303,21 +290,10 @@ static uint8_t decn_is_zero(const dec80* x){
 	return 1;
 }
 
-void set_dec64_NaN(dec64* dest){
-	uint8_t i;
-
-	//clear exponent
-	dest->exponent = 0xff;
-	//clear nibbles
-	for (i = 0; i < DEC64_NUM_LSU; i++){
-		dest->lsu[i] = 0;
-	}
-}
-
 void set_dec80_NaN(dec80* dest){
 	uint8_t i;
 
-	//clear exponent
+	//set exponent to special val
 	dest->exponent = 0xff;
 	//clear nibbles
 	for (i = 0; i < DEC80_NUM_LSU; i++){
@@ -333,63 +309,36 @@ void negate_decn(dec80* x){
 int8_t compare_magn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 	uint8_t a_i, b_i;
 	int16_t a_exp=0, b_exp=0;
-	uint8_t a_trailing_zeros=0, b_trailing_zeros=0;
 	int8_t a_signif_b = 0; //a<b: -1, a==b: 0, a>b: 1
 	//discard leading zeros
-	for (a_i = 0; a_i < DEC80_NUM_LSU*2; a_i++){
-		if (get_nibble(a->lsu, a_i) != 0){
+	for (a_i = 0; a_i < DEC80_NUM_LSU; a_i++){
+		if (a->lsu[a_i] != 0){
+			if (a->lsu[a_i] > 10){
+				a_exp++;
+			}
 			break;
 		}
 	}
-	for (b_i = 0; b_i < DEC80_NUM_LSU*2; b_i++){
-		if (get_nibble(b->lsu, b_i) != 0){
+	for (b_i = 0; b_i < DEC80_NUM_LSU; b_i++){
+		if (b->lsu[b_i] != 0){
+			if (b->lsu[b_i] > 10){
+				b_exp++;
+			}
 			break;
 		}
 	}
 	//compare signifcands while tracking magnitude
-	for ( ; a_i < DEC80_NUM_LSU*2 && b_i < DEC80_NUM_LSU*2; a_i++, b_i++, a_exp++, b_exp++){
+	for ( ; a_i < DEC80_NUM_LSU && b_i < DEC80_NUM_LSU; a_i++, b_i++, a_exp+=2, b_exp+=2){
 		//set signif. inequality if this is first digit that is different
-		if (a_signif_b == 0 && (get_nibble(a->lsu, a_i) < get_nibble(b->lsu, b_i))){
+		if (a_signif_b == 0 && (a->lsu[a_i] < b->lsu[b_i])){
 			a_signif_b = -1;
-		} else if (a_signif_b == 0 && (get_nibble(a->lsu, a_i) > get_nibble(b->lsu, b_i))){
+		} else if (a_signif_b == 0 && (a->lsu[a_i] > b->lsu[b_i])){
 			a_signif_b = 1;
-		}
-		//track trailing zeros (a)
-		if (get_nibble(a->lsu, a_i) == 0){
-			a_trailing_zeros++;
-		} else {
-			a_trailing_zeros = 0;
-		}
-		//                     (b)
-		if (get_nibble(b->lsu, b_i) == 0){
-			b_trailing_zeros++;
-		} else {
-			b_trailing_zeros = 0;
-		}
-	}
-	//done with at least one, make sure both are done (a)
-	for ( ; a_i < DEC80_NUM_LSU*2; a_i++, a_exp++){
-		//track trailing zeros
-		if (get_nibble(a->lsu, a_i) == 0){
-			a_trailing_zeros++;
-		} else {
-			a_trailing_zeros = 0;
-		}
-	}
-	//                                                (b)
-	for ( ; b_i < DEC80_NUM_LSU*2; b_i++, b_exp++){
-		//track trailing zeros
-		if (get_nibble(b->lsu, b_i) == 0){
-			b_trailing_zeros++;
-		} else {
-			b_trailing_zeros = 0;
 		}
 	}
 	//calculate exponents
 	a_exp += get_exponent(a);
 	b_exp += get_exponent(b);
-	a_exp -= a_trailing_zeros;
-	b_exp -= b_trailing_zeros;
 	//compare exponents
 	if (a_exp > b_exp){
 		return 1;
@@ -449,11 +398,7 @@ static void _incr_exp(dec80* acc, int16_t exponent){
 	assert(exponent > curr_exp);
 	while (curr_exp != exponent){
 		//shift right
-		int8_t i;
-		for (i = DEC80_NUM_LSU*2 - 1 - 1; i >= 0; i--){
-			set_nibble(acc->lsu, i + 1, get_nibble(acc->lsu, i));
-		}
-		acc->lsu[0] &= 0xf0; //0 gets shifted into most significant digit
+		shift_right(acc);
 		curr_exp++;
 	}
 
@@ -533,11 +478,11 @@ void add_decn(dec80* acc, const dec80* x){
 	printf("incr_exp tmp: %s\n", buf);
 #endif
 	//do addition
-	for (i = DEC80_NUM_LSU*2 - 1; i >= 0; i--){
-		uint8_t digit = get_nibble(acc->lsu, i) + get_nibble(tmp.lsu, i) + carry;
-		set_nibble(acc->lsu, i, digit % 10);
-		carry = digit / 10;
-		assert(carry < 10);
+	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){
+		uint8_t digit100 = acc->lsu[i] + tmp.lsu[i] + carry;
+		acc->lsu[i] = digit100 % 100;
+		carry = digit100 / 100;
+		assert(carry < 100);
 	}
 	//may need to rescale number
 	if (carry > 0){
@@ -547,12 +492,17 @@ void add_decn(dec80* acc, const dec80* x){
 		printf("carry out: %d", carry);
 #endif
 		//shift right
-		for (i = DEC80_NUM_LSU*2 - 1 - 1; i >= 0; i--){
-			set_nibble(acc->lsu, i + 1, get_nibble(acc->lsu, i));
+		if (carry < 10){
+			shift_right(acc);
+			acc->lsu[0] += carry*10; //carry gets shifted into most significant digit
+			curr_exp++;
+		} else {
+			shift_right(acc);
+			shift_right(acc);
+			acc->lsu[0] = carry;
+			curr_exp+=2;
 		}
-		acc->lsu[0] &= 0xf0; //carry gets shifted into most significant digit
-		acc->lsu[0] |= carry;
-		curr_exp++;
+		//track sign
 		if (rel){ //is_neg
 			acc->exponent = curr_exp | 0x8000;
 		} else {
@@ -562,10 +512,10 @@ void add_decn(dec80* acc, const dec80* x){
 }
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28
-static void decn_to_str(char* buf, const dec80* x, uint8_t NUM_LSU){
+void dec80_to_str(char* buf, const dec80* x){
 	uint8_t i = 0;
-	uint8_t nibble;
-	int16_t exponent;
+	uint8_t digit100;
+	int16_t exponent = 0;
 	uint8_t trailing_zeros = 0;
 
 	//check sign of number
@@ -577,18 +527,19 @@ static void decn_to_str(char* buf, const dec80* x, uint8_t NUM_LSU){
 		i++;
 	}
 	//discard leading zeros
-	for (nibble = 0; nibble < NUM_LSU*2; nibble++){
-		if (get_nibble(x->lsu, nibble) != 0){
+	for (digit100 = 0; digit100 < DEC80_NUM_LSU; digit100++){
+		if (x->lsu[digit100] != 0){
 			break;
 		}
+		exponent -= 2; //base 100
 	}
 #ifdef DEBUG
-	printf ("  leading 0s discarded (%d)  ", nibble);
+	printf ("  leading 0s discarded (%d)  ", digit100);
 #endif
 	//print 1st nonzero
 
-	//handle corner case
-	if (nibble == NUM_LSU*2){
+	//handle corner case of 0
+	if (digit100 == DEC80_NUM_LSU){
 #ifdef DEBUG
 		printf ("  corner case, set to 0  ");
 #endif
@@ -597,32 +548,54 @@ static void decn_to_str(char* buf, const dec80* x, uint8_t NUM_LSU){
 		return;
 	}
 
-	buf[i] = get_nibble(x->lsu, nibble) + '0';
-	i++;
-	nibble++;
-	buf[i] = '.';
-	i++;
-	exponent = 0;
+	//print 1st two digits
+	if (x->lsu[digit100] >= 10){ //2 digits
+		buf[i] = (x->lsu[digit100] / 10) + '0';
+		i++;
+		buf[i] = '.';
+		i++;
+		buf[i] = (x->lsu[digit100] % 10) + '0';
+		i++;
+	} else { //1 digit
+		buf[i] = x->lsu[digit100] + '0';
+		i++;
+		buf[i] = '.';
+		i++;
+	}
+	digit100++;
 	//print rest of significand
-	for ( ; nibble < NUM_LSU*2; nibble++, i++, exponent++){
-		buf[i] = get_nibble(x->lsu, nibble) + '0';
-		if (get_nibble(x->lsu, nibble) == 0){
-			trailing_zeros++;
-		} else {
-			trailing_zeros = 0;
+	for ( ; digit100 < DEC80_NUM_LSU; digit100++){
+		if (x->lsu[digit100] > 10){ //2 digits
+			buf[i] = (x->lsu[digit100] / 10) + '0';
+			i++;
+			buf[i] = (x->lsu[digit100] % 10) + '0';
+			i++;
+			//track trailing 0s
+			if ((x->lsu[digit100] % 10) == 0){
+				trailing_zeros++;
+			} else {
+				trailing_zeros = 0;
+			}
+		} else { //1 digit
+			buf[i] = '0';
+			i++;
+			buf[i] = x->lsu[digit100] + '0';
+			i++;
+			//track trailing 0s
+			if ((x->lsu[digit100]) == 0){
+				trailing_zeros += 2;
+			} else {
+				trailing_zeros = 0;
+			}
 		}
 	}
 	//calculate exponent
 #ifdef DEBUG
 	printf ("  exponent (%d,", exponent);
 #endif
-	exponent += get_exponent(x);
+	exponent += get_exponent(x); //base 100
 #ifdef DEBUG
-	printf ("%d,", exponent);
-#endif
-	exponent -= trailing_zeros;
-#ifdef DEBUG
-	printf ("%d)  ", exponent);
+	printf ("%d)", exponent);
 #endif
 	//remove trailing zeros
 	i -= trailing_zeros;
@@ -633,9 +606,9 @@ static void decn_to_str(char* buf, const dec80* x, uint8_t NUM_LSU){
 		if (exponent < 0){
 			buf[i] = '-';
 			i++;
-			u32str(-exponent, &buf[i], 10); //adds null terminator
+			u32str(-exponent, &buf[i], 10); //adds null terminator automatically
 		} else {
-			u32str(exponent, &buf[i], 10); //adds null terminator
+			u32str(exponent, &buf[i], 10); //adds null terminator automatically
 		}
 	} else {
 		//null terminate
@@ -647,12 +620,5 @@ static void decn_to_str(char* buf, const dec80* x, uint8_t NUM_LSU){
 #endif
 }
 
-void dec80_to_str(char* buf, const dec80* x){
-	decn_to_str(buf, x, DEC80_NUM_LSU);
-}
-
-void dec64_to_str(char* buf, const dec64* x){
-	decn_to_str(buf, (const dec80*) x, DEC64_NUM_LSU);
-}
 
 

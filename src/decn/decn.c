@@ -7,12 +7,14 @@
 
 #include "../utils.h"
 
-#define DEBUG
-#define DEBUG_ADD
+//#define DEBUG
+//#define DEBUG_ADD
+//#define DEBUG_COMPARE_MAGN
 
 #ifndef DESKTOP
 #undef DEBUG
 #undef DEBUG_ADD
+#undef DEBUG_COMPARE_MAGN
 #endif
 
 #ifdef DESKTOP
@@ -42,9 +44,9 @@ void copy_decn(dec80* dest, const dec80* src){
 int16_t get_exponent(const dec80* x){
 	int16_t exponent = x->exponent;
 	if (exponent & 0x4000){ //negative
-		return (uint16_t) exponent | 0x8000;
+		return exponent | 0x8000;
 	} else { //positive
-		return (uint16_t) exponent & 0x7fff;
+		return exponent & 0x7fff;
 	}
 }
 
@@ -52,6 +54,28 @@ int16_t get_exponent(const dec80* x){
 static void zero_remaining_dec80(dec80* dest, uint8_t digit100){
 	for ( ; digit100 < DEC80_NUM_LSU; digit100++){
 		dest->lsu[digit100] = 0;
+	}
+}
+
+static void shift_right(dec80* x){
+	uint8_t high = 0, low = 0, old_low = 0;
+	uint8_t i;
+	for (i = 0; i < DEC80_NUM_LSU; i++){
+		high = x->lsu[i] / 10;
+		low = x->lsu[i] % 10;
+		x->lsu[i] = high + (old_low*10);
+		old_low = low;
+	}
+}
+
+static void shift_left(dec80* x){
+	uint8_t high = 0, low = 0, old_high = 0;
+	int8_t i;
+	for (i = DEC80_NUM_LSU - 1; i >= 0 ; i--){
+		high = x->lsu[i] / 10;
+		low = x->lsu[i] % 10;
+		x->lsu[i] = old_high + (low*10);
+		old_high = high;
 	}
 }
 
@@ -76,23 +100,17 @@ static void remove_leading_zeros(dec80* x){
 		}
 		//zero out remaining digit100s, now that number left-aligned
 		zero_remaining_dec80(x, i);
+		//ensure MSdigit in MSdigit100 is > 0
+		if (x->lsu[digit100] < 10) {
+			shift_left(x);
+			exponent--;
+		}
 		//write back exponent
 		if (is_negative){
 			x->exponent = exponent | 0x8000;
 		} else {
 			x->exponent = exponent & 0x7fff;
 		}
-	}
-}
-
-static void shift_right(dec80* x){
-	uint8_t high = 0, low = 0, old_low = 0;
-	uint8_t i;
-	for (i = 0; i < DEC80_NUM_LSU; i++){
-		high = x->lsu[i] / 10;
-		low = x->lsu[i] % 10;
-		x->lsu[i] = high + (old_low*10);
-		old_low = low;
 	}
 }
 
@@ -302,7 +320,7 @@ void set_dec80_NaN(dec80* dest){
 }
 
 void negate_decn(dec80* x){
-	static const int16_t xor_val = 0x8000;
+	static const int16_t xor_val = -(0x7fff) - 1;
 	(x->exponent) ^= xor_val;
 }
 
@@ -310,42 +328,54 @@ int8_t compare_magn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 	uint8_t a_i, b_i;
 	int16_t a_exp=0, b_exp=0;
 	int8_t a_signif_b = 0; //a<b: -1, a==b: 0, a>b: 1
-	//discard leading zeros
-	for (a_i = 0; a_i < DEC80_NUM_LSU; a_i++){
-		if (a->lsu[a_i] != 0){
-			if (a->lsu[a_i] > 10){
-				a_exp++;
-			}
-			break;
-		}
-	}
-	for (b_i = 0; b_i < DEC80_NUM_LSU; b_i++){
-		if (b->lsu[b_i] != 0){
-			if (b->lsu[b_i] > 10){
-				b_exp++;
-			}
-			break;
-		}
-	}
+	dec80 a_tmp, b_tmp;
+	//copy
+	copy_decn(&a_tmp, a);
+	copy_decn(&b_tmp, b);
+	//normalize
+	remove_leading_zeros(&a_tmp);
+	remove_leading_zeros(&b_tmp);
 	//compare signifcands while tracking magnitude
-	for ( ; a_i < DEC80_NUM_LSU && b_i < DEC80_NUM_LSU; a_i++, b_i++, a_exp+=2, b_exp+=2){
+	for (
+		a_i = 0, b_i = 0;
+		a_i < DEC80_NUM_LSU && b_i < DEC80_NUM_LSU;
+		a_i++, b_i++, a_exp+=2, b_exp+=2
+		)
+	{
 		//set signif. inequality if this is first digit that is different
-		if (a_signif_b == 0 && (a->lsu[a_i] < b->lsu[b_i])){
+		if (a_signif_b == 0 && (a_tmp.lsu[a_i] < b_tmp.lsu[b_i])){
+#ifdef DEBUG_COMPARE_MAGN
+			printf("a_signif_b -1: a.lsu[%d]=%d, b.lsu[%d]=%d\n",
+			        a_i, a_tmp.lsu[a_i], b_i, b_tmp.lsu[b_i]);
+#endif
 			a_signif_b = -1;
-		} else if (a_signif_b == 0 && (a->lsu[a_i] > b->lsu[b_i])){
+		} else if (a_signif_b == 0 && (a_tmp.lsu[a_i] > b_tmp.lsu[b_i])){
+#ifdef DEBUG_COMPARE_MAGN
+			printf("a_signif_b  1: a.lsu[%d]=%d, b.lsu[%d]=%d\n",
+			        a_i, a_tmp.lsu[a_i], b_i, b_tmp.lsu[b_i]);
+#endif
 			a_signif_b = 1;
 		}
 	}
 	//calculate exponents
-	a_exp += get_exponent(a);
-	b_exp += get_exponent(b);
+	a_exp += get_exponent(&a_tmp);
+	b_exp += get_exponent(&b_tmp);
 	//compare exponents
 	if (a_exp > b_exp){
+#ifdef DEBUG
+		printf("a_exp > b_exp\n");
+#endif
 		return 1;
 	} else if (a_exp < b_exp){
+#ifdef DEBUG
+		printf("a_exp < b_exp\n");
+#endif
 		return -1;
 	}
 	//exponents equal, compare by significand
+#ifdef DEBUG
+		printf("a_signif_b (%d)\n", a_signif_b);
+#endif
 	return a_signif_b;
 }
 
@@ -421,7 +451,7 @@ static void sub_mag(dec80* acc, const dec80* x){
 	//do subtraction
 	for (i = DEC80_NUM_LSU - 1; i >=0; i--){
 		uint8_t digit100;
-		if (acc->lsu[i] > (tmp.lsu[i] + carry)){
+		if (acc->lsu[i] >= (tmp.lsu[i] + carry)){
 			digit100 = acc->lsu[i] - (tmp.lsu[i] + carry);
 			carry = 0;
 		} else {
@@ -452,14 +482,23 @@ void add_decn(dec80* acc, const dec80* x){
 		// -acc, +x
 		rel = compare_magn(acc, x);
 		if (rel == 1){
+#ifdef DEBUG_ADD
+			printf("|-acc| > |+x|\n");
+#endif
 			sub_mag(acc, x);
 			return;
 		} else if (rel == -1){
+#ifdef DEBUG_ADD
+			printf("|-acc| < |+x|\n");
+#endif
 			copy_decn(&tmp, x);
 			sub_mag(&tmp, acc);
 			copy_decn(acc, &tmp);
 			return;
 		} else { //equal
+#ifdef DEBUG_ADD
+			printf("|-acc| == |+x|\n");
+#endif
 			set_dec80_zero(acc);
 			return;
 		}
@@ -467,15 +506,24 @@ void add_decn(dec80* acc, const dec80* x){
 		// +acc, -x
 		rel = compare_magn(acc, x);
 		if (rel == 1){
+#ifdef DEBUG_ADD
+			printf("|+acc| > |-x|\n");
+#endif
 			sub_mag(acc, x);
 			return;
 		} else if (rel == -1){
+#ifdef DEBUG_ADD
+			printf("|+acc| < |-x|\n");
+#endif
 			copy_decn(&tmp, x);
 			sub_mag(&tmp, acc);
 			negate_decn(&tmp);
 			copy_decn(acc, &tmp);
 			return;
 		} else { //equal
+#ifdef DEBUG_ADD
+			printf("|+acc| == |-x|\n");
+#endif
 			set_dec80_zero(acc);
 			return;
 		}

@@ -35,6 +35,15 @@ int main(void){
 	dec80_to_str(buf, &acc);
 	printf("b - a: %s\n", buf);
 
+	printf("acc: %s\n", buf);
+	negate_decn(&b);
+	dec80_to_str(buf, &b);
+	printf("-b: %s\n", buf);
+
+	add_decn(&acc, &b);
+	dec80_to_str(buf, &acc);
+	printf("acc - b: %s\n", buf);
+
 
 	return 0;
 }

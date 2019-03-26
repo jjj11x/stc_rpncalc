@@ -380,18 +380,14 @@ int8_t compare_decn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 	return is_neg * compare_magn(a, b);
 }
 
-static void sub_mag(dec80* acc, const dec80* x){
-
-}
-
-//WARNING: for add_decn() function only
-//rescales acc up to exponent (increase exponent of acc in abs value, while doing shifts)
+//WARNING: for add_decn() and sub_mag() functions only
+//rescales acc up to exponent (increase exponent of acc, while shifting right)
 //the actual value of acc->exponent remains unchanged
 //both acc, and the number from which exponent was taking must be stripped of leading 0s first
 static void _incr_exp(dec80* acc, int16_t exponent){
 	int16_t curr_exp = get_exponent(acc);
-	uint8_t is_neg = (acc->exponent < 0 ? 1 : 0);
 #ifdef DEBUG_ADD
+	uint8_t is_neg = (acc->exponent < 0 ? 1 : 0);
 	printf("   (is_neg,curr_exp,exponent)=(%d,%d,%d)\n",
 	        is_neg, curr_exp, exponent);
 #endif
@@ -403,6 +399,39 @@ static void _incr_exp(dec80* acc, int16_t exponent){
 	}
 
 	//curr_exp does NOT get written back to acc->exponent
+}
+
+//for internal use only,
+//acc must be larger than x in absolute value
+//subtract by equal addition algorithm
+static void sub_mag(dec80* acc, const dec80* x){
+	int8_t i;
+	uint8_t carry = 0;
+	dec80 tmp;
+	copy_decn(&tmp, x);
+	//normalize
+	remove_leading_zeros(acc);
+	remove_leading_zeros(&tmp);
+	_incr_exp(&tmp, get_exponent(acc));
+#ifdef DEBUG_ADD
+	extern char buf[DECN_BUF_SIZE];
+	dec80_to_str(buf, &tmp);
+	printf("incr_exp tmp: %s\n", buf);
+#endif
+	//do subtraction
+	for (i = DEC80_NUM_LSU - 1; i >=0; i--){
+		uint8_t digit100;
+		if (acc->lsu[i] > (tmp.lsu[i] + carry)){
+			digit100 = acc->lsu[i] - (tmp.lsu[i] + carry);
+			carry = 0;
+		} else {
+			digit100 = acc->lsu[i] + 100 - (tmp.lsu[i] + carry);
+			carry = 1;
+		}
+		assert(digit100 < 100);
+		acc->lsu[i] = digit100;
+	}
+	assert(carry == 0); //shouldn't be carry out if |acc| > |x|
 }
 
 void add_decn(dec80* acc, const dec80* x){
@@ -424,7 +453,6 @@ void add_decn(dec80* acc, const dec80* x){
 		rel = compare_magn(acc, x);
 		if (rel == 1){
 			sub_mag(acc, x);
-			negate_decn(acc);
 			return;
 		} else if (rel == -1){
 			copy_decn(&tmp, x);
@@ -557,6 +585,7 @@ void dec80_to_str(char* buf, const dec80* x){
 		buf[i] = (x->lsu[digit100] % 10) + '0';
 		i++;
 	} else { //1 digit
+		exponent--;
 		buf[i] = x->lsu[digit100] + '0';
 		i++;
 		buf[i] = '.';

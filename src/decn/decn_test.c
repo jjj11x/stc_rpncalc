@@ -31,10 +31,19 @@ int main(void){
 	dec80_to_str(buf, &acc);
 	printf("-acc:  %s\n", buf);
 
+	//compare result of b - acc
 	add_decn(&acc, &b);
 	dec80_to_str(buf, &acc);
-	printf("b - a: %s\n", buf);
+	printf("\nb - a: %s", buf);
+	printf("\n     : %s", "-1.01580246791358016E4");
+	dec80 diff;
+	build_dec80(&diff, "-1.01580246791358016", 4);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(buf, &diff);
+	printf("\n     : %s\n\n", buf);
 
+	dec80_to_str(buf, &acc);
 	printf("acc: %s\n", buf);
 	negate_decn(&b);
 	dec80_to_str(buf, &b);
@@ -42,7 +51,14 @@ int main(void){
 
 	add_decn(&acc, &b);
 	dec80_to_str(buf, &acc);
-	printf("acc - b: %s\n", buf);
+	//compare result
+	printf("\nacc - b: %s", buf);
+	printf("\n       : %s", "-9.234567890123456E3");
+	build_dec80(&diff, "-9.234567890123456", 3);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(buf, &diff);
+	printf("\n       : %s\n\n", buf);
 
 
 	return 0;

@@ -38,6 +38,7 @@ void set_dec80_NaN(dec80* dest);
 void negate_decn(dec80* x);
 int8_t compare_decn(dec80* a, dec80* b); //a<b: -1, a==b: 0, a>b: 1
 void add_decn(dec80* acc, const dec80* x);
+void mult_decn(dec80* acc, const dec80* x);
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

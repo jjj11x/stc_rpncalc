@@ -9,12 +9,14 @@
 
 //#define DEBUG
 //#define DEBUG_ADD
+#define DEBUG_MULT
 //#define DEBUG_COMPARE_MAGN
 
 #ifndef DESKTOP
 #undef DEBUG
 #undef DEBUG_ADD
 #undef DEBUG_COMPARE_MAGN
+#undef DEBUG_MULT
 #endif
 
 #ifdef DESKTOP
@@ -585,6 +587,68 @@ void add_decn(dec80* acc, const dec80* x){
 			acc->exponent = curr_exp | 0x7fff;
 		}
 	}
+}
+
+void mult_decn(dec80* acc, const dec80* x){
+	dec80 tmp; //copy of x
+	dec80 acc_tmp; //holds sum
+	int8_t i, j;
+	uint8_t carry = 0;
+	uint8_t is_neg;
+	//initialize values
+	copy_decn(&tmp, x);
+	set_dec80_zero(&acc_tmp);
+	//normalize
+	remove_leading_zeros(acc);
+	remove_leading_zeros(&tmp);
+	//calculate new exponent
+	if ((acc->exponent & 0x8000) ^ (tmp.exponent & 0x8000)){ //signs differ
+		is_neg = 1;
+	} else {
+		is_neg = 0;
+	}
+	acc_tmp.exponent = get_exponent(acc) + get_exponent(&tmp);
+	if (is_neg){
+		acc_tmp.exponent |= 0x8000;
+	} else {
+		acc_tmp.exponent &= 0x7fff;
+	}
+	//do multiply
+	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){
+		//partial product
+		for (j = DEC80_NUM_LSU - 1; j >= 0; j--){
+			uint16_t digit100 = acc_tmp.lsu[j] + (tmp.lsu[i] * acc->lsu[j]) + carry;
+			acc_tmp.lsu[j] = digit100 % 100;
+			carry = digit100 / 100;
+			assert(carry < 100);
+		}
+#ifdef DEBUG_MULT
+		printf("\n%d:", i);
+		printf("\n      acc:");
+		for (j = 0; j < DEC80_NUM_LSU; j++){
+			printf(" %3d", acc->lsu[j]);
+		}
+		printf("\n        x:");
+		for (j = 0; j < DEC80_NUM_LSU; j++){
+			if (j == i)
+				printf(" %3d", tmp.lsu[j]);
+			else
+				printf("    ");
+		}
+		printf("\n  acc_tmp:");
+		for (j = 0; j < DEC80_NUM_LSU; j++){
+			printf(" %3d", acc_tmp.lsu[j]);
+		}
+		printf("\ncarry:%d", carry);
+#endif
+		//shift
+		shift_right(&acc_tmp);
+		shift_right(&acc_tmp);
+		//add back carry to MSdigit100
+		acc_tmp.lsu[0] = carry; //was 0 from shift
+	}
+	//copy back to acc
+	copy_decn(acc, &acc_tmp);
 }
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28

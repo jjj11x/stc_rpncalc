@@ -92,7 +92,7 @@ static void shift_left(dec80* x){
 
 static void remove_leading_zeros(dec80* x){
 	uint8_t digit100;
-	uint8_t is_negative = (x->exponent < 0 ? 1 : 0);
+	uint8_t is_negative = (x->exponent < 0);
 	int16_t exponent = get_exponent(x);
 
 	//find first non-zero digit100
@@ -415,13 +415,13 @@ int8_t compare_decn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 }
 
 //WARNING: for add_decn() and sub_mag() functions only
+//acc and the number from which exponent was taken MUST be stripped of leading 0s first
 //rescales acc up to exponent (increase exponent of acc, while shifting right)
 //the actual value of acc->exponent remains unchanged
-//both acc, and the number from which exponent was taking must be stripped of leading 0s first
 static void _incr_exp(dec80* acc, int16_t exponent){
 	int16_t curr_exp = get_exponent(acc);
 #ifdef DEBUG_ADD
-	uint8_t is_neg = (acc->exponent < 0 ? 1 : 0);
+	uint8_t is_neg = (acc->exponent < 0);
 	printf("   (is_neg,curr_exp,exponent)=(%d,%d,%d)\n",
 	        is_neg, curr_exp, exponent);
 #endif
@@ -571,9 +571,9 @@ void add_decn(dec80* acc, const dec80* x){
 	//may need to rescale number
 	if (carry > 0){
 		int16_t curr_exp = get_exponent(acc);
-		rel = (acc->exponent < 0 ? 1 : 0); //is_neg?
+		rel = (acc->exponent < 0); //is_neg?
 #ifdef DEBUG_ADD
-		printf("carry out: %d", carry);
+		printf("        carry out: %d", carry);
 #endif
 		//shift right
 		if (carry < 10){

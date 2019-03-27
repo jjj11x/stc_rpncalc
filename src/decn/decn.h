@@ -20,7 +20,7 @@
 typedef struct {
 	int16_t exponent; //MSBit is sign of dec80 number, bottom 15 bits are 2's Compl exponent
 	uint8_t lsu[DEC80_NUM_LSU]; //lsu[0] holds most-significant 2 digits (base 100)
-	//implicit decimal point between (lsu[0]/100) and (lsu[0]%100)
+	//implicit decimal point between (lsu[0]/10) and (lsu[0]%10)
 } dec80;
 
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits

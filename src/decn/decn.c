@@ -93,7 +93,7 @@ static void shift_left(dec80* x){
 static void remove_leading_zeros(dec80* x){
 	uint8_t digit100;
 	uint8_t is_negative = (x->exponent < 0 ? 1 : 0);
-	uint8_t exponent = get_exponent(x);
+	int16_t exponent = get_exponent(x);
 
 	//find first non-zero digit100
 	for (digit100 = 0; digit100 < DEC80_NUM_LSU; digit100++){
@@ -103,6 +103,7 @@ static void remove_leading_zeros(dec80* x){
 	}
 	exponent -= digit100 * 2; //base 100
 
+	//copy digit100s left if needed
 	if (digit100 != 0 && digit100 < DEC80_NUM_LSU){ //found non-zero digit100
 		uint8_t i;
 		//copy digit100s
@@ -111,18 +112,15 @@ static void remove_leading_zeros(dec80* x){
 		}
 		//zero out remaining digit100s, now that number left-aligned
 		zero_remaining_dec80(x, i);
-		//ensure MSdigit in MSdigit100 is > 0
-		if (x->lsu[digit100] < 10) {
-			shift_left(x);
-			exponent--;
-		}
-		//write back exponent
-		if (is_negative){
-			x->exponent = exponent | 0x8000;
-		} else {
-			x->exponent = exponent & 0x7fff;
-		}
 	}
+
+	//ensure MSdigit in MSdigit100 is > 0
+	if (x->lsu[0] < 10) {
+		shift_left(x);
+		exponent--;
+	}
+	//write back exponent
+	set_exponent(x, exponent, is_negative);
 }
 
 void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
@@ -448,11 +446,13 @@ static void sub_mag(dec80* acc, const dec80* x){
 	//normalize
 	remove_leading_zeros(acc);
 	remove_leading_zeros(&tmp);
-	_incr_exp(&tmp, get_exponent(acc));
+	if (get_exponent(acc) != get_exponent(&tmp)){
+		_incr_exp(&tmp, get_exponent(acc));
+	}
 #ifdef DEBUG_ADD
 	extern char buf[DECN_BUF_SIZE];
 	dec80_to_str(buf, &tmp);
-	printf("incr_exp tmp: %s\n", buf);
+	printf("        incr_exp tmp: %s\n", buf);
 #endif
 	//do subtraction
 	for (i = DEC80_NUM_LSU - 1; i >=0; i--){
@@ -484,7 +484,7 @@ void add_decn(dec80* acc, const dec80* x){
 		return;
 	}
 	//handle cases where signs differ
-	if (acc->exponent < 0 && x->exponent > 0){
+	if (acc->exponent < 0 && x->exponent >= 0){
 		// -acc, +x
 		rel = compare_magn(acc, x);
 		if (rel == 1){
@@ -508,7 +508,7 @@ void add_decn(dec80* acc, const dec80* x){
 			set_dec80_zero(acc);
 			return;
 		}
-	} else if (acc->exponent > 0 && x->exponent < 0){
+	} else if (acc->exponent >= 0 && x->exponent < 0){
 		// +acc, -x
 		rel = compare_magn(acc, x);
 		if (rel == 1){
@@ -523,7 +523,6 @@ void add_decn(dec80* acc, const dec80* x){
 #endif
 			copy_decn(&tmp, x);
 			sub_mag(&tmp, acc);
-			negate_decn(&tmp);
 			copy_decn(acc, &tmp);
 			return;
 		} else { //equal
@@ -542,22 +541,25 @@ void add_decn(dec80* acc, const dec80* x){
 #ifdef DEBUG_ADD
 	extern char buf[DECN_BUF_SIZE];
 	dec80_to_str(buf, acc);
-	printf("rem_leading_zeros acc: %s\n", buf);
+	printf("        rem_leading_zeros acc: %s\n", buf);
 	dec80_to_str(buf, &tmp);
-	printf("rem_leading_zeros tmp: %s\n", buf);
+	printf("        rem_leading_zeros tmp: %s\n", buf);
 #endif
-	rel = compare_magn(acc, &tmp);
-	if (rel == 1){
+	if (get_exponent(acc) > get_exponent(&tmp)){
 		_incr_exp(&tmp, get_exponent(acc));
-	} else if (rel == -1){
-		_incr_exp(acc, get_exponent(&tmp));
+	} else if (get_exponent(acc) < get_exponent(&tmp)){
+		//shift significand and adjust exponent to match
+		for (i = 0; i < get_exponent(&tmp) - get_exponent(acc); i++){
+			shift_right(acc);
+		}
+		set_exponent(acc, get_exponent(&tmp), (acc->exponent < 0));
 	}
 #ifdef DEBUG_ADD
 	extern char buf[DECN_BUF_SIZE];
 	dec80_to_str(buf, acc);
-	printf("incr_exp acc: %s\n", buf);
+	printf("        incr_exp acc: %s\n", buf);
 	dec80_to_str(buf, &tmp);
-	printf("incr_exp tmp: %s\n", buf);
+	printf("        incr_exp tmp: %s\n", buf);
 #endif
 	//do addition
 	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){

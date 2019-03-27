@@ -43,6 +43,7 @@ int main(void){
 	dec80_to_str(buf, &diff);
 	printf("\n     : %s\n\n", buf);
 
+	//new acc for acc - b test
 	dec80_to_str(buf, &acc);
 	printf("acc: %s\n", buf);
 	negate_decn(&b);
@@ -51,7 +52,7 @@ int main(void){
 
 	add_decn(&acc, &b);
 	dec80_to_str(buf, &acc);
-	//compare result
+	//compare result of new acc - b
 	printf("\nacc - b: %s", buf);
 	printf("\n       : %s", "-9.234567890123456E3");
 	build_dec80(&diff, "-9.234567890123456", 3);

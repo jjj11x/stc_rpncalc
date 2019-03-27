@@ -23,6 +23,12 @@ typedef struct {
 	//implicit decimal point between (lsu[0]/10) and (lsu[0]%10)
 } dec80;
 
+//1 constant
+static const dec80 DECN_1 = {
+	0,
+	{10, 0}
+};
+
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits
 int16_t get_exponent(const dec80* x);
 
@@ -39,6 +45,7 @@ void negate_decn(dec80* x);
 int8_t compare_decn(dec80* a, dec80* b); //a<b: -1, a==b: 0, a>b: 1
 void add_decn(dec80* acc, const dec80* x);
 void mult_decn(dec80* acc, const dec80* x);
+void div_decn(dec80* acc, const dec80* x);
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

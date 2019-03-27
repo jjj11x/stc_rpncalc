@@ -8,15 +8,17 @@
 #include "../utils.h"
 
 //#define DEBUG
-//#define DEBUG_ADD
-#define DEBUG_MULT
 //#define DEBUG_COMPARE_MAGN
+//#define DEBUG_ADD
+//#define DEBUG_MULT
+//#define DEBUG_DIV
 
 #ifndef DESKTOP
 #undef DEBUG
-#undef DEBUG_ADD
 #undef DEBUG_COMPARE_MAGN
+#undef DEBUG_ADD
 #undef DEBUG_MULT
+#undef DEBUG_DIV
 #endif
 
 #ifdef DESKTOP
@@ -672,6 +674,54 @@ void mult_decn(dec80* acc, const dec80* x){
 	//normalize
 	remove_leading_zeros(acc);
 }
+
+void div_decn(dec80* acc, const dec80* x){
+	dec80 tmp; //copy of x, holds current 1/x estimate
+	dec80 acc_copy; //holds copy of original acc
+	uint8_t i;
+	//check divide by zero
+	if (decn_is_zero(x)){
+		set_dec80_NaN(acc);
+		return;
+	}
+	//store copy of acc for final multiply by 1/x
+	copy_decn(&acc_copy, acc);
+	//get initial estimate for 1/x, by negating exponent, and setting signif. to 1
+	set_exponent(&tmp, -get_exponent(x), (x->exponent < 0));
+	tmp.lsu[0] = 10; //1 with implicit point
+	for (i = 1; i < DEC80_NUM_LSU; i++){
+		tmp.lsu[i] = 0;
+	}
+	copy_decn(acc, &tmp);
+	//do newton raphson iterations
+	for (i = 0; i < 20; i++){ //just fix number of iterations for now
+#ifdef DEBUG_DIV
+		char buf[80];
+		dec80_to_str(buf, &tmp);
+		printf("%2d: %s\n", i, buf);
+#endif
+		mult_decn(acc, x);
+#ifdef DEBUG_DIV
+		dec80_to_str(buf, acc);
+		printf("  %20s: %s\n", "recip*x", buf);
+#endif
+		negate_decn(acc);
+		add_decn(acc, &DECN_1);
+#ifdef DEBUG_DIV
+		dec80_to_str(buf, acc);
+		printf("  %20s: %s\n", "(1-recip*x)", buf);
+#endif
+		mult_decn(acc, &tmp);
+#ifdef DEBUG_DIV
+		dec80_to_str(buf, acc);
+		printf("  %20s: %s\n", "recip * (1-recip*x)", buf);
+#endif
+		add_decn(acc, &tmp);
+		//new_est(acc) = recip + (1 - recip*x)*recip, where tmp is current recip estimate
+		copy_decn(&tmp, acc);
+	}
+	//acc now holds 1/x, multiply by original acc to complete division
+	mult_decn(acc, &acc_copy);
 }
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28

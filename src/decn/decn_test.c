@@ -73,5 +73,17 @@ int main(void){
 	dec80_to_str(buf, &acc);
 	printf("acc*b: %s\n\n", buf);
 
+	//new acc and b for divide test
+	build_dec80(&acc,  "3.14", 88);
+	build_dec80(&b,   "-1.5", -2);
+	dec80_to_str(buf, &acc);
+	printf(" acc: %s\n", buf);
+	dec80_to_str(buf, &b);
+	printf("   b: %s\n", buf);
+	div_decn(&acc, &b);
+	dec80_to_str(buf, &acc);
+	printf("acc/b: %s\n", buf);
+
+
 	return 0;
 }

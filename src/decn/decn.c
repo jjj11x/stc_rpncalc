@@ -597,24 +597,24 @@ void mult_decn(dec80* acc, const dec80* x){
 	int8_t i, j;
 	uint8_t carry = 0;
 	uint8_t is_neg;
+	int16_t new_exponent;
 	//initialize values
 	copy_decn(&tmp, x);
 	set_dec80_zero(&acc_tmp);
 	//normalize
 	remove_leading_zeros(acc);
 	remove_leading_zeros(&tmp);
-	//calculate new exponent
+	//store new sign
 	if ((acc->exponent & 0x8000) ^ (tmp.exponent & 0x8000)){ //signs differ
 		is_neg = 1;
 	} else {
 		is_neg = 0;
 	}
-	acc_tmp.exponent = get_exponent(acc) + get_exponent(&tmp);
-	if (is_neg){
-		acc_tmp.exponent |= 0x8000;
-	} else {
-		acc_tmp.exponent &= 0x7fff;
-	}
+	//calculate new exponent
+	new_exponent = get_exponent(acc) + get_exponent(&tmp);
+#ifdef DEBUG_MULT
+		printf("\n new exponent: %d:", new_exponent);
+#endif
 	//do multiply
 	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){
 		//partial product
@@ -643,14 +643,35 @@ void mult_decn(dec80* acc, const dec80* x){
 		}
 		printf("\ncarry:%d", carry);
 #endif
+		if (i != 0){ //handle last carry separately later, no final shift
+			//shift
+			shift_right(&acc_tmp);
+			shift_right(&acc_tmp);
+			//add back carry to MSdigit100
+			acc_tmp.lsu[0] = carry; //was 0 from shift
+		}
+	}
+	//handle last carry
+	if (carry > 10){
 		//shift
 		shift_right(&acc_tmp);
 		shift_right(&acc_tmp);
+		new_exponent += 1;
 		//add back carry to MSdigit100
 		acc_tmp.lsu[0] = carry; //was 0 from shift
+	} else if (carry > 0){
+		//shift
+		shift_right(&acc_tmp);
+		//add back carry to MSdigit in MSdigit100
+		acc_tmp.lsu[0] += carry*10;
 	}
+	//set new exponent
+	set_exponent(&acc_tmp, new_exponent, is_neg);
 	//copy back to acc
 	copy_decn(acc, &acc_tmp);
+	//normalize
+	remove_leading_zeros(acc);
+}
 }
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28

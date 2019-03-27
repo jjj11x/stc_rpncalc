@@ -61,6 +61,17 @@ int main(void){
 	dec80_to_str(buf, &diff);
 	printf("\n       : %s\n\n", buf);
 
+	//new acc and b for multiply test
+//	build_dec80(&acc,  "2", 2);
+	build_dec80(&acc,  "92.34567890123456", 2);
+	build_dec80(&b,   "-92.3456789012345678", 1);
+	dec80_to_str(buf, &acc);
+	printf(" acc: %s\n", buf);
+	dec80_to_str(buf, &b);
+	printf("   b: %s\n", buf);
+	mult_decn(&acc, &b);
+	dec80_to_str(buf, &acc);
+	printf("acc*b: %s\n\n", buf);
 
 	return 0;
 }

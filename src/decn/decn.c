@@ -52,6 +52,15 @@ int16_t get_exponent(const dec80* x){
 	}
 }
 
+void set_exponent(dec80* acc, int16_t exponent, uint8_t num_is_neg){
+	if (num_is_neg){
+		exponent |= 0x8000;
+	} else {
+		exponent &= 0x7fff;
+	}
+
+	acc->exponent = exponent;
+}
 
 static void zero_remaining_dec80(dec80* dest, uint8_t digit100){
 	for ( ; digit100 < DEC80_NUM_LSU; digit100++){
@@ -259,12 +268,7 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 				}
 				exponent = new_exponent;
 				//set negative bit
-				if (IS_NEG(curr_sign)){
-					exponent |= 0x8000;
-				} else {
-					exponent &= 0x7fff;
-				}
-				dest->exponent = exponent;
+				set_exponent(dest, exponent, IS_NEG(curr_sign));
 #ifdef DEBUG
 				printf("   num_lr_points (%d), new_exp (%d), sign (%d), exp (%d)\n",
 				        num_lr_points, new_exponent, curr_sign, exponent);
@@ -581,11 +585,7 @@ void add_decn(dec80* acc, const dec80* x){
 			curr_exp+=2;
 		}
 		//track sign
-		if (rel){ //is_neg
-			acc->exponent = curr_exp | 0x8000;
-		} else {
-			acc->exponent = curr_exp | 0x7fff;
-		}
+		set_exponent(acc, curr_exp, rel); //rel==is_neg?
 	}
 }
 

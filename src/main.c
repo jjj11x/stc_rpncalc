@@ -81,7 +81,7 @@ void Timer0Init(void)
 }
 
 
-char buf[17];
+char Buf[17];
 
 /*********************************************/
 int main()
@@ -122,9 +122,9 @@ int main()
 			LCD_OutString("  ");
 		} else if (SecCount < 10){
 			TERMIO_PutChar(' ');
-			LCD_OutString(u32str(SecCount, buf, 10));
+			LCD_OutString(u32str(SecCount, Buf, 10));
 		} else {
-			LCD_OutString(u32str(SecCount, buf, 10));
+			LCD_OutString(u32str(SecCount, Buf, 10));
 		}
 
 		///new keys

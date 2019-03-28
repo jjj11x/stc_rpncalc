@@ -457,7 +457,7 @@ static void sub_mag(dec80* acc, const dec80* x){
 		_incr_exp(&tmp, get_exponent(acc));
 	}
 #ifdef DEBUG_ADD
-	extern char buf[DECN_BUF_SIZE];
+	extern char Buf[DECN_BUF_SIZE];
 	dec80_to_str(buf, &tmp);
 	printf("        incr_exp tmp: %s\n", buf);
 #endif
@@ -546,7 +546,7 @@ void add_decn(dec80* acc, const dec80* x){
 	remove_leading_zeros(acc);
 	remove_leading_zeros(&tmp);
 #ifdef DEBUG_ADD
-	extern char buf[DECN_BUF_SIZE];
+	extern char Buf[DECN_BUF_SIZE];
 	dec80_to_str(buf, acc);
 	printf("        rem_leading_zeros acc: %s\n", buf);
 	dec80_to_str(buf, &tmp);
@@ -562,7 +562,7 @@ void add_decn(dec80* acc, const dec80* x){
 		set_exponent(acc, get_exponent(&tmp), (acc->exponent < 0));
 	}
 #ifdef DEBUG_ADD
-	extern char buf[DECN_BUF_SIZE];
+	extern char Buf[DECN_BUF_SIZE];
 	dec80_to_str(buf, acc);
 	printf("        incr_exp acc: %s\n", buf);
 	dec80_to_str(buf, &tmp);
@@ -701,7 +701,7 @@ void div_decn(dec80* acc, const dec80* x){
 	//do newton raphson iterations
 	for (i = 0; i < 20; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
-		char buf[80];
+		extern char Buf[80];
 		dec80_to_str(buf, &tmp);
 		printf("%2d: %s\n", i, buf);
 #endif

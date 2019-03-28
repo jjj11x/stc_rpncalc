@@ -33,6 +33,11 @@
 
 #include "decn.h"
 
+#ifdef DESKTOP
+uint8_t num_digits_display = DEC80_NUM_LSU*2;
+#else
+uint8_t num_digits_display = 16;
+#endif
 
 
 void copy_decn(dec80* dest, const dec80* src){
@@ -726,33 +731,19 @@ void div_decn(dec80* acc, const dec80* x){
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28
 void dec80_to_str(char* buf, const dec80* x){
+#define INSERT_DOT() buf[i++]='.'
 	uint8_t i = 0;
 	uint8_t digit100;
 	int16_t exponent = 0;
 	uint8_t trailing_zeros = 0;
+	uint8_t use_sci = 0;
+	dec80 tmp;
 
-	//check sign of number
-	if (x->exponent < 0){
-#ifdef DEBUG
-		printf ("  negative  ");
-#endif
-		buf[i] = '-';
-		i++;
-	}
-	//discard leading zeros
-	for (digit100 = 0; digit100 < DEC80_NUM_LSU; digit100++){
-		if (x->lsu[digit100] != 0){
-			break;
-		}
-		exponent -= 2; //base 100
-	}
-#ifdef DEBUG
-	printf ("  leading 0s discarded (%d)  ", digit100);
-#endif
-	//print 1st nonzero
-
+	//copy and normalize
+	copy_decn(&tmp, x);
+	remove_leading_zeros(&tmp);
 	//handle corner case of 0
-	if (digit100 == DEC80_NUM_LSU){
+	if (tmp.lsu[0] == 0){
 #ifdef DEBUG
 		printf ("  corner case, set to 0  ");
 #endif
@@ -760,61 +751,103 @@ void dec80_to_str(char* buf, const dec80* x){
 		buf[1] = '\0';
 		return;
 	}
-
-	//print 1st two digits
-	if (x->lsu[digit100] >= 10){ //2 digits
-		buf[i] = (x->lsu[digit100] / 10) + '0';
-		i++;
-		buf[i] = '.';
-		i++;
-		buf[i] = (x->lsu[digit100] % 10) + '0';
-		i++;
-	} else { //1 digit
-		exponent--;
-		buf[i] = x->lsu[digit100] + '0';
-		i++;
-		buf[i] = '.';
+	//check sign of number
+	if (tmp.exponent < 0){
+#ifdef DEBUG
+		printf ("  negative  ");
+#endif
+		buf[i] = '-';
 		i++;
 	}
-	digit100++;
-	//print rest of significand
-	for ( ; digit100 < DEC80_NUM_LSU; digit100++){
-		if (x->lsu[digit100] > 10){ //2 digits
-			buf[i] = (x->lsu[digit100] / 10) + '0';
-			i++;
-			buf[i] = (x->lsu[digit100] % 10) + '0';
-			i++;
-			//track trailing 0s
-			if ((x->lsu[digit100] % 10) == 0){
-				trailing_zeros++;
-			} else {
-				trailing_zeros = 0;
-			}
-		} else { //1 digit
+	//check if we should use scientific notation
+	exponent = get_exponent(&tmp);
+	if (exponent > (num_digits_display - 1) || exponent < -3){
+		use_sci = 1;
+	}
+	//pad zeros right of decimal point if needed
+	if (!use_sci && exponent < 0){
+		int8_t j;
+		buf[i] = '0';
+		i++;
+		INSERT_DOT();
+		for (j = exponent + 1; j < 0; j++){
 			buf[i] = '0';
 			i++;
-			buf[i] = x->lsu[digit100] + '0';
-			i++;
-			//track trailing 0s
-			if ((x->lsu[digit100]) == 0){
-				trailing_zeros += 2;
-			} else {
-				trailing_zeros = 0;
-			}
 		}
 	}
-	//calculate exponent
-#ifdef DEBUG
-	printf ("  exponent (%d,", exponent);
-#endif
-	exponent += get_exponent(x); //base 100
-#ifdef DEBUG
-	printf ("%d)", exponent);
-#endif
-	//remove trailing zeros
-	i -= trailing_zeros;
+	//print 1st digit
+	buf[i] = (tmp.lsu[0] / 10) + '0';
+	i++;
+	if (use_sci) {
+		INSERT_DOT();
+	} else {
+		if (exponent == 0){
+			INSERT_DOT();
+			exponent--;
+		} else if (exponent > 0){
+			exponent--;
+		}
+	}
+	//print 2nd digit
+	buf[i] = (tmp.lsu[0] % 10) + '0';
+	if (tmp.lsu[0] % 10 == 0){
+		trailing_zeros = 1;
+	}
+	i++;
+	if (!use_sci){
+		if (exponent == 0){
+			INSERT_DOT();
+			exponent--;
+		} else if (exponent > 0){
+			exponent--;
+		}
+	}
+	//print rest of significand
+	for (digit100 = 1 ; digit100 < DEC80_NUM_LSU; digit100++){
+		//print 1st digit
+		buf[i] = (tmp.lsu[digit100] / 10) + '0';
+		i++;
+		if (!use_sci){
+			if (exponent == 0){
+				INSERT_DOT();
+				exponent--;
+			} else if (exponent > 0){
+				exponent--;
+			}
+		}
+		//print 2nd digit
+		buf[i] = (tmp.lsu[digit100] % 10) + '0';
+		i++;
+		if (!use_sci){
+			if (exponent == 0){
+				INSERT_DOT();
+				exponent--;
+			} else if (exponent > 0){
+				exponent--;
+			}
+		}
+		//track trailing 0s
+		if (tmp.lsu[digit100] == 0){
+			trailing_zeros += 2;
+		} else if (tmp.lsu[digit100] == 10){
+			trailing_zeros = 1;
+		} else {
+			trailing_zeros = 0;
+		}
+	}
 
-	if (exponent != 0){
+	//remove trailing zeros
+	if (use_sci || exponent <= 0){
+		i -= trailing_zeros;
+	}
+
+	//calculate exponent
+	exponent = get_exponent(&tmp); //base 100
+#ifdef DEBUG
+	printf ("  exponent (%d)", exponent);
+#endif
+	//print exponent
+	if (use_sci && exponent != 0){
 		buf[i] = 'E';
 		i++;
 		if (exponent < 0){
@@ -831,6 +864,10 @@ void dec80_to_str(char* buf, const dec80* x){
 
 #ifdef DEBUG
 	printf ("  final i (%d)  ", i);
+	for (int jjj = 0; jjj < DEC80_NUM_LSU; jjj++){
+		printf(" %02d", tmp.lsu[jjj]);
+	}
+	printf("\n");
 #endif
 }
 

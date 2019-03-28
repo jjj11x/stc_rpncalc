@@ -42,7 +42,7 @@ void set_dec80_zero(dec80* dest);
 void set_dec80_NaN(dec80* dest);
 
 void negate_decn(dec80* x);
-int8_t compare_decn(dec80* a, dec80* b); //a<b: -1, a==b: 0, a>b: 1
+int8_t compare_decn(const dec80* a, const dec80* b); //a<b: -1, a==b: 0, a>b: 1
 void add_decn(dec80* acc, const dec80* x);
 void mult_decn(dec80* acc, const dec80* x);
 void div_decn(dec80* acc, const dec80* x);

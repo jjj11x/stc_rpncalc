@@ -35,7 +35,7 @@ int main(void){
 	add_decn(&acc, &b);
 	dec80_to_str(buf, &acc);
 	printf("\nb - a: %s", buf);
-	printf("\n     : %s", "-1.01580246791358016E4");
+	printf("\n     : %s", "-10158.0246791358016");
 	dec80 diff;
 	build_dec80(&diff, "-1.01580246791358016", 4);
 	negate_decn(&diff);
@@ -48,21 +48,21 @@ int main(void){
 	printf("acc: %s\n", buf);
 	negate_decn(&b);
 	dec80_to_str(buf, &b);
-	printf("-b: %s\n", buf);
+	printf(" -b: %s\n", buf);
 
 	add_decn(&acc, &b);
 	dec80_to_str(buf, &acc);
 	//compare result of new acc - b
-	printf("\nacc - b: %s", buf);
-	printf("\n       : %s", "-9.234567890123456E3");
+	printf("acc - b: %s\n", buf);
+	printf("       : %s\n", "-9234.567890123456");
 	build_dec80(&diff, "-9.234567890123456", 3);
 	negate_decn(&diff);
 	add_decn(&diff, &acc);
 	dec80_to_str(buf, &diff);
-	printf("\n       : %s\n\n", buf);
+	printf("       : %s\n\n", buf);
 
 	//new acc and b for multiply test
-//	build_dec80(&acc,  "2", 2);
+//	build_dec80(&acc,  "7", 2);
 	build_dec80(&acc,  "92.34567890123456", 2);
 	build_dec80(&b,   "-92.3456789012345678", 1);
 	dec80_to_str(buf, &acc);
@@ -71,7 +71,13 @@ int main(void){
 	printf("   b: %s\n", buf);
 	mult_decn(&acc, &b);
 	dec80_to_str(buf, &acc);
-	printf("acc*b: %s\n\n", buf);
+	printf("acc*b: %s\n", buf);
+	printf("     : %s\n", "-8527724.41172991849");
+	build_dec80(&diff, "-8.52772441172991849", 6);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(buf, &diff);
+	printf("     : %s\n\n", buf);
 
 	//new acc and b for divide test
 	build_dec80(&acc,  "3.14", 88);
@@ -83,6 +89,12 @@ int main(void){
 	div_decn(&acc, &b);
 	dec80_to_str(buf, &acc);
 	printf("acc/b: %s\n", buf);
+	printf("     : %s\n", "-2.09333333333333334E90");
+	build_dec80(&diff, "-2.09333333333333334", 90);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(buf, &diff);
+	printf("     : %s\n\n", buf);
 
 
 	return 0;

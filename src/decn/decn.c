@@ -7,13 +7,16 @@
 
 #include "../utils.h"
 
+#define EXTRA_CHECKS
 //#define DEBUG
 //#define DEBUG_COMPARE_MAGN
 //#define DEBUG_ADD
 //#define DEBUG_MULT
+//#define DEBUG_MULT_ALL //even more verbose
 //#define DEBUG_DIV
 
 #ifndef DESKTOP
+//#undef EXTRA_CHECKS
 #undef DEBUG
 #undef DEBUG_COMPARE_MAGN
 #undef DEBUG_ADD
@@ -34,9 +37,9 @@
 #include "decn.h"
 
 #ifdef DESKTOP
-uint8_t num_digits_display = DEC80_NUM_LSU*2;
+static const uint8_t num_digits_display = DEC80_NUM_LSU*2;
 #else
-uint8_t num_digits_display = 16;
+static const uint8_t num_digits_display = 16;
 #endif
 
 
@@ -168,7 +171,9 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 			if (!SEEN_POINT(curr_sign)){
 				//begin tracking number of digits to right of decimal point
 				curr_sign |= 1; //seen point
-			} else {
+			}
+#ifdef EXTRA_CHECKS
+			else {
 				//multiple '.'s in string
 #ifdef DEBUG
 				printf("  ERROR: multiple '.'s in string\n");
@@ -176,6 +181,7 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 				set_dec80_NaN(dest);
 				return;
 			}
+#endif
 		} else if (signif_str[i] >= '1' && signif_str[i] <= '9'){
 			if (nibble_i < DEC80_NUM_LSU*2){
 				if (nibble_i & 1) { //odd
@@ -245,6 +251,7 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 					assert(DEC80_NUM_LSU*2 > num_lr_points);
 					new_exponent = exponent + (num_lr_points - 1); //1 digit left of implicit point
 					//check for overflow
+#ifdef EXTRA_CHECKS
 					if (new_exponent < exponent || exponent > DEC80_MAX_EXP){
 	#ifdef DEBUG
 						printf("   overflow (new_exp, exp)=(%d,%d)\n",
@@ -253,12 +260,14 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 						set_dec80_NaN(dest);
 						return;
 					}
+#endif
 				} else if (num_lr_points < 0) { //right count exists
 					// (-num_past_point represents #0s right of decimal)
 					// (this ends up being a subtraction)
 					new_exponent = exponent + num_lr_points;
 					new_exponent -= 1; //decimal point after 1st non-zero number
 					//check for underflow
+#ifdef EXTRA_CHECKS
 					if (new_exponent > exponent || exponent < DEC80_MIN_EXP){
 	#ifdef DEBUG
 						printf("   underflow (new_exp, exp)=(%d,%d)\n",
@@ -267,6 +276,7 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 						set_dec80_NaN(dest);
 						return;
 					}
+#endif
 				} else {
 					//no change
 					new_exponent = exponent;
@@ -319,6 +329,7 @@ static uint8_t decn_is_zero(const dec80* x){
 	return 1;
 }
 
+#ifdef EXTRA_CHECKS
 void set_dec80_NaN(dec80* dest){
 	uint8_t i;
 
@@ -329,6 +340,7 @@ void set_dec80_NaN(dec80* dest){
 		dest->lsu[i] = 0;
 	}
 }
+#endif
 
 void negate_decn(dec80* x){
 	static const int16_t xor_val = -(0x7fff) - 1;
@@ -339,7 +351,7 @@ int8_t compare_magn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 	uint8_t a_i, b_i;
 	int16_t a_exp=0, b_exp=0;
 	int8_t a_signif_b = 0; //a<b: -1, a==b: 0, a>b: 1
-	dec80 a_tmp, b_tmp;
+	static __xdata dec80 a_tmp, b_tmp;
 	//copy
 	copy_decn(&a_tmp, a);
 	copy_decn(&b_tmp, b);
@@ -448,7 +460,7 @@ static void _incr_exp(dec80* acc, int16_t exponent){
 static void sub_mag(dec80* acc, const dec80* x){
 	int8_t i;
 	uint8_t carry = 0;
-	dec80 tmp;
+	static __xdata dec80 tmp;
 	copy_decn(&tmp, x);
 	//normalize
 	remove_leading_zeros(acc);
@@ -478,7 +490,7 @@ static void sub_mag(dec80* acc, const dec80* x){
 }
 
 void add_decn(dec80* acc, const dec80* x){
-	dec80 tmp;
+	static __xdata dec80 tmp;
 	int8_t rel;
 	uint8_t carry = 0;
 	int8_t i;
@@ -599,8 +611,8 @@ void add_decn(dec80* acc, const dec80* x){
 }
 
 void mult_decn(dec80* acc, const dec80* x){
-	dec80 tmp; //copy of x
-	dec80 acc_tmp; //holds sum
+	static __xdata dec80 tmp; //copy of x
+	static __xdata dec80 acc_tmp; //holds sum
 	int8_t i, j;
 	uint8_t carry = 0;
 	uint8_t is_neg;
@@ -631,7 +643,7 @@ void mult_decn(dec80* acc, const dec80* x){
 			carry = digit100 / 100;
 			assert(carry < 100);
 		}
-#ifdef DEBUG_MULT
+#ifdef DEBUG_MULT_ALL
 		printf("\n%d:", i);
 		printf("\n      acc:");
 		for (j = 0; j < DEC80_NUM_LSU; j++){
@@ -644,6 +656,8 @@ void mult_decn(dec80* acc, const dec80* x){
 			else
 				printf("    ");
 		}
+#endif
+#ifdef DEBUG_MULT
 		printf("\n  acc_tmp:");
 		for (j = 0; j < DEC80_NUM_LSU; j++){
 			printf(" %3d", acc_tmp.lsu[j]);
@@ -681,14 +695,16 @@ void mult_decn(dec80* acc, const dec80* x){
 }
 
 void div_decn(dec80* acc, const dec80* x){
-	dec80 tmp; //copy of x, holds current 1/x estimate
-	dec80 acc_copy; //holds copy of original acc
+	static __xdata dec80 tmp; //copy of x, holds current 1/x estimate
+	static __xdata dec80 acc_copy; //holds copy of original acc
 	uint8_t i;
 	//check divide by zero
+#ifdef EXTRA_CHECKS
 	if (decn_is_zero(x)){
 		set_dec80_NaN(acc);
 		return;
 	}
+#endif
 	//store copy of acc for final multiply by 1/x
 	copy_decn(&acc_copy, acc);
 	//get initial estimate for 1/x, by negating exponent, and setting signif. to 1
@@ -702,24 +718,24 @@ void div_decn(dec80* acc, const dec80* x){
 	for (i = 0; i < 20; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
 		extern char Buf[80];
-		dec80_to_str(buf, &tmp);
-		printf("%2d: %s\n", i, buf);
+		dec80_to_str(Buf, &tmp);
+		printf("%2d: %s\n", i, Buf);
 #endif
 		mult_decn(acc, x);
 #ifdef DEBUG_DIV
-		dec80_to_str(buf, acc);
-		printf("  %20s: %s\n", "recip*x", buf);
+		dec80_to_str(Buf, acc);
+		printf("  %20s: %s\n", "recip*x", Buf);
 #endif
 		negate_decn(acc);
 		add_decn(acc, &DECN_1);
 #ifdef DEBUG_DIV
-		dec80_to_str(buf, acc);
-		printf("  %20s: %s\n", "(1-recip*x)", buf);
+		dec80_to_str(Buf, acc);
+		printf("  %20s: %s\n", "(1-recip*x)", Buf);
 #endif
 		mult_decn(acc, &tmp);
 #ifdef DEBUG_DIV
-		dec80_to_str(buf, acc);
-		printf("  %20s: %s\n", "recip * (1-recip*x)", buf);
+		dec80_to_str(Buf, acc);
+		printf("  %20s: %s\n", "recip * (1-recip*x)", Buf);
 #endif
 		add_decn(acc, &tmp);
 		//new_est(acc) = recip + (1 - recip*x)*recip, where tmp is current recip estimate
@@ -737,7 +753,7 @@ void dec80_to_str(char* buf, const dec80* x){
 	int16_t exponent = 0;
 	uint8_t trailing_zeros = 0;
 	uint8_t use_sci = 0;
-	dec80 tmp;
+	static __xdata dec80 tmp;
 
 	//copy and normalize
 	copy_decn(&tmp, x);

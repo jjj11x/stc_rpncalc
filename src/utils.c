@@ -5,11 +5,12 @@
 void _delay_ms(uint8_t ms){
 	//TODO:
 }
+#ifdef ACCURATE_DELAY_US
 void _delay_us(uint8_t us)
 {
 	//TODO:
 }
-#else
+#endif
 void _delay_ms(uint8_t ms)
 {
 	// delay function, tuned for 11.583 MHz clock
@@ -28,6 +29,7 @@ void _delay_ms(uint8_t ms)
 	__endasm;
 }
 
+#ifdef ACCURATE_DELAY_US
 void _delay_us(uint8_t us)
 {
 	// delay function, tuned for 11.583 MHz clock

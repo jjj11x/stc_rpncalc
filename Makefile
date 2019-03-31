@@ -1,7 +1,9 @@
 SDCC ?= sdcc
-STCCODESIZE ?= 13000
-SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 0 --stack-auto
+STCCODESIZE ?= 13312
+SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 256 --stack-auto --idata-loc 0x80
+#SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 256 --stack-auto --model-large
 FLASHFILE ?= main.hex
+LARGE_LDFLAGS += -L/usr/share/sdcc/lib/large/
 
 SRC = src/lcd.c src/key.c src/utils.c src/decn/decn.c src/calc.c
 
@@ -15,6 +17,7 @@ build/%.rel: src/%.c src/%.h
 
 main: $(OBJ)
 	$(SDCC) -o build/ src/$@.c $(SDCCOPTS) $(CFLAGS) $^
+#	$(SDCC) -o build/ src/$@.c $(SDCCOPTS) $(CFLAGS) $(LARGE_LDFLAGS) $^
 	@ tail -n 5 build/main.mem | head -n 2
 	@ tail -n 1 build/main.mem
 	cp build/$@.ihx $@.hex

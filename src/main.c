@@ -25,14 +25,17 @@ static const char KEY_MAP[20] = {
 uint32_t NewKeyBuf[4];
 volatile uint8_t new_key_write_i;
 volatile uint8_t new_key_read_i;
-volatile uint8_t new_key_empty;
+volatile uint8_t NewKeyEmpty;
 #define INCR_NEW_KEY_I(i) i = (i + 1) & 3
 
 volatile uint8_t SecCount;
 void timer0_isr() __interrupt 1 __using 1
+//#define TRACK_TIME
 {
+#ifdef TRACK_TIME
 	static uint8_t count = 0;
 	static uint8_t min_count = 0, hour_count = 0;
+#endif
 
 	uint32_t new_keys;
 
@@ -40,16 +43,17 @@ void timer0_isr() __interrupt 1 __using 1
 	KeyScan();
 	new_keys = GetNewKeys();
 	if (new_keys != 0){
-		if (!new_key_empty && (new_key_write_i == new_key_read_i)){
+		if (!NewKeyEmpty && (new_key_write_i == new_key_read_i)){
 			//do not overwrite keymap currently being processed
 			INCR_NEW_KEY_I(new_key_write_i);
 		}
 		NewKeyBuf[new_key_write_i] = new_keys;
 		INCR_NEW_KEY_I(new_key_write_i);
-		new_key_empty = 0;
+		NewKeyEmpty = 0;
 	}
 
 	//track time
+#ifdef TRACK_TIME
 	count++;
 	if (count == 200){
 		count = 0;
@@ -63,6 +67,7 @@ void timer0_isr() __interrupt 1 __using 1
 			}
 		}
 	}
+#endif
 }
 
 
@@ -104,8 +109,15 @@ int main()
 	uint8_t entering_exp = ENTERING_DONE;
 	uint8_t no_lift = 0;
 	uint8_t exp_i = 0;
+#ifdef DEBUG_KEYS
+	uint8_t j = 0;
 	const uint8_t* keys;
 	uint8_t key_i;
+#endif
+
+#ifdef DEBUG_UPTIME
+	uint32_t i;
+#endif
 	Timer0Init(); // display refresh & switch read
 	LCD_Open();
 	KeyInit();
@@ -116,12 +128,17 @@ int main()
 	P3M1 &= ~(0x4);
 	P3M0 |= (0x4);
 
+#ifdef DEBUG_UPTIME
 	i = 0;
-	j = 0;
+#endif
 	// LOOP
 	while (1)
 	{
 		LCD_GoTo(0,0);
+#ifdef DEBUG_UPTIME
+		u32str(i++, Buf, 10);
+		LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+#else
 		//display y register on first line
 		if (entering_exp == ENTERING_DONE){
 			dec80_to_str(Buf, get_y());
@@ -130,6 +147,9 @@ int main()
 			dec80_to_str(Buf, get_x());
 		}
 		LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+#endif //DEBUG_UPTIME
+
+#ifdef DEBUG_KEYS
 		//keyboard debug
 		keys = DebugGetKeys();
 		for (key_i = 0; key_i < 5; key_i++){
@@ -150,14 +170,16 @@ int main()
 		} else {
 			LCD_OutString(u32str(SecCount, Buf, 10));
 		}
+#endif //DEBUG_KEYS
 
-		///new keys
-		if (!new_key_empty){
+
+		///get new keys
+		if (!NewKeyEmpty){
 			uint8_t i_key;
 			uint32_t new_keys = NewKeyBuf[new_key_read_i];
 			INCR_NEW_KEY_I(new_key_read_i);
 			if (new_key_read_i == new_key_write_i){
-				new_key_empty = 1;
+				NewKeyEmpty = 1;
 			}
 
 #ifdef DEBUG_KEYS

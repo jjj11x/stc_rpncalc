@@ -7,16 +7,16 @@
 
 #include <stdint.h>
 #include "utils.h"
+#include "key.h"
 
 #ifndef DESKTOP
 #include "stc15.h"
 #endif
 
 
-#define TOTAL_ROWS 5
 #define M_COLS 4
 
-static uint8_t keys[TOTAL_ROWS]; //only bottom nibbles get set
+uint8_t Keys[TOTAL_ROWS]; //only bottom nibbles get set
 static uint32_t new_keys_pressed; //bottom 20 bits get set
 static uint8_t last_state[TOTAL_ROWS]; //all used, 2 bits per key
 static int8_t last_count[TOTAL_ROWS][M_COLS]; //all used
@@ -81,7 +81,7 @@ static void raw_scan(void){
 	uint8_t i, j;
 
 	//scan top row
-	keys[0] = 0; //initially
+	Keys[0] = 0; //initially
 	//temporarily set P3[1:0] push pull output M[1:0]=b01
 	P3M0 |= 0x3;
 	P3 &= ~(0x3);
@@ -89,19 +89,19 @@ static void raw_scan(void){
 	//back to quasi-bidirectional w/ pullup M[1:0]=b00
 	P3M0 &= ~(0x3);
 	//read inputs
-	keys[0] += (P3_0 ? 0 : (1<<0)); //on
-	keys[0] += (P3_1 ? 0 : (1<<1));
-	keys[0] += (P5_4 ? 0 : (1<<2));
-	keys[0] += (P5_5 ? 0 : (1<<3));
+	Keys[0] += (P3_0 ? 0 : (1<<0)); //on
+	Keys[0] += (P3_1 ? 0 : (1<<1));
+	Keys[0] += (P5_4 ? 0 : (1<<2));
+	Keys[0] += (P5_5 ? 0 : (1<<3));
 	//scan matrix
 	for (i = 0; i < M_ROWS; i++){
-		keys[i+1] = 0; //initially
+		Keys[i+1] = 0; //initially
 		for (j = 0; j < M_COLS; j++){
 			uint8_t read;
 			P1 = (~(1 << (j+4))); //pulldown column (all others pull up)
 			read = (P1 & (1<<i)); //read button
 			read = (read == 0 ? 1 : 0); //pressed if grounded by column driver
-			keys[i+1] += (read << j);
+			Keys[i+1] += (read << j);
 			P1 = 0xff; //reset all as pullups
 		}
 	}
@@ -123,7 +123,7 @@ static void debounce(void){
 			new_count = curr_count;
 			new_state = curr_state;
 			//update count
-			if (keys[i] & (1 << j)){
+			if (Keys[i] & (1 << j)){
 				if (curr_count < COUNT_LIM_HIGH){
 					new_count = curr_count + 1;
 				}
@@ -198,9 +198,11 @@ void KeyScan(void){
 	debounce();
 }
 
+#ifdef DEBUG_KEYS
 const uint8_t* DebugGetKeys(void){
 	return keys;
 }
+#endif
 
 const uint32_t GetNewKeys(void){
 	return new_keys_pressed;

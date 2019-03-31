@@ -34,14 +34,14 @@ int main(void){
 	//compare result of b - acc
 	add_decn(&acc, &b);
 	dec80_to_str(Buf, &acc);
-	printf("\nb - a: %s", Buf);
-	printf("\n     : %s", "-10158.0246791358016");
+	printf("b - a: %s\n", Buf);
+	printf("     : %s\n", "-10158.0246791358016");
 	dec80 diff;
 	build_dec80(&diff, "-1.01580246791358016", 4);
 	negate_decn(&diff);
 	add_decn(&diff, &acc);
 	dec80_to_str(Buf, &diff);
-	printf("\n     : %s\n\n", Buf);
+	printf("     : %s\n\n", Buf);
 
 	//new acc for acc - b test
 	dec80_to_str(Buf, &acc);
@@ -91,6 +91,88 @@ int main(void){
 	printf("acc/b: %s\n", Buf);
 	printf("     : %s\n", "-2.09333333333333334E90");
 	build_dec80(&diff, "-2.09333333333333334", 90);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(Buf, &diff);
+	printf("     : %s\n\n", Buf);
+
+	//new acc and b for divide test
+	build_dec80(&acc,  "4", 0);
+	build_dec80(&b,   "4", 0);
+	dec80_to_str(Buf, &acc);
+	printf(" acc: %s\n", Buf);
+	dec80_to_str(Buf, &b);
+	printf("   b: %s\n", Buf);
+	div_decn(&acc, &b);
+	dec80_to_str(Buf, &acc);
+	printf("acc/b: %s\n", Buf);
+	printf("     : %s\n", "1.00000000");
+	build_dec80(&diff, "1", 0);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(Buf, &diff);
+	printf("     : %s\n\n", Buf);
+
+	//new acc and b for divide test
+	build_dec80(&acc,  "1", 0);
+	build_dec80(&b,   "3", 0);
+	dec80_to_str(Buf, &acc);
+	printf(" acc: %s\n", Buf);
+	dec80_to_str(Buf, &b);
+	printf("   b: %s\n", Buf);
+	div_decn(&acc, &b);
+	dec80_to_str(Buf, &acc);
+	printf("acc/b: %s\n", Buf);
+	printf("     : %s\n", "0.333333333333333336");
+	build_dec80(&diff, "3.33333333333333336", -1);
+	dec80_to_str(Buf, &diff);
+	printf("     : %s\n", Buf);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(Buf, &diff);
+	printf("     : %s\n\n", Buf);
+
+	//small fractions >= 1/10
+	build_dec80(&acc, "0.333", 0);
+	build_dec80(&b,   "3.33", -1);
+	dec80_to_str(Buf, &acc);
+	printf("  a  : %s\n", Buf);
+	dec80_to_str(Buf, &b);
+	printf("  b  : %s\n", Buf);
+	negate_decn(&b);
+	add_decn(&acc, &b);
+	dec80_to_str(Buf, &acc);
+	printf("a - b: %s\n", Buf);
+
+	//new acc and b for divide test
+	build_dec80(&acc,  "500", 0);
+	build_dec80(&b,   "99", 0);
+	dec80_to_str(Buf, &acc);
+	printf(" acc: %s\n", Buf);
+	dec80_to_str(Buf, &b);
+	printf("   b: %s\n", Buf);
+	div_decn(&acc, &b);
+	dec80_to_str(Buf, &acc);
+	printf("acc/b: %s\n", Buf);
+	printf("     : %s\n", "5.05050505050505055");
+	build_dec80(&diff, "5.05050505050505055", 0);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	dec80_to_str(Buf, &diff);
+	printf("     : %s\n\n", Buf);
+
+	//new acc and b for divide test
+	build_dec80(&acc,  "500", 0);
+	build_dec80(&b,   "2", 0);
+	dec80_to_str(Buf, &acc);
+	printf(" acc: %s\n", Buf);
+	dec80_to_str(Buf, &b);
+	printf("   b: %s\n", Buf);
+	div_decn(&acc, &b);
+	dec80_to_str(Buf, &acc);
+	printf("acc/b: %s\n", Buf);
+	printf("     : %s\n", "250.0");
+	build_dec80(&diff, "250", 0);
 	negate_decn(&diff);
 	add_decn(&diff, &acc);
 	dec80_to_str(Buf, &diff);

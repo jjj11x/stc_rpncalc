@@ -191,6 +191,11 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 				}
 			}
 			nibble_i++;
+			//track number of digits R of decimal point
+			//must do this before changing is_zero
+			if (curr_sign == SIGN_ZERO_SEEN_POINT || curr_sign == SIGN_NEG_ZERO_SEEN_POINT){
+				num_lr_points = -1;
+			}
 			//track sign
 			if (curr_sign == SIGN_ZERO){
 				curr_sign = SIGN_POS;
@@ -201,7 +206,7 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 			} else if (curr_sign == SIGN_NEG_ZERO_SEEN_POINT){
 				curr_sign = SIGN_NEG_SEEN_POINT;
 			}
-			//track number digits L/R of decimal point
+			//track number digits L of decimal point
 			if (!SEEN_POINT(curr_sign)){ //haven't seen decimal point yet
 				num_lr_points++; //increase left count
 			}
@@ -220,7 +225,9 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 			//track number digits L/R of decimal point
 			if (SEEN_POINT(curr_sign)){
 				if (IS_ZERO(curr_sign)){ //tracking 0s to right of point
-					if (num_lr_points <= 0){ //no left count exists
+					if (num_lr_points == 0){ //no left count exists
+						num_lr_points = -2;
+					} else if (num_lr_points < 0){ //continue tracking count
 						num_lr_points--; //increase right count
 					}
 				}
@@ -262,10 +269,9 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 					}
 #endif
 				} else if (num_lr_points < 0) { //right count exists
-					// (-num_past_point represents #0s right of decimal)
+					// (num_lr_points represents exponent shift)
 					// (this ends up being a subtraction)
 					new_exponent = exponent + num_lr_points;
-					new_exponent -= 1; //decimal point after 1st non-zero number
 					//check for underflow
 #ifdef EXTRA_CHECKS
 					if (new_exponent > exponent || exponent < DEC80_MIN_EXP){
@@ -284,6 +290,8 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 				exponent = new_exponent;
 				//set negative bit
 				set_exponent(dest, exponent, IS_NEG(curr_sign));
+				//normalize
+				remove_leading_zeros(dest);
 #ifdef DEBUG
 				printf("   num_lr_points (%d), new_exp (%d), sign (%d), exp (%d)\n",
 				        num_lr_points, new_exponent, curr_sign, exponent);
@@ -673,7 +681,7 @@ void mult_decn(dec80* acc, const dec80* x){
 		}
 	}
 	//handle last carry
-	if (carry > 10){
+	if (carry >= 10){
 		//shift
 		shift_right(&acc_tmp);
 		shift_right(&acc_tmp);
@@ -698,6 +706,7 @@ void div_decn(dec80* acc, const dec80* x){
 	static __xdata dec80 tmp; //copy of x, holds current 1/x estimate
 	static __xdata dec80 acc_copy; //holds copy of original acc
 	uint8_t i;
+	int16_t initial_exp;
 	//check divide by zero
 #ifdef EXTRA_CHECKS
 	if (decn_is_zero(x)){
@@ -708,14 +717,27 @@ void div_decn(dec80* acc, const dec80* x){
 	//store copy of acc for final multiply by 1/x
 	copy_decn(&acc_copy, acc);
 	//get initial estimate for 1/x, by negating exponent, and setting signif. to 1
-	set_exponent(&tmp, -get_exponent(x), (x->exponent < 0));
+	initial_exp = get_exponent(x);
+#ifdef DEBUG_DIV
+	printf("exponent %d", initial_exp);
+#endif
+	if (initial_exp >= 0){
+		//necessary to subtract 1 for convergence
+		initial_exp = -initial_exp - 1;
+	} else {
+		initial_exp = -initial_exp;
+	}
+#ifdef DEBUG_DIV
+	printf(" -> %d\n", initial_exp);
+#endif
+	set_exponent(&tmp, initial_exp, (x->exponent < 0)); //set exponent, copy sign
 	tmp.lsu[0] = 10; //1 with implicit point
 	for (i = 1; i < DEC80_NUM_LSU; i++){
 		tmp.lsu[i] = 0;
 	}
 	copy_decn(acc, &tmp);
 	//do newton raphson iterations
-	for (i = 0; i < 20; i++){ //just fix number of iterations for now
+	for (i = 0; i < DEC80_NUM_LSU + 4; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
 		extern char Buf[80];
 		dec80_to_str(Buf, &tmp);
@@ -806,7 +828,8 @@ void dec80_to_str(char* buf, const dec80* x){
 	}
 	//print 2nd digit
 	buf[i] = (tmp.lsu[0] % 10) + '0';
-	if (tmp.lsu[0] % 10 == 0){
+	if (tmp.lsu[0] % 10 == 0 && (use_sci || exponent < 0)){
+
 		trailing_zeros = 1;
 	}
 	i++;
@@ -843,9 +866,11 @@ void dec80_to_str(char* buf, const dec80* x){
 			}
 		}
 		//track trailing 0s
-		if (tmp.lsu[digit100] == 0){
+		if (tmp.lsu[digit100] == 0 && (use_sci || exponent < -1)){
 			trailing_zeros += 2;
-		} else if (tmp.lsu[digit100] == 10){
+		} else if (tmp.lsu[digit100] == 0 && (use_sci || exponent < 0)){
+			trailing_zeros += 1;
+		} else if (tmp.lsu[digit100] == 10 && (use_sci || exponent < 0)){
 			trailing_zeros = 1;
 		} else {
 			trailing_zeros = 0;

@@ -29,8 +29,8 @@ volatile uint8_t NewKeyEmpty;
 #define INCR_NEW_KEY_I(i) i = (i + 1) & 3
 
 volatile uint8_t SecCount;
-void timer0_isr() __interrupt 1 __using 1
 //#define TRACK_TIME
+void timer0_isr() SDCC_ISR(1,1)
 {
 #ifdef TRACK_TIME
 	static uint8_t count = 0;
@@ -71,6 +71,10 @@ void timer0_isr() __interrupt 1 __using 1
 }
 
 
+#ifdef DESKTOP
+void Timer0Init(void) { }
+static void latch_on(void){ }
+#else
 // Call timer0_isr() 200/sec: 5 ms period
 // Initialize the timer count so that it overflows after 0.01 sec
 // THTL = 0x10000 - FOSC / 200 = 0x10000 - 115830 = 7621 = 0x1DC5
@@ -87,6 +91,7 @@ void Timer0Init(void)
 	EA  = 1;		// Enable global interrupt
 }
 
+#endif //!DESKTOP
 
 
 char Buf[DECN_BUF_SIZE];
@@ -118,6 +123,8 @@ int main()
 #ifdef DEBUG_UPTIME
 	uint32_t i;
 #endif
+
+	latch_on();
 	Timer0Init(); // display refresh & switch read
 	LCD_Open();
 	KeyInit();
@@ -127,6 +134,7 @@ int main()
 	P3_2 = 1; //latch on
 	P3M1 &= ~(0x4);
 	P3M0 |= (0x4);
+	BACKLIGHT_ON(); //turn on led backlight
 
 #ifdef DEBUG_UPTIME
 	i = 0;
@@ -134,6 +142,11 @@ int main()
 	// LOOP
 	while (1)
 	{
+		//turn off?
+		if (Keys[0] == 8 && Keys[4] == 8){
+			TURN_OFF();
+		}
+
 		LCD_GoTo(0,0);
 #ifdef DEBUG_UPTIME
 		u32str(i++, Buf, 10);
@@ -155,11 +168,6 @@ int main()
 		for (key_i = 0; key_i < 5; key_i++){
 			LCD_OutNibble(keys[key_i]);
 		}
-		//turn off?
-		if (keys[0] == 8 && keys[4] == 8){
-			P3_2 = 0;
-		}
-
 		TERMIO_PutChar(',');
 		//counter
 		if (SecCount == 0){
@@ -181,7 +189,6 @@ int main()
 			if (new_key_read_i == new_key_write_i){
 				NewKeyEmpty = 1;
 			}
-
 #ifdef DEBUG_KEYS
 			LCD_GoTo(1,j);
 #endif
@@ -374,6 +381,8 @@ int main()
 			TERMIO_PutChar(ExpBuf[0] + '0');
 		}
 		LCD_ClearToEnd(1);
+		//turn backlight back on
+		BACKLIGHT_ON();
 	} //while (1)
 }
 /* ------------------------------------------------------------------------- */

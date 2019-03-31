@@ -18,6 +18,7 @@ void _delay_us(uint8_t us);
 #define _delay_us(x) _delay_ms(1)
 #endif
 
+void backlight_off(void);
 
 char* u32str(uint32_t x, char* buf, uint8_t base);
 
@@ -28,6 +29,19 @@ char* u32str(uint32_t x, char* buf, uint8_t base);
 #define DESKTOP
 #elif __APPLE__
 #define DESKTOP
+#endif
+
+#if defined(DESKTOP) || defined(IS_ECLIPSE)
+#define __xdata
+#define __sfr
+#define __at uint8_t*
+#define SDCC_ISR(isr, reg)
+#define BACKLIGHT_ON()
+#define TURN_OFF()
+#else
+#define SDCC_ISR(isr, reg) __interrupt (isr) __using (reg)
+#define BACKLIGHT_ON()  P3_4 = 0
+#define TURN_OFF() P3_2 = 0
 #endif
 
 #endif /* SRC_UTILS_H_ */

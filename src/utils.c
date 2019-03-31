@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "stc15.h"
 #include "utils.h"
 
 #ifdef DESKTOP
@@ -11,6 +12,8 @@ void _delay_us(uint8_t us)
 	//TODO:
 }
 #endif
+void backlight_off(void){ }
+#else //!DESKTOP
 void _delay_ms(uint8_t ms)
 {
 	// delay function, tuned for 11.583 MHz clock
@@ -48,6 +51,12 @@ void _delay_us(uint8_t us)
 	__endasm;
 }
 #endif
+
+void backlight_off(void){
+	P3_4 = 1;
+}
+
+#endif //ifdef desktop
 
 char* u32str(uint32_t x, char* buf, uint8_t base)
 {

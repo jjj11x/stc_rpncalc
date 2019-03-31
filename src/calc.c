@@ -5,6 +5,7 @@
  */
 
 #include "decn/decn.h"
+#include "utils.h"
 
 #define STACK_SIZE 4 //must be a power of 2
 
@@ -52,6 +53,8 @@ static void do_binary_op(void (*f_ptr)(dec80*, const dec80*)){
 }
 
 void process_cmd(char cmd){
+	//turn off backlight before start of processing
+	backlight_off();
 	//process cmd
 	switch(cmd){
 		//////////

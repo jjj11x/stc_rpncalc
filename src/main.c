@@ -91,6 +91,15 @@ void Timer0Init(void)
 	EA  = 1;		// Enable global interrupt
 }
 
+//keep soft power switch latched on
+static void latch_on(void)
+{
+	//set (P3_2) as push pull output
+	P3_2 = 1;
+	//latch on
+	P3M1 &= ~(0x4);
+	P3M0 |= (0x4);
+}
 #endif //!DESKTOP
 
 
@@ -128,12 +137,6 @@ int main()
 	Timer0Init(); // display refresh & switch read
 	LCD_Open();
 	KeyInit();
-	P3_4 = 0; //turn on led backlight
-
-	//set (P3_2) as push pull output
-	P3_2 = 1; //latch on
-	P3M1 &= ~(0x4);
-	P3M0 |= (0x4);
 	BACKLIGHT_ON(); //turn on led backlight
 
 #ifdef DEBUG_UPTIME

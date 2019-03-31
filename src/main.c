@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include "lcd.h"
 #include "key.h"
+#include "decn/decn.h"
+#include "calc.h"
 #include "utils.h"
 
 #define FOSC 11583000
@@ -81,13 +83,27 @@ void Timer0Init(void)
 }
 
 
-char Buf[17];
 
+char Buf[DECN_BUF_SIZE];
+__xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
+__xdata uint8_t ExpBuf[2] = {0, 0};
+
+//#define DEBUG_UPTIME
 /*********************************************/
 int main()
 {
-	uint32_t i;
-	uint8_t j;
+	enum {
+		ENTERING_DONE,
+		ENTERING_SIGNIF_NOLIFT,
+		ENTERING_SIGNIF,
+		ENTERING_FRAC,
+		ENTERING_EXP,
+		ENTERING_EXP_NEG
+	};
+	uint8_t entry_i = 0;
+	uint8_t entering_exp = ENTERING_DONE;
+	uint8_t no_lift = 0;
+	uint8_t exp_i = 0;
 	const uint8_t* keys;
 	uint8_t key_i;
 	Timer0Init(); // display refresh & switch read
@@ -106,6 +122,14 @@ int main()
 	while (1)
 	{
 		LCD_GoTo(0,0);
+		//display y register on first line
+		if (entering_exp == ENTERING_DONE){
+			dec80_to_str(Buf, get_y());
+		} else {
+			//display x on 1st line, entered number on 2nd line
+			dec80_to_str(Buf, get_x());
+		}
+		LCD_OutString(Buf, MAX_CHARS_PER_LINE);
 		//keyboard debug
 		keys = DebugGetKeys();
 		for (key_i = 0; key_i < 5; key_i++){
@@ -136,17 +160,199 @@ int main()
 				new_key_empty = 1;
 			}
 
+#ifdef DEBUG_KEYS
 			LCD_GoTo(1,j);
+#endif
+			//find first key pressed in array (if any)
 			for (i_key = 0; i_key < 20; i_key++){
 				if (new_keys & ((uint32_t) 1 << i_key)){
+#ifdef DEBUG_KEYS
 					TERMIO_PutChar(KEY_MAP[i_key]);
 					j++;
 					j &= 0x0f;
+#endif
+					//process key
+					switch(KEY_MAP[i_key]){
+						//////////
+						case '0': {
+							if (entering_exp >= ENTERING_EXP){
+								ExpBuf[exp_i] = 0;
+								exp_i = (exp_i + 1) & 1;
+							} else if (entering_exp == ENTERING_DONE){
+								entering_exp = ENTERING_SIGNIF;
+								EntryBuf[entry_i] = KEY_MAP[i_key];
+								//do not increment entry_i from 0, until first non-0 entry
+							} else if (entry_i != 0 && entry_i < MAX_CHARS_PER_LINE - 1 + 1){
+								EntryBuf[entry_i] = KEY_MAP[i_key];
+								entry_i++;
+							}
+						} break;
+						//////////
+						case '1': //fallthrough
+						case '2': //fallthrough
+						case '3': //fallthrough
+						case '4': //fallthrough
+						case '5': //fallthrough
+						case '6': //fallthrough
+						case '7': //fallthrough
+						case '8': //fallthrough
+						case '9': {
+							if (entering_exp >= ENTERING_EXP){
+								ExpBuf[exp_i] = KEY_MAP[i_key] - '0';
+								exp_i = (exp_i + 1) & 1;
+							} else if (entering_exp == ENTERING_DONE){
+								entering_exp = ENTERING_SIGNIF;
+								EntryBuf[entry_i] = KEY_MAP[i_key];
+								entry_i++;
+							} else if (entry_i < MAX_CHARS_PER_LINE - 1 + 1){
+								EntryBuf[entry_i] = KEY_MAP[i_key];
+								entry_i++;
+							}
+						} break;
+						//////////
+						case '.': {
+							if (entering_exp == ENTERING_DONE){
+								EntryBuf[entry_i++] = '0';
+								EntryBuf[entry_i++] = '.';
+								entering_exp = ENTERING_FRAC;
+							} else if (entering_exp == ENTERING_SIGNIF){
+								if (entry_i == 0){
+									EntryBuf[entry_i++] = '0';
+								}
+								EntryBuf[entry_i++] = '.';
+								entering_exp = ENTERING_FRAC;
+							} else if (entering_exp <= ENTERING_EXP) {
+								entering_exp++;
+							} else { //entering_exp == ENTERING_EXP_NEG
+								entering_exp = ENTERING_EXP;
+							}
+						} break;
+						//////////
+						case '=': {
+							//track stack lift
+							if (entering_exp != ENTERING_DONE){
+								//finish entry
+								int8_t exponent; //exponent is only 2 digits
+								exponent = 10*ExpBuf[1] + ExpBuf[0];
+								if (entering_exp == ENTERING_EXP_NEG){
+									exponent = -exponent;
+								}
+								EntryBuf[entry_i] = '\0';
+								push_decn(EntryBuf, exponent, no_lift);
+								process_cmd(KEY_MAP[i_key]);
+								//reset state as initial ENTERING_DONE state
+								entering_exp = ENTERING_DONE;
+								entry_i = 0;
+								exp_i = 0;
+								ExpBuf[0] = 0;
+								ExpBuf[1] = 0;
+							} else {
+								//dup
+								process_cmd(KEY_MAP[i_key]);
+							}
+							no_lift = 1;
+						} break;
+						//////////
+						case 'c': {
+							if (entering_exp == ENTERING_DONE){
+								//clear
+								clear_x();
+								no_lift = 1;
+								entering_exp = ENTERING_SIGNIF;
+								EntryBuf[entry_i] = '0';
+								//do not increment entry_i from 0, until first non-0 entry
+							} else if (entering_exp >= ENTERING_EXP){
+								//go back to digit entry
+								entering_exp--;
+								exp_i = 0;
+								ExpBuf[0] = 0;
+								ExpBuf[1] = 0;
+							} else if (entry_i > 0){
+								//backspace
+								if (EntryBuf[entry_i] == '.'){
+									entering_exp--;
+								}
+								entry_i--;
+							}
+						} break;
+						//////////
+						case '+': //fallthrough
+						case '*': //fallthrough
+						case '-': //fallthrough
+						case '/': //fallthrough
+						case '<': //fallthrough //use as +/-
+						case 'r': { //use as swap
+							if (entering_exp != ENTERING_DONE){
+								//finish entry
+								int8_t exponent; //exponent is only 2 digits
+								exponent = 10*ExpBuf[1] + ExpBuf[0];
+								if (entering_exp == ENTERING_EXP_NEG){
+									exponent = -exponent;
+								}
+								EntryBuf[entry_i] = '\0';
+								push_decn(EntryBuf, exponent, no_lift);
+								process_cmd(KEY_MAP[i_key]);
+								//reset state as initial ENTERING_DONE state
+								entering_exp = ENTERING_DONE;
+								entry_i = 0;
+								exp_i = 0;
+								ExpBuf[0] = 0;
+								ExpBuf[1] = 0;
+							} else {
+								//process key
+								process_cmd(KEY_MAP[i_key]);
+							}
+							no_lift = 0;
+						} break;
+						//////////
+						default: process_cmd(KEY_MAP[i_key]);
+						//////////
+					} //switch(KEY_MAP[i_key])
+
 					break;
-				}
+				} //if found new key pressed
+			} //for new key array
+		} //if (!NewKeyEmpty)
+
+		//print X
+		LCD_ClearToEnd(0); //go to 2nd row
+		if (entering_exp == ENTERING_DONE){
+			dec80_to_str(Buf, get_x());
+			LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+		} else if (entry_i == 0){
+			TERMIO_PutChar('0');
+		} else if (entering_exp < ENTERING_EXP){
+			uint8_t idx;
+			for (idx = 0; idx < entry_i && idx < MAX_CHARS_PER_LINE; idx++){
+				TERMIO_PutChar(EntryBuf[idx]);
 			}
+		} else {
+			uint8_t idx;
+			//print significand
+			for (idx = 0; idx < entry_i && idx < MAX_CHARS_PER_LINE - 3; idx++){
+				TERMIO_PutChar(EntryBuf[idx]);
+			}
+			//go to exponent
+			if (idx < MAX_CHARS_PER_LINE - 3){
+				//clear until exponent
+				for ( ; idx < MAX_CHARS_PER_LINE - 3; idx++){
+					TERMIO_PutChar(' ');
+				}
+			} else {
+				LCD_GoTo(1, MAX_CHARS_PER_LINE - 3);
+			}
+			//print exponent sign
+			if (entering_exp == ENTERING_EXP_NEG){
+				TERMIO_PutChar('-');
+			} else {
+				TERMIO_PutChar(' ');
+			}
+			//print exp
+			TERMIO_PutChar(ExpBuf[1] + '0');
+			TERMIO_PutChar(ExpBuf[0] + '0');
 		}
-	}
+		LCD_ClearToEnd(1);
+	} //while (1)
 }
 /* ------------------------------------------------------------------------- */
 

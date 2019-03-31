@@ -220,9 +220,9 @@ void LCD_SingleLineGoTo(unsigned int spot_to) {
 	LCD_GoTo(spot_to / MAX_CHARS_PER_LINE, spot_to % MAX_CHARS_PER_LINE);
 }
 
-void LCD_OutString(const char *string) {
+void LCD_OutString(const char *string, uint8_t max_chars) {
 	const char *s;
-	for (s = string; *s; s++) {
+	for (s = string; *s && max_chars > 0; s++, max_chars--) {
 		TERMIO_PutChar(*s);
 	}
 }
@@ -251,8 +251,8 @@ short TERMIO_PutChar(unsigned char letter) {
 	return 1;
 }
 
-void LCD_ClearToEnd(void){
-	while (col != 0){
+void LCD_ClearToEnd(uint8_t curr_row){
+	while (col != 0 && row == curr_row){
 		TERMIO_PutChar(' ');
 	}
 }

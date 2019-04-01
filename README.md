@@ -120,9 +120,8 @@ The keys on the original calculator map as follows:
 - `mode`: reserved for a future shift key
 
 # Bugs
-1. Currently, when displaying numbers, the exponent may be cut off if the number is too long.
-1. Initially, the exponent for the 1st number entered after poweron is random.
 1. Currently, trying to display numbers between `[0.1, 1)` causes the calculator to crash.
+1. There are other calculations which can randomly cause the calculator to crash.
 1. There are probably more bugs waiting to be discovered.
 
 # Internals

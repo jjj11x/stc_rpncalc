@@ -105,7 +105,7 @@ static void latch_on(void)
 
 char Buf[DECN_BUF_SIZE];
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
-__xdata uint8_t ExpBuf[2] = {0, 0};
+__xdata uint8_t ExpBuf[2];
 
 //#define DEBUG_UPTIME
 /*********************************************/
@@ -123,6 +123,7 @@ int main()
 	uint8_t entering_exp = ENTERING_DONE;
 	uint8_t no_lift = 0;
 	uint8_t exp_i = 0;
+	int8_t disp_exponent;
 #ifdef DEBUG_KEYS
 	uint8_t j = 0;
 	const uint8_t* keys;
@@ -138,6 +139,9 @@ int main()
 	LCD_Open();
 	KeyInit();
 	BACKLIGHT_ON(); //turn on led backlight
+
+	ExpBuf[0] = 0;
+	ExpBuf[1] = 0;
 
 #ifdef DEBUG_UPTIME
 	i = 0;
@@ -157,12 +161,24 @@ int main()
 #else
 		//display y register on first line
 		if (entering_exp == ENTERING_DONE){
-			dec80_to_str(Buf, get_y());
+			disp_exponent = decn_to_str(Buf, get_y());
 		} else {
 			//display x on 1st line, entered number on 2nd line
-			dec80_to_str(Buf, get_x());
+			disp_exponent = decn_to_str(Buf, get_x());
 		}
-		LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+		if (disp_exponent == 0){
+			LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+		} else { //have exponent to display
+			LCD_OutString(Buf, MAX_CHARS_PER_LINE - 3);
+			if (disp_exponent < 0){
+				TERMIO_PutChar('-');
+				disp_exponent = -disp_exponent;
+			} else {
+				TERMIO_PutChar(' ');
+			}
+			TERMIO_PutChar((disp_exponent / 10) + '0');
+			TERMIO_PutChar((disp_exponent % 10) + '0');
+		}
 #endif //DEBUG_UPTIME
 
 #ifdef DEBUG_KEYS
@@ -208,8 +224,17 @@ int main()
 						//////////
 						case '0': {
 							if (entering_exp >= ENTERING_EXP){
-								ExpBuf[exp_i] = 0;
-								exp_i = (exp_i + 1) & 1;
+								if (exp_i == 0){
+									ExpBuf[0] = 0;
+									exp_i = 1;
+								} else {
+									ExpBuf[1] = ExpBuf[0];
+									ExpBuf[0] = 0;
+									exp_i++;
+									if (exp_i > 2){
+										exp_i = 1;
+									}
+								}
 							} else if (entering_exp == ENTERING_DONE){
 								entering_exp = ENTERING_SIGNIF;
 								EntryBuf[entry_i] = KEY_MAP[i_key];
@@ -230,8 +255,17 @@ int main()
 						case '8': //fallthrough
 						case '9': {
 							if (entering_exp >= ENTERING_EXP){
-								ExpBuf[exp_i] = KEY_MAP[i_key] - '0';
-								exp_i = (exp_i + 1) & 1;
+								if (exp_i == 0){
+									ExpBuf[0] = KEY_MAP[i_key] - '0';
+									exp_i = 1;
+								} else {
+									ExpBuf[1] = ExpBuf[0];
+									ExpBuf[0] = KEY_MAP[i_key] - '0';
+									exp_i++;
+									if (exp_i > 2){
+										exp_i = 1;
+									}
+								}
 							} else if (entering_exp == ENTERING_DONE){
 								entering_exp = ENTERING_SIGNIF;
 								EntryBuf[entry_i] = KEY_MAP[i_key];
@@ -349,8 +383,20 @@ int main()
 		//print X
 		LCD_ClearToEnd(0); //go to 2nd row
 		if (entering_exp == ENTERING_DONE){
-			dec80_to_str(Buf, get_x());
-			LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+			disp_exponent = decn_to_str(Buf, get_x());
+			if (disp_exponent == 0){
+				LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+			} else { //have exponent to display
+				LCD_OutString(Buf, MAX_CHARS_PER_LINE - 3);
+				if (disp_exponent < 0){
+					TERMIO_PutChar('-');
+					disp_exponent = -disp_exponent;
+				} else {
+					TERMIO_PutChar(' ');
+				}
+				TERMIO_PutChar((disp_exponent / 10) + '0');
+				TERMIO_PutChar((disp_exponent % 10) + '0');
+			}
 		} else if (entry_i == 0){
 			TERMIO_PutChar('0');
 		} else if (entering_exp < ENTERING_EXP){

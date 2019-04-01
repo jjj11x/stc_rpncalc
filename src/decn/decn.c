@@ -768,7 +768,7 @@ void div_decn(dec80* acc, const dec80* x){
 }
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28
-void dec80_to_str(char* buf, const dec80* x){
+int8_t decn_to_str(char* buf, const dec80* x){
 #define INSERT_DOT() buf[i++]='.'
 	uint8_t i = 0;
 	uint8_t digit100;
@@ -787,7 +787,7 @@ void dec80_to_str(char* buf, const dec80* x){
 #endif
 		buf[0] = '0';
 		buf[1] = '\0';
-		return;
+		return 0;
 	}
 	//check sign of number
 	if (tmp.exponent < 0){
@@ -821,10 +821,8 @@ void dec80_to_str(char* buf, const dec80* x){
 	} else {
 		if (exponent == 0){
 			INSERT_DOT();
-			exponent--;
-		} else if (exponent > 0){
-			exponent--;
 		}
+		exponent--;
 	}
 	//print 2nd digit
 	buf[i] = (tmp.lsu[0] % 10) + '0';
@@ -836,10 +834,8 @@ void dec80_to_str(char* buf, const dec80* x){
 	if (!use_sci){
 		if (exponent == 0){
 			INSERT_DOT();
-			exponent--;
-		} else if (exponent > 0){
-			exponent--;
 		}
+		exponent--;
 	}
 	//print rest of significand
 	for (digit100 = 1 ; digit100 < DEC80_NUM_LSU; digit100++){
@@ -849,10 +845,8 @@ void dec80_to_str(char* buf, const dec80* x){
 		if (!use_sci){
 			if (exponent == 0){
 				INSERT_DOT();
-				exponent--;
-			} else if (exponent > 0){
-				exponent--;
 			}
+			exponent--;
 		}
 		//print 2nd digit
 		buf[i] = (tmp.lsu[digit100] % 10) + '0';
@@ -860,17 +854,17 @@ void dec80_to_str(char* buf, const dec80* x){
 		if (!use_sci){
 			if (exponent == 0){
 				INSERT_DOT();
-				exponent--;
-			} else if (exponent > 0){
-				exponent--;
 			}
+			exponent--;
 		}
 		//track trailing 0s
-		if (tmp.lsu[digit100] == 0 && (use_sci || exponent < -1)){
-			trailing_zeros += 2;
-		} else if (tmp.lsu[digit100] == 0 && (use_sci || exponent < 0)){
-			trailing_zeros += 1;
-		} else if (tmp.lsu[digit100] == 10 && (use_sci || exponent < 0)){
+		if (tmp.lsu[digit100] == 0 && (use_sci || exponent < 0)){
+			if (use_sci || exponent < -2){ //xx.00
+				trailing_zeros += 2;
+			} else if (exponent == -2){ //xx.0
+				trailing_zeros += 1;
+			}
+		} else if (tmp.lsu[digit100]%10 == 0 && (use_sci || exponent < 0)){
 			trailing_zeros = 1;
 		} else {
 			trailing_zeros = 0;
@@ -881,6 +875,7 @@ void dec80_to_str(char* buf, const dec80* x){
 	if (use_sci || exponent <= 0){
 		i -= trailing_zeros;
 	}
+	buf[i] = '\0';
 
 	//calculate exponent
 	exponent = get_exponent(&tmp); //base 100
@@ -888,19 +883,10 @@ void dec80_to_str(char* buf, const dec80* x){
 	printf ("  exponent (%d)", exponent);
 #endif
 	//print exponent
-	if (use_sci && exponent != 0){
-		buf[i] = 'E';
-		i++;
-		if (exponent < 0){
-			buf[i] = '-';
-			i++;
-			u32str(-exponent, &buf[i], 10); //adds null terminator automatically
-		} else {
-			u32str(exponent, &buf[i], 10); //adds null terminator automatically
-		}
+	if (use_sci){
+		return exponent;
 	} else {
-		//null terminate
-		buf[i] = '\0';
+		return 0;
 	}
 
 #ifdef DEBUG
@@ -912,5 +898,25 @@ void dec80_to_str(char* buf, const dec80* x){
 #endif
 }
 
+#ifdef DESKTOP
+//complete string including exponent
+void decn_to_str_complete(char* buf, const dec80* x){
+	int8_t exponent = decn_to_str(buf, x);
+	int i;
+	//find end of string
+	for (i = 0; buf[i] != '\0'; i++);
+	//add exponent
+	if (exponent != 0){
+		buf[i++] = 'E';
+		if (exponent < 0){
+			buf[i++] = '-';
+			u32str(-exponent, &buf[i], 10); //adds null terminator automatically
+		} else {
+			u32str(exponent, &buf[i], 10); //adds null terminator automatically
+		}
+	}
+
+}
+#endif
 
 

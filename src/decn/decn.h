@@ -8,6 +8,7 @@
 #define SRC_DEC_DECN_H_
 
 #include <stdint.h>
+#include "../utils.h"
 
 #define DEC80_NUM_LSU 9
 
@@ -49,6 +50,11 @@ void div_decn(dec80* acc, const dec80* x);
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28
-void dec80_to_str(char* buf, const dec80* x);
+int8_t decn_to_str(char* buf, const dec80* x);
+
+#ifdef DESKTOP
+//complete string including exponent
+void decn_to_str_complete(char* buf, const dec80* x);
+#endif
 
 #endif /* SRC_DEC_DECN_H_ */

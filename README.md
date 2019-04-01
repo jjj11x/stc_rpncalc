@@ -1,6 +1,6 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the diyleyuan calculator using the STC IAP15W413AS microcontroller (8051-compatible). This firmware replaces the pre-programmed firmware with a RPN calculator firmware.
+This is a replacement firmware for the diyleyuan calculator using the STC IAP15W413AS microcontroller (8051-compatible). This firmware replaces the pre-programmed firmware with a new RPN calculator firmware.
 ![calculator](./calc.jpg)
 
 # Building
@@ -81,22 +81,22 @@ The calculator uses RPN notation. To calculate (2+3)/(9^2), enter:
 - 2
 - Enter (=)
 - 3
-- +
+- `+`
 - 9
 - Enter (=)
-- *
+- `*`
 - ÷
 
 There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2.
 
 The keys on the original calculator map as follows:
 
-- =: Enter
-- <-: Negate (+/-: change sign)
+- `=   `: Enter
+- `<-  `: Negate (+/-: change sign)
 	- Note: for implementation simplicity, this is a postfix operator
 	- pressing this key will terminate digit entry and immediately negate the number
-- sqrt: Swap `x <-> y`
-- .: ./(-)Exp: The `.` key works similarly to old Sinclair Scientific calculators that have a limited number of keys:
+- `sqrt`: Swap `x <-> y`
+- `.   `: ./(-)Exp: The `.` key works similarly to old Sinclair Scientific calculators that have a limited number of keys:
 	- The 1st press inserts a decimal point.
 	- The 2nd press begins exponent entry.
 	- The 3rd and subsequent presses negates the current exponent being entered.
@@ -159,3 +159,6 @@ Another weird thing about the 8051 is that not all of the memory is addressed th
 Thus, there are special compiler directives to tell it where to place things in memory. Even for a simple calculator, there isn't enough directly addressable memory for everything.
 
 Currently all of the code space is full, although there are ways to free some of it up. This would involve changing the code and build to not use `--stack-auto`. It might be possible to add back in square root (using newton's method), maybe logarithms/exponents (and thus arbitrary powers including square roots), and maybe if there's still space left, the original resistor value calculator and the decimal/hex converter.
+
+# Licensing
+This code is licensed under GPLv3.

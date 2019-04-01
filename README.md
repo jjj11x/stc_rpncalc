@@ -1,21 +1,22 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the diyleyuan calculator using the STC IAP15W413AS microcontroller (8051-compatible). This firmware replaces the pre-programmed firmware with a new RPN calculator firmware.
+This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyuan.com/jc/L8Q.html) using the STC IAP15W413AS microcontroller, which uses the 8051 instruction set. It uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+
 ![calculator](./calc.jpg)
 
 # Building
 - Makefile is for building the project for the actual calculator using SDCC.
 	- type `make` to build
 	- this will create a main.hex file
-- CMakeLists.txt is for building the Qt desktop application.
+<!-- - CMakeLists.txt is for building the Qt desktop application. -->
 
 # Installing
-The STC microcontroller used has a bootloader permanently built-in to rom that allows downloading new firmware over a serial port. You can re-program it using a USB to logic level (5V) serial dongle, and the stcgal program. WARNING: a lot of USB to logic level serial dongles are for 3.3V logic levels. The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display. You have a couple of options:
+The STC microcontroller used has a bootloader permanently stored in ROM that allows downloading new firmware over a serial port. You can re-program it using a USB to logic level (5V) serial dongle, and the stcgal program. WARNING: a lot of USB to logic level serial dongles are for 3.3V logic levels. The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display. You have a couple of options:
 
 1. get a USB to logic level serial dongle that supports 5V operation (there may be a jumper you have to set to switch between 3.3V and 5V). This is the best option.
 	- here is one that works: https://www.amazon.com/gp/product/B00N4MCS1A/
 1. if you have an adjustable power supply, power the diyleyuan calculator at 3.3-3.5V for programming, instead of 5V, and use a 3.3V USB to logic level serial dongle.
-	- You won't be able to see the LCD screen at 3.3V well.
+	- You won't be able to see the LCD screen at 3.3V well, though.
 	- After programming, remove the USB dongle, and set the voltage back up to 5V.
 	- This is an ok option, but is cumbersome to switch between 3.3V and 5V, and requires that you have an adjustable power supply.
 	- Also you run the risk of forgetting to switch between the 2 voltages.
@@ -26,13 +27,28 @@ The STC microcontroller used has a bootloader permanently built-in to rom that a
 ## Hardware connections
 - Pin 15 of the STC microcontroller is RX to the microcontroller (green wire in the picture).
 - Pin 16 is TX from the microcontroller (purple wire in the picture).
+
 You must "cross over" TX/RX going between the microcontroller and the USB dongle (i.e. RX on the microcontroller goes to TX on the USB dongle, and TX on the microcontroller goes to RX on the USB dongle).
+
+Be careful when working on the calculator. The 7550 voltage regulator used has no short circuit protection. It does have a very low quiescent current and low dropout voltage though. If you do end up damaging the regulator (like I did), a good replacement is the Microchip MCP1700-5002E/TO. In the picture, I have removed the 7550, shorted pins 2 and 3, and added a capacitor between pin 1 and pins 2/3. I am powering the calculator externally.
+
 ![connections](./connections.jpg)
 
+Here is the schematic from the diyleyuan website. Note that the schematic symbol for the microcontroller mistakenly labels P5.4 as P0.0, and mistakenly labels P5.5 as P0.1. The net name labels are correct.
+
+![schematic](./schematic.gif)
+
+The soft-latching power switch works as follows. Initially the calculator is off. Both Q1 and Q2 are off. Pressing the On key (S4) turns on Q1 through R1 and D2. Then, once the microcontroller has power, it turns on Q2, which keeps Q1 on through R1. To turn off, the microcontroller turns off Q2, which in turn will turn off Q1.
+
+Here is the component layout from the diyleyuan website.
+
+![component layout](./component.gif)
+
+The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050. The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a postive FSTN type, although the one included is definitely usable.
 
 ## Programming with stcgal
 
-See below, for the stcgal output. Replace stc_rpncalc/main.hex with the actual path to the main.hex build output. This example is done at a high line rate of 230,400 bits/s. You may want to try at a slower speed 1st to get things working (omit the `-b 230400` option).
+See below for the stcgal output. Replace stc_rpncalc/main.hex with the actual path to the main.hex you built. This example is done at a high line rate of 230,400 bits/s. You may want to try at a slower speed 1st to get things working (omit the `-b 230400` option).
 
 ~~~~
 $ ./stcgal.py -P stc15 -b 230400 stc_rpncalc/main.hex
@@ -99,10 +115,12 @@ The keys on the original calculator map as follows:
 - `.   `: ./(-)Exp: The `.` key works similarly to old Sinclair Scientific calculators that have a limited number of keys:
 	- The 1st press inserts a decimal point.
 	- The 2nd press begins exponent entry.
-	- The 3rd and subsequent presses negates the current exponent being entered.
+	- The 3rd and subsequent presses negates the current exponent being entered.\
+- `mode`: reserved for a future shift key
 
 # Bugs
 1. Currently, when displaying numbers, the exponent may be cut off if the number is too long.
+1. Initially, the exponent for the 1st number entered after poweron is random.
 1. Currently, trying to display numbers between `[0.1, 1)` causes the calculator to crash.
 1. There are probably more bugs waiting to be discovered.
 
@@ -137,28 +155,28 @@ There is an implicit decimal point between the 1 and 3 in `lsu[0]`, so the numbe
 - Addition is done the same way as it's done by hand, although in base-100 instead of decimal.
 - Subtraction is similarly done similar to how it's done by hand, although with carries instead of borrows using the "equal additions" algorithm, and also in base-100.
 - Multiplication is done the same way it's done by hand, although in base-100. Partial sums are added up and shifted after each digit, instead of waiting until the very end to sum up all partial sums, as is common when doing multiplication by hand.
-- Division is done by newton's method.
+- Division is done using a fixed number of Newton Raphson iterations.
 
 ## Rounding
 Currently, to save code space, there is no rounding being done, and numbers are instead truncated.
 
 # Implementation
-This was my 1st time using an 8051 microcontroller. The architecture is a bit limiting for programming in C compared to more modern architectures -- even compared to other 8-bit microcontrollers such as the AVR. Most significantly, there is no stack-pointer relative addressing, which makes C functions takes up a lot of code space, since they must emulate stack-pointer relative addressing. Unfortunately, the microcontroller used only has 13K of code space, which is pretty limiting. It's almost completely full just doing a 4 function decimal floating point calculator.
+This was my 1st time using an 8051 microcontroller. The architecture is a bit limiting for programming in C compared to more modern architectures -- even compared to other 8-bit microcontrollers such as the AVR. Most significantly, there is no stack-pointer-relative addressing, which makes C functions takes up a lot of code space, since they must emulate stack-pointer-relative addressing. Unfortunately, the microcontroller used only has 13K of code space, which is pretty limiting. It's almost completely full just doing a 4 function decimal floating point calculator.
 
 I've avoided relying on the functions being able to be reentrant, so that they do not depend on having a stack. Some "large" variables are declared as static in functions to save on the code space needed to emulate a stack.
 
 Another weird thing about the 8051 is that not all of the memory is addressed the same way. On this microcontorller, there are 512 bytes of ram total, of which:
 
-- only 128 bytes of it can be addressed directly
-	- the start of this address space is also shared with general purpose registers
+- only 128 bytes can be addressed directly (or indirectly)
+	- the start of this address space is also shared with general purpose registers, so you don't actually have the full 128 bytes
 - (there are also 128 bytes of "special function registers" which can be addressed directly to set up the microcontroller and its peripherals)
-- 128 bytes of it can be addressed indirectly (used in this firmware for the stack)
-- 256 bytes of it can be addressed as external memory
+- 128 bytes can be addressed only indirectly (used in this firmware for the stack)
+- 256 bytes can be addressed as external memory
 	- on the original 8051 it would have actually been external, although on this microcontroller, the "external" ram is built in
 
-Thus, there are special compiler directives to tell it where to place things in memory. Even for a simple calculator, there isn't enough directly addressable memory for everything.
+Thus, there are special compiler directives to tell it where to place things in memory. (Even for a simple calculator, there isn't enough directly addressable memory (128 bytes) to store everything.)
 
-Currently all of the code space is full, although there are ways to free some of it up. This would involve changing the code and build to not use `--stack-auto`. It might be possible to add back in square root (using newton's method), maybe logarithms/exponents (and thus arbitrary powers including square roots), and maybe if there's still space left, the original resistor value calculator and the decimal/hex converter.
+Currently all of the code space is full, although there are ways to free some of it up. This would involve changing the code and build to not use `--stack-auto`. After doing so, it might be possible to add back in square root (using newton's method), maybe logarithms/exponents (and thus arbitrary powers including square roots), and maybe if there's still space left, the original resistor value calculator and the decimal/hex converter.
 
 # Licensing
 This code is licensed under GPLv3.

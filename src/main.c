@@ -95,10 +95,10 @@ void Timer0Init(void)
 static void latch_on(void)
 {
 	//set (P3_2) as push pull output
-	P3_2 = 1;
-	//latch on
 	P3M1 &= ~(0x4);
 	P3M0 |= (0x4);
+	//latch on
+	P3_2 = 1;
 }
 #endif //!DESKTOP
 

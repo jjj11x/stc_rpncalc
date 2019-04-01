@@ -168,10 +168,10 @@ int main()
 		} else { //have exponent to display
 			LCD_OutString(Buf, MAX_CHARS_PER_LINE - 3);
 			if (disp_exponent < 0){
-				TERMIO_PutChar('-');
+				TERMIO_PutChar(CGRAM_EXP_NEG);
 				disp_exponent = -disp_exponent;
 			} else {
-				TERMIO_PutChar(' ');
+				TERMIO_PutChar(CGRAM_EXP);
 			}
 			TERMIO_PutChar((disp_exponent / 10) + '0');
 			TERMIO_PutChar((disp_exponent % 10) + '0');
@@ -376,10 +376,10 @@ int main()
 			} else { //have exponent to display
 				LCD_OutString(Buf, MAX_CHARS_PER_LINE - 3);
 				if (disp_exponent < 0){
-					TERMIO_PutChar('-');
+					TERMIO_PutChar(CGRAM_EXP_NEG);
 					disp_exponent = -disp_exponent;
 				} else {
-					TERMIO_PutChar(' ');
+					TERMIO_PutChar(CGRAM_EXP);
 				}
 				TERMIO_PutChar((disp_exponent / 10) + '0');
 				TERMIO_PutChar((disp_exponent % 10) + '0');
@@ -408,9 +408,9 @@ int main()
 			}
 			//print exponent sign
 			if (entering_exp == ENTERING_EXP_NEG){
-				TERMIO_PutChar('-');
+				TERMIO_PutChar(CGRAM_EXP_NEG);
 			} else {
-				TERMIO_PutChar(' ');
+				TERMIO_PutChar(CGRAM_EXP);
 			}
 			//print exp
 			TERMIO_PutChar(ExpBuf[1] + '0');

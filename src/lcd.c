@@ -45,7 +45,6 @@ static int row, col;
 #define LCD_BUSY P2_7 //LCD D7
 
 static void outCsrBlindNibble(unsigned char command);
-static void outCsrBlind(unsigned char command);
 static void outCsr(unsigned char command);
 static char readBusy(void);
 static void wait_busy(void);
@@ -64,13 +63,6 @@ static void outCsrBlindNibble(unsigned char command) {
 	LCD_E = 1;
 	_delay_us(100);
 	LCD_E = 0;
-}
-
-static void outCsrBlind(unsigned char command) {
-	outCsrBlindNibble(command >> 4); // ms nibble, E=0, RS=0
-	_delay_us(100);
-	outCsrBlindNibble(command); // ls nibble, E=0, RS=0
-	_delay_us(100); // blind cycle 90 us wait
 }
 
 static void outCsr(unsigned char command) {
@@ -143,6 +135,7 @@ static void LCD_OutChar(unsigned char c) {
 }
 
 void LCD_Open(void) {
+	uint8_t i;
 	//set ports to push-pull output M[1:0] = b01
 	//P2 entire port
 	P2M1 = 0;
@@ -161,21 +154,35 @@ void LCD_Open(void) {
 	outCsrBlindNibble(0x02); // DL=1 switch to 4 bit mode (only high 4 bits are sent)
 	_delay_us(100); // blind cycle 100 us wait
 	//set increment, no shift
-	outCsrBlind(0x4 + LCDINC + LCDNOSHIFT);
+	outCsr(0x4 + LCDINC + LCDNOSHIFT);
 #ifdef DEBUG
 	//set display on, cursor on, blink on:
-	outCsrBlind(0x0c + LCDCURSOR + LCDBLINK);
+	outCsr(0x0c + LCDCURSOR + LCDBLINK);
 #else
 	//set display on, cursor and blink off:
-	outCsrBlind(0x0c + LCDNOCURSOR + LCDNOBLINK);
+	outCsr(0x0c + LCDNOCURSOR + LCDNOBLINK);
 #endif
 	//set display shift on and to the right
-	outCsrBlind(0x10 + LCDNOSCROLL + LCDRIGHT);
+	outCsr(0x10 + LCDNOSCROLL + LCDRIGHT);
 	//set 4-bit mode, 2 line, 5x7 display:
-	outCsrBlind(0x20 + LCD2LINE + LCD7DOT);
+	outCsr(0x20 + LCD2LINE + LCD7DOT);
+
+	outCsr(0x40); //set cgram address to 0
+	//program CGRAM
+	for (i = 0; i < 2; i++){
+		//define exponent and negative exponent sign
+		LCD_OutChar(0x0);
+		LCD_OutChar(i ? 0x0f : 0);
+		LCD_OutChar(0x0);
+		LCD_OutChar(0x1c);
+		LCD_OutChar(0x10);
+		LCD_OutChar(0x18);
+		LCD_OutChar(0x10);
+		LCD_OutChar(0x1c);
+	}
+
 	//clear display
-//	LCD_Clear();
-//	_delay_ms(50);
+	LCD_Clear();
 }
 
 //row and columns indexed from 0

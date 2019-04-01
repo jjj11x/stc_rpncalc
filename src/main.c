@@ -22,7 +22,7 @@ static const char KEY_MAP[20] = {
 };
 
 
-uint32_t NewKeyBuf[4];
+int8_t NewKeyBuf[4];
 volatile uint8_t new_key_write_i;
 volatile uint8_t new_key_read_i;
 volatile uint8_t NewKeyEmpty;
@@ -37,17 +37,14 @@ void timer0_isr() SDCC_ISR(1,1)
 	static uint8_t min_count = 0, hour_count = 0;
 #endif
 
-	uint32_t new_keys;
-
 	//scan keyboard
 	KeyScan();
-	new_keys = GetNewKeys();
-	if (new_keys != 0){
+	if (NewKeyPressed != -1){
 		if (!NewKeyEmpty && (new_key_write_i == new_key_read_i)){
 			//do not overwrite keymap currently being processed
 			INCR_NEW_KEY_I(new_key_write_i);
 		}
-		NewKeyBuf[new_key_write_i] = new_keys;
+		NewKeyBuf[new_key_write_i] = NewKeyPressed;
 		INCR_NEW_KEY_I(new_key_write_i);
 		NewKeyEmpty = 0;
 	}
@@ -200,185 +197,175 @@ int main()
 #endif //DEBUG_KEYS
 
 
-		///get new keys
+		///get new key
 		if (!NewKeyEmpty){
-			uint8_t i_key;
-			uint32_t new_keys = NewKeyBuf[new_key_read_i];
+			int8_t i_key = NewKeyBuf[new_key_read_i];
 			INCR_NEW_KEY_I(new_key_read_i);
 			if (new_key_read_i == new_key_write_i){
 				NewKeyEmpty = 1;
 			}
 #ifdef DEBUG_KEYS
 			LCD_GoTo(1,j);
+			TERMIO_PutChar(KEY_MAP[i_key]);
+			j++;
+			j &= 0x0f;
 #endif
-			//find first key pressed in array (if any)
-			for (i_key = 0; i_key < 20; i_key++){
-				if (new_keys & ((uint32_t) 1 << i_key)){
-#ifdef DEBUG_KEYS
-					TERMIO_PutChar(KEY_MAP[i_key]);
-					j++;
-					j &= 0x0f;
-#endif
-					//process key
-					switch(KEY_MAP[i_key]){
-						//////////
-						case '0': {
-							if (entering_exp >= ENTERING_EXP){
-								if (exp_i == 0){
-									ExpBuf[0] = 0;
-									exp_i = 1;
-								} else {
-									ExpBuf[1] = ExpBuf[0];
-									ExpBuf[0] = 0;
-									exp_i++;
-									if (exp_i > 2){
-										exp_i = 1;
-									}
-								}
-							} else if (entering_exp == ENTERING_DONE){
-								entering_exp = ENTERING_SIGNIF;
-								EntryBuf[entry_i] = KEY_MAP[i_key];
-								//do not increment entry_i from 0, until first non-0 entry
-							} else if (entry_i != 0 && entry_i < MAX_CHARS_PER_LINE - 1 + 1){
-								EntryBuf[entry_i] = KEY_MAP[i_key];
-								entry_i++;
+			//process key
+			switch(KEY_MAP[i_key]){
+				//////////
+				case '0': {
+					if (entering_exp >= ENTERING_EXP){
+						if (exp_i == 0){
+							ExpBuf[0] = 0;
+							exp_i = 1;
+						} else {
+							ExpBuf[1] = ExpBuf[0];
+							ExpBuf[0] = 0;
+							exp_i++;
+							if (exp_i > 2){
+								exp_i = 1;
 							}
-						} break;
-						//////////
-						case '1': //fallthrough
-						case '2': //fallthrough
-						case '3': //fallthrough
-						case '4': //fallthrough
-						case '5': //fallthrough
-						case '6': //fallthrough
-						case '7': //fallthrough
-						case '8': //fallthrough
-						case '9': {
-							if (entering_exp >= ENTERING_EXP){
-								if (exp_i == 0){
-									ExpBuf[0] = KEY_MAP[i_key] - '0';
-									exp_i = 1;
-								} else {
-									ExpBuf[1] = ExpBuf[0];
-									ExpBuf[0] = KEY_MAP[i_key] - '0';
-									exp_i++;
-									if (exp_i > 2){
-										exp_i = 1;
-									}
-								}
-							} else if (entering_exp == ENTERING_DONE){
-								entering_exp = ENTERING_SIGNIF;
-								EntryBuf[entry_i] = KEY_MAP[i_key];
-								entry_i++;
-							} else if (entry_i < MAX_CHARS_PER_LINE - 1 + 1){
-								EntryBuf[entry_i] = KEY_MAP[i_key];
-								entry_i++;
+						}
+					} else if (entering_exp == ENTERING_DONE){
+						entering_exp = ENTERING_SIGNIF;
+						EntryBuf[entry_i] = KEY_MAP[i_key];
+						//do not increment entry_i from 0, until first non-0 entry
+					} else if (entry_i != 0 && entry_i < MAX_CHARS_PER_LINE - 1 + 1){
+						EntryBuf[entry_i] = KEY_MAP[i_key];
+						entry_i++;
+					}
+				} break;
+				//////////
+				case '1': //fallthrough
+				case '2': //fallthrough
+				case '3': //fallthrough
+				case '4': //fallthrough
+				case '5': //fallthrough
+				case '6': //fallthrough
+				case '7': //fallthrough
+				case '8': //fallthrough
+				case '9': {
+					if (entering_exp >= ENTERING_EXP){
+						if (exp_i == 0){
+							ExpBuf[0] = KEY_MAP[i_key] - '0';
+							exp_i = 1;
+						} else {
+							ExpBuf[1] = ExpBuf[0];
+							ExpBuf[0] = KEY_MAP[i_key] - '0';
+							exp_i++;
+							if (exp_i > 2){
+								exp_i = 1;
 							}
-						} break;
-						//////////
-						case '.': {
-							if (entering_exp == ENTERING_DONE){
-								EntryBuf[entry_i++] = '0';
-								EntryBuf[entry_i++] = '.';
-								entering_exp = ENTERING_FRAC;
-							} else if (entering_exp == ENTERING_SIGNIF){
-								if (entry_i == 0){
-									EntryBuf[entry_i++] = '0';
-								}
-								EntryBuf[entry_i++] = '.';
-								entering_exp = ENTERING_FRAC;
-							} else if (entering_exp <= ENTERING_EXP) {
-								entering_exp++;
-							} else { //entering_exp == ENTERING_EXP_NEG
-								entering_exp = ENTERING_EXP;
-							}
-						} break;
-						//////////
-						case '=': {
-							//track stack lift
-							if (entering_exp != ENTERING_DONE){
-								//finish entry
-								int8_t exponent; //exponent is only 2 digits
-								exponent = 10*ExpBuf[1] + ExpBuf[0];
-								if (entering_exp == ENTERING_EXP_NEG){
-									exponent = -exponent;
-								}
-								EntryBuf[entry_i] = '\0';
-								push_decn(EntryBuf, exponent, no_lift);
-								process_cmd(KEY_MAP[i_key]);
-								//reset state as initial ENTERING_DONE state
-								entering_exp = ENTERING_DONE;
-								entry_i = 0;
-								exp_i = 0;
-								ExpBuf[0] = 0;
-								ExpBuf[1] = 0;
-							} else {
-								//dup
-								process_cmd(KEY_MAP[i_key]);
-							}
-							no_lift = 1;
-						} break;
-						//////////
-						case 'c': {
-							if (entering_exp == ENTERING_DONE){
-								//clear
-								clear_x();
-								no_lift = 1;
-								entering_exp = ENTERING_SIGNIF;
-								EntryBuf[entry_i] = '0';
-								//do not increment entry_i from 0, until first non-0 entry
-							} else if (entering_exp >= ENTERING_EXP){
-								//go back to digit entry
-								entering_exp--;
-								exp_i = 0;
-								ExpBuf[0] = 0;
-								ExpBuf[1] = 0;
-							} else if (entry_i > 0){
-								//backspace
-								if (EntryBuf[entry_i] == '.'){
-									entering_exp--;
-								}
-								entry_i--;
-							}
-						} break;
-						//////////
-						case '+': //fallthrough
-						case '*': //fallthrough
-						case '-': //fallthrough
-						case '/': //fallthrough
-						case '<': //fallthrough //use as +/-
-						case 'r': { //use as swap
-							if (entering_exp != ENTERING_DONE){
-								//finish entry
-								int8_t exponent; //exponent is only 2 digits
-								exponent = 10*ExpBuf[1] + ExpBuf[0];
-								if (entering_exp == ENTERING_EXP_NEG){
-									exponent = -exponent;
-								}
-								EntryBuf[entry_i] = '\0';
-								push_decn(EntryBuf, exponent, no_lift);
-								process_cmd(KEY_MAP[i_key]);
-								//reset state as initial ENTERING_DONE state
-								entering_exp = ENTERING_DONE;
-								entry_i = 0;
-								exp_i = 0;
-								ExpBuf[0] = 0;
-								ExpBuf[1] = 0;
-							} else {
-								//process key
-								process_cmd(KEY_MAP[i_key]);
-							}
-							no_lift = 0;
-						} break;
-						//////////
-						default: process_cmd(KEY_MAP[i_key]);
-						//////////
-					} //switch(KEY_MAP[i_key])
-
-					break;
-				} //if found new key pressed
-			} //for new key array
-		} //if (!NewKeyEmpty)
+						}
+					} else if (entering_exp == ENTERING_DONE){
+						entering_exp = ENTERING_SIGNIF;
+						EntryBuf[entry_i] = KEY_MAP[i_key];
+						entry_i++;
+					} else if (entry_i < MAX_CHARS_PER_LINE - 1 + 1){
+						EntryBuf[entry_i] = KEY_MAP[i_key];
+						entry_i++;
+					}
+				} break;
+				//////////
+				case '.': {
+					if (entering_exp == ENTERING_DONE){
+						EntryBuf[entry_i++] = '0';
+						EntryBuf[entry_i++] = '.';
+						entering_exp = ENTERING_FRAC;
+					} else if (entering_exp == ENTERING_SIGNIF){
+						if (entry_i == 0){
+							EntryBuf[entry_i++] = '0';
+						}
+						EntryBuf[entry_i++] = '.';
+						entering_exp = ENTERING_FRAC;
+					} else if (entering_exp <= ENTERING_EXP) {
+						entering_exp++;
+					} else { //entering_exp == ENTERING_EXP_NEG
+						entering_exp = ENTERING_EXP;
+					}
+				} break;
+				//////////
+				case '=': {
+					//track stack lift
+					if (entering_exp != ENTERING_DONE){
+						//finish entry
+						int8_t exponent; //exponent is only 2 digits
+						exponent = 10*ExpBuf[1] + ExpBuf[0];
+						if (entering_exp == ENTERING_EXP_NEG){
+							exponent = -exponent;
+						}
+						EntryBuf[entry_i] = '\0';
+						push_decn(EntryBuf, exponent, no_lift);
+						process_cmd(KEY_MAP[i_key]);
+						//reset state as initial ENTERING_DONE state
+						entering_exp = ENTERING_DONE;
+						entry_i = 0;
+						exp_i = 0;
+						ExpBuf[0] = 0;
+						ExpBuf[1] = 0;
+					} else {
+						//dup
+						process_cmd(KEY_MAP[i_key]);
+					}
+					no_lift = 1;
+				} break;
+				//////////
+				case 'c': {
+					if (entering_exp == ENTERING_DONE){
+						//clear
+						clear_x();
+						no_lift = 1;
+						entering_exp = ENTERING_SIGNIF;
+						EntryBuf[entry_i] = '0';
+						//do not increment entry_i from 0, until first non-0 entry
+					} else if (entering_exp >= ENTERING_EXP){
+						//go back to digit entry
+						entering_exp--;
+						exp_i = 0;
+						ExpBuf[0] = 0;
+						ExpBuf[1] = 0;
+					} else if (entry_i > 0){
+						//backspace
+						if (EntryBuf[entry_i] == '.'){
+							entering_exp--;
+						}
+						entry_i--;
+					}
+				} break;
+				//////////
+				case '+': //fallthrough
+				case '*': //fallthrough
+				case '-': //fallthrough
+				case '/': //fallthrough
+				case '<': //fallthrough //use as +/-
+				case 'r': { //use as swap
+					if (entering_exp != ENTERING_DONE){
+						//finish entry
+						int8_t exponent; //exponent is only 2 digits
+						exponent = 10*ExpBuf[1] + ExpBuf[0];
+						if (entering_exp == ENTERING_EXP_NEG){
+							exponent = -exponent;
+						}
+						EntryBuf[entry_i] = '\0';
+						push_decn(EntryBuf, exponent, no_lift);
+						process_cmd(KEY_MAP[i_key]);
+						//reset state as initial ENTERING_DONE state
+						entering_exp = ENTERING_DONE;
+						entry_i = 0;
+						exp_i = 0;
+						ExpBuf[0] = 0;
+						ExpBuf[1] = 0;
+					} else {
+						//process key
+						process_cmd(KEY_MAP[i_key]);
+					}
+					no_lift = 0;
+				} break;
+				//////////
+				default: process_cmd(KEY_MAP[i_key]);
+				//////////
+			} //switch(KEY_MAP[i_key])
+		} //if found new key pressed
 
 		//print X
 		LCD_ClearToEnd(0); //go to 2nd row

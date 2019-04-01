@@ -21,6 +21,7 @@ const uint8_t* DebugGetKeys(void);
 //prefer using GetNewKeys();
 #define TOTAL_ROWS 5
 extern uint8_t Keys[TOTAL_ROWS]; //only bottom nibbles get set
+extern int8_t NewKeyPressed;
 
 
 #endif /* SRC_KEY_H_ */

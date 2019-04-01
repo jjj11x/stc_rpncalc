@@ -9,7 +9,15 @@
 #include "utils.h"
 #include "key.h"
 
-#ifndef DESKTOP
+#ifdef DESKTOP
+#include <stdio.h>
+const char state_names[4][32] = {
+	"STEADY_LOW"    ,
+	"TRANS_LOW_HIGH",
+	"STEADY_HIGH"   ,
+	"TRANS_HIGH_LOW"
+};
+#else
 #include "stc15.h"
 #endif
 
@@ -17,7 +25,7 @@
 #define M_COLS 4
 
 uint8_t Keys[TOTAL_ROWS]; //only bottom nibbles get set
-static uint32_t new_keys_pressed; //bottom 20 bits get set
+int8_t NewKeyPressed; //row*M_COLS + col, see KEY_MAP[] in main.c
 static uint8_t last_state[TOTAL_ROWS]; //all used, 2 bits per key
 static int8_t last_count[TOTAL_ROWS][M_COLS]; //all used
 static uint8_t unexpected_count; //count of unexpected transitions
@@ -35,7 +43,14 @@ static const int8_t THRESH_TRANS  = 2;
 
 #ifdef DESKTOP
 //test functions
-void KeyInit(void){}
+void KeyInit(void){
+	//initialize counts
+	for (uint8_t i = 0; i < TOTAL_ROWS; i++){
+		for (uint8_t j = 0; j < M_COLS; j++){
+			last_count[i][j] = COUNT_LIM_LOW;
+		}
+	}
+}
 
 static void raw_scan(void){
 	static uint8_t i = 0;
@@ -49,7 +64,7 @@ static void raw_scan(void){
 		0,0,0,0,0,0,0,0,0,0,0,0
 	};
 
-	keys[1] = data[i];
+	Keys[1] = data[i];
 	i++;
 	if (i >= (sizeof(data)/sizeof(data[0]))){
 		i = 0;
@@ -57,6 +72,8 @@ static void raw_scan(void){
 }
 #else
 void KeyInit(void){
+	uint8_t i, j;
+
 	//set column drivers bits 7:4 to quasi-bidirectional w/ pullup M[1:0]=b00
 	//and row inputs bits 3:0 to quasi-bidirectional w/ pullup M[1:0]=b00
 	P1M1 = 0x00;
@@ -73,6 +90,13 @@ void KeyInit(void){
 	P5M1 &= ~(0x30);
 	P5M0 &= ~(0x30);
 	P5 |= 0x30; //pull up
+
+	//initialize counts
+	for (i = 0; i < TOTAL_ROWS; i++){
+		for (j = 0; j < M_COLS; j++){
+			last_count[i][j] = COUNT_LIM_LOW;
+		}
+	}
 }
 
 static void raw_scan(void){
@@ -112,7 +136,8 @@ static void raw_scan(void){
 //https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/
 static void debounce(void){
 	uint8_t i, j;
-	new_keys_pressed = 0; //initially
+	NewKeyPressed = -1; //initially
+//	new_keys_pressed = 0; //initially
 	for (i = 0; i < TOTAL_ROWS; i++){
 		for (j = 0; j < M_COLS; j++){
 			int8_t new_count;
@@ -180,9 +205,14 @@ static void debounce(void){
 					new_count = COUNT_LIM_LOW;
 					unexpected_count++;
 			} //switch(curr_state)
-			//track new keys down
+			//track new key down
 			if (curr_state != TRANS_LOW_HIGH && new_state == TRANS_LOW_HIGH){
-				new_keys_pressed |= ((uint32_t) 1 << (i*M_COLS + j));
+				NewKeyPressed = (i*M_COLS + j); //can only track 1 for now
+#ifdef DESKTOP
+				printf("new key (%d, %d) pressed\n", i, j);
+//				printf("curr_state: %d, new_state: %d\n", curr_state, new_state);
+#endif
+//				new_keys_pressed |= ((uint32_t) 1 << (i*M_COLS + j));
 			}
 			//write back new count
 			last_count[i][j] = new_count;
@@ -204,33 +234,29 @@ const uint8_t* DebugGetKeys(void){
 }
 #endif
 
-const uint32_t GetNewKeys(void){
-	return new_keys_pressed;
-}
 
 
 
 #ifdef DESKTOP
-#include <stdio.h>
-
-const char state_names[4][32] = {
-	"STEADY_LOW"    ,
-	"TRANS_LOW_HIGH",
-	"STEADY_HIGH"   ,
-	"TRANS_HIGH_LOW"
-};
 
 int main(void){
+	KeyInit();
+
 	for (int iii = 0; iii < 100; iii++){
-		KeyScan();
-		const uint8_t* keys = DebugGetKeys();
+		//look at '9' key at row 1, col 1 (0 indexed)
+		//the corresponding new key code is 5, see KEY_MAP[] in main.c
 		static const uint8_t i = 1, j = 1;
-		uint8_t curr_count = last_count[i][j/2] & (0xf << ((j&1)*4));
+		int8_t curr_count = last_count[i][j/2] & (0xf << ((j&1)*4));
 		uint8_t curr_state = last_state[i] & (0x3 << (j*2));
 		curr_count >>= (j&1)*4;
 		curr_state >>= j*2;
-		printf("%3d: %x, %14s, %2u, %2lx\n",
-		       iii, keys[1], state_names[curr_state], curr_count, (unsigned long) GetNewKeys());
+		if (iii == 0){
+			printf("%3d: %x, %14s, %2d, %2d\n",
+				   iii, Keys[1], state_names[curr_state], curr_count, NewKeyPressed);
+		}
+		KeyScan();
+		printf("%3d: %x, %14s, %2d, %2d\n",
+		       iii, Keys[1], state_names[curr_state], curr_count, NewKeyPressed);
 	}
 
 	return 0;

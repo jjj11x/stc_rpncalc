@@ -1,6 +1,8 @@
 #include <stdint.h>
-#include "stc15.h"
 #include "utils.h"
+#ifndef DESKTOP
+#include "stc15.h"
+#endif
 
 #ifdef DESKTOP
 void _delay_ms(uint8_t ms){

@@ -93,7 +93,7 @@ Disconnected!
 (The name for `stcgal` is probably a play on words from the `avrdude` programming software used to program AVR microcontrollers.)
 
 # Usage
-The calculator uses RPN notation. To calculate (2+3)/(9^2), enter:
+The calculator uses RPN. To calculate (2+3)/(9^2), enter:
 
 - 2
 - Enter (=)
@@ -131,7 +131,7 @@ The original firmware that came with this calculator used a fixed point format, 
 
 This calculator firmware uses decimal floating point, using base-100 to store numbers and do calculations. Base-100 allows for efficient storage into 8-bit bytes, and is easier to work with than packed-BCD. Unlike straight binary representations, base-100 is still fairly easy to display as decimal. Also unlike binary representations, there is no conversion error from binary/decimal (e.g. numbers like `0.1` can be represented exactly).
 
-Each `uint8_t` stores a base-100 "`digit100`", referred to as an "`lsu`", for least significant unit (the terminology is borrowed from the decNumber library). The format is as follows:
+Each `uint8_t` stores a base-100 "`digit100`", referred to as an "`lsu`", for least significant unit (the terminology is borrowed from the decNumber library: I originally considered using the decNumber library similar to the WP-34S calculator, but just the library itself takes several times more flash than is available on this calculator). The number format is as follows:
 
 - `lsu[0]`: contains the most signifcant `digit100` (the most signifcant 2 decimal digits)
 	- implicit decimal point between `lsu[0]/10` and `lsu[0]%10`

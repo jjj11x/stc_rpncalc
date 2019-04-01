@@ -94,6 +94,7 @@ Disconnected!
 (The name for `stcgal` is probably a play on words from the `avrdude` programming software used to program AVR microcontrollers.)
 
 # Usage
+## Calculation
 The calculator uses RPN. To calculate (2+3)/(9^2), enter:
 
 - 2
@@ -107,6 +108,7 @@ The calculator uses RPN. To calculate (2+3)/(9^2), enter:
 
 The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2.
 
+## Keys
 The keys on the original calculator map as follows:
 
 - `=   `: Enter
@@ -119,6 +121,9 @@ The keys on the original calculator map as follows:
 	- The 2nd press begins exponent entry.
 	- The 3rd and subsequent presses negates the current exponent being entered.
 - `mode`: reserved for a future shift key
+
+## Turning off
+Hold `mode` and `0` at the same time to turn off. NOTE: There is no auto power off.
 
 # Bugs
 1. Currently, trying to display numbers between `[0.1, 1)` causes the calculator to crash.

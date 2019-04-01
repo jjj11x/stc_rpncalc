@@ -9,6 +9,7 @@ This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyu
 	- type `make` to build
 	- (you must already have SDCC installed and setup so it can be found in your PATH)
 	- this will create a `main.hex` output file
+	- there is also a prebuilt binary checked in at `binaries/main.hex`
 <!-- - CMakeLists.txt is for building the Qt desktop application. -->
 
 # Installing

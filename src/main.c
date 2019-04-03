@@ -2,13 +2,15 @@
 // STC15 RPN calculator
 //
 
-#include "stc15.h"
 #include <stdint.h>
 #include "lcd.h"
 #include "key.h"
 #include "decn/decn.h"
 #include "calc.h"
 #include "utils.h"
+#ifndef DESKTOP
+#include "stc15.h"
+#endif
 
 #define FOSC 11583000
 

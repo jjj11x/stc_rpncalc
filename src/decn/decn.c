@@ -478,7 +478,7 @@ static void sub_mag(dec80* acc, const dec80* x){
 	}
 #ifdef DEBUG_ADD
 	extern char Buf[DECN_BUF_SIZE];
-	dec80_to_str(buf, &tmp);
+	decn_to_str_complete(buf, &tmp);
 	printf("        incr_exp tmp: %s\n", buf);
 #endif
 	//do subtraction
@@ -567,9 +567,9 @@ void add_decn(dec80* acc, const dec80* x){
 	remove_leading_zeros(&tmp);
 #ifdef DEBUG_ADD
 	extern char Buf[DECN_BUF_SIZE];
-	dec80_to_str(buf, acc);
+	decn_to_str_complete(buf, acc);
 	printf("        rem_leading_zeros acc: %s\n", buf);
-	dec80_to_str(buf, &tmp);
+	decn_to_str_complete(buf, &tmp);
 	printf("        rem_leading_zeros tmp: %s\n", buf);
 #endif
 	if (get_exponent(acc) > get_exponent(&tmp)){
@@ -583,9 +583,9 @@ void add_decn(dec80* acc, const dec80* x){
 	}
 #ifdef DEBUG_ADD
 	extern char Buf[DECN_BUF_SIZE];
-	dec80_to_str(buf, acc);
+	decn_to_str_complete(buf, acc);
 	printf("        incr_exp acc: %s\n", buf);
-	dec80_to_str(buf, &tmp);
+	decn_to_str_complete(buf, &tmp);
 	printf("        incr_exp tmp: %s\n", buf);
 #endif
 	//do addition
@@ -721,12 +721,8 @@ void div_decn(dec80* acc, const dec80* x){
 #ifdef DEBUG_DIV
 	printf("exponent %d", initial_exp);
 #endif
-	if (initial_exp >= 0){
-		//necessary to subtract 1 for convergence
-		initial_exp = -initial_exp - 1;
-	} else {
-		initial_exp = -initial_exp;
-	}
+	//necessary to subtract 1 for convergence
+	initial_exp = -initial_exp - 1;
 #ifdef DEBUG_DIV
 	printf(" -> %d\n", initial_exp);
 #endif
@@ -740,23 +736,23 @@ void div_decn(dec80* acc, const dec80* x){
 	for (i = 0; i < DEC80_NUM_LSU + 4; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
 		extern char Buf[80];
-		dec80_to_str(Buf, &tmp);
+		decn_to_str_complete(Buf, &tmp);
 		printf("%2d: %s\n", i, Buf);
 #endif
 		mult_decn(acc, x);
 #ifdef DEBUG_DIV
-		dec80_to_str(Buf, acc);
+		decn_to_str_complete(Buf, acc);
 		printf("  %20s: %s\n", "recip*x", Buf);
 #endif
 		negate_decn(acc);
 		add_decn(acc, &DECN_1);
 #ifdef DEBUG_DIV
-		dec80_to_str(Buf, acc);
+		decn_to_str_complete(Buf, acc);
 		printf("  %20s: %s\n", "(1-recip*x)", Buf);
 #endif
 		mult_decn(acc, &tmp);
 #ifdef DEBUG_DIV
-		dec80_to_str(Buf, acc);
+		decn_to_str_complete(Buf, acc);
 		printf("  %20s: %s\n", "recip * (1-recip*x)", Buf);
 #endif
 		add_decn(acc, &tmp);

@@ -178,6 +178,23 @@ int main(void){
 	decn_to_str_complete(Buf, &diff);
 	printf("     : %s\n\n", Buf);
 
+	//new acc and b for divide test
+	build_dec80(&acc,  "3", 0);
+	build_dec80(&b,   "25", -15);
+	decn_to_str_complete(Buf, &acc);
+	printf(" acc: %s\n", Buf);
+	decn_to_str_complete(Buf, &b);
+	printf("   b: %s\n", Buf);
+	div_decn(&acc, &b);
+	decn_to_str_complete(Buf, &acc);
+	printf("acc/b: %s\n", Buf);
+	printf("     : %s\n", "120000000000000");
+	build_dec80(&diff, "1.2", 14);
+	negate_decn(&diff);
+	add_decn(&diff, &acc);
+	decn_to_str_complete(Buf, &diff);
+	printf("     : %s\n\n", Buf);
+
 
 	return 0;
 }

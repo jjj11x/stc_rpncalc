@@ -205,11 +205,6 @@ static void to_row(unsigned char row_to) {
 	col = 0;
 }
 
-//row indexed from 0
-void LCD_SingleLineGoTo(unsigned int spot_to) {
-	LCD_GoTo(spot_to / MAX_CHARS_PER_LINE, spot_to % MAX_CHARS_PER_LINE);
-}
-
 void LCD_OutString(const char *string, uint8_t max_chars) {
 	const char *s;
 	for (s = string; *s && max_chars > 0; s++, max_chars--) {

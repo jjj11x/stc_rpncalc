@@ -1,6 +1,6 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyuan.com/jc/L8Q.html). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontorller) with a built in serial bootloder. This project uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyuan.com/jc/L8Q.html). The calculator is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontorller) with a built in serial bootloder. This project uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
 
 ![calculator](./calc.jpg)
 
@@ -10,7 +10,8 @@ This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyu
 	- (you must already have SDCC installed and setup so it can be found in your PATH)
 	- this will create a `main.hex` output file
 	- there is also a prebuilt binary checked in at `binaries/main.hex`
-<!-- - CMakeLists.txt is for building the Qt desktop application. -->
+- CMakeLists.txt is for building the Qt desktop application.
+	- (still a work in progress, currently doesn't do anything)
 
 # Installing
 The STC microcontroller used has a bootloader permanently stored in ROM that allows downloading new firmware over a serial port. You can re-program it using a USB-to-logic-level-serial (5V) dongle, and the stcgal program. WARNING: a lot of USB-to-logic-level-serial dongles are for 3.3V logic levels. The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display. You have a couple of options:

@@ -76,7 +76,7 @@ static int is_valid_character(char letter){
 		return 1;
 	} else if(letter == CGRAM_EXP || letter == CGRAM_EXP_NEG){
 		return 1;
-	} else if(letter == '.' || letter == ' '){
+	} else if(letter == '.' || letter == ' ' || letter == '-'){
 		return 1;
 	}
 

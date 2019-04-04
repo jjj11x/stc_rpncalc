@@ -59,7 +59,7 @@ ApplicationWindow
 						color: "gray"
 						border { width: 1; color: "black" }
 						Text {
-							text: index
+							text: {getText(parent.parent.objectName, index)}
 							anchors.centerIn: parent
 						}
 						MouseArea {
@@ -70,5 +70,17 @@ ApplicationWindow
 				}
 			}
 		}
+	}
+
+	function getText(row, col) {
+		var keys = [
+			["Shift", "x<->y", "+/-", "C"],
+			["7", "8", "9", "/"],
+			["4", "5", "6", "*"],
+			["1", "2", "3", "-"],
+			["0", ".", "Enter", "+"]
+		]
+
+		return keys[row][col]
 	}
 }

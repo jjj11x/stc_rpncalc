@@ -19,6 +19,7 @@ int main(int argc, char** argv)
 	//fixed-width font for LCD
 	QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 	fixedFont.setStyleHint(QFont::TypeWriter);
+	fixedFont.setPointSize(24);
 	engine.rootContext()->setContextProperty("_fixedFont", fixedFont);
 
 	//handle quit

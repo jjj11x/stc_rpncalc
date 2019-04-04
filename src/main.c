@@ -182,31 +182,10 @@ int main()
 		}
 #endif
 
-		LCD_GoTo(0,0);
 #ifdef DEBUG_UPTIME
+		LCD_GoTo(0,0);
 		u32str(i++, Buf, 10);
 		LCD_OutString(Buf, MAX_CHARS_PER_LINE);
-#else
-		//display y register on first line
-		if (entering_exp == ENTERING_DONE){
-			disp_exponent = decn_to_str(Buf, get_y());
-		} else {
-			//display x on 1st line, entered number on 2nd line
-			disp_exponent = decn_to_str(Buf, get_x());
-		}
-		if (disp_exponent == 0){
-			LCD_OutString(Buf, MAX_CHARS_PER_LINE);
-		} else { //have exponent to display
-			LCD_OutString(Buf, MAX_CHARS_PER_LINE - 3);
-			if (disp_exponent < 0){
-				TERMIO_PutChar(CGRAM_EXP_NEG);
-				disp_exponent = -disp_exponent;
-			} else {
-				TERMIO_PutChar(CGRAM_EXP);
-			}
-			TERMIO_PutChar((disp_exponent / 10) + '0');
-			TERMIO_PutChar((disp_exponent % 10) + '0');
-		}
 #endif //DEBUG_UPTIME
 
 #ifdef DEBUG_KEYS
@@ -411,6 +390,29 @@ int main()
 			KeyMutex.unlock();
 #endif
 			continue;
+		}
+
+
+		LCD_GoTo(0,0);
+		//display y register on first line
+		if (entering_exp == ENTERING_DONE){
+			disp_exponent = decn_to_str(Buf, get_y());
+		} else {
+			//display x on 1st line, entered number on 2nd line
+			disp_exponent = decn_to_str(Buf, get_x());
+		}
+		if (disp_exponent == 0){
+			LCD_OutString(Buf, MAX_CHARS_PER_LINE);
+		} else { //have exponent to display
+			LCD_OutString(Buf, MAX_CHARS_PER_LINE - 3);
+			if (disp_exponent < 0){
+				TERMIO_PutChar(CGRAM_EXP_NEG);
+				disp_exponent = -disp_exponent;
+			} else {
+				TERMIO_PutChar(CGRAM_EXP);
+			}
+			TERMIO_PutChar((disp_exponent / 10) + '0');
+			TERMIO_PutChar((disp_exponent % 10) + '0');
 		}
 
 		//print X

@@ -8,13 +8,14 @@ Calculator::Calculator(QObject *parent) :
 	m_lcdText("calculator initial text"),
 	m_timer(this)
 {
-	NewKeyEmpty = 1;
 	qDebug() << "Starting calculator thread";
 	calc_thread.start();
 	qDebug() << "calculator thread started";
 
 	QObject::connect(&m_timer, &QTimer::timeout, this, &Calculator::updateLcd);
-	m_timer.start(50);
+	m_timer.start(200);
+
+	updateLcd();
 }
 
 Calculator::~Calculator(){
@@ -51,16 +52,21 @@ void Calculator::updateLcd() {
 	QString tmp("lcd text:\n");
 	const char* lcd_buf = get_lcd_buf();
 	for (int i = 0; i < MAX_ROWS; i++){
+		tmp += "|";
 		for (int j = 0; j < MAX_CHARS_PER_LINE; j++){
 			tmp += lcd_buf[j + i*MAX_CHARS_PER_LINE];
 		}
-		tmp += '\n';
+		tmp += "|\n";
 	}
 //	qDebug() << "update lcd:" << tmp.toStdString().c_str();
 
 	setLcdText(tmp);
 }
 
+void Calculator::setLcdText(const QString &lcdText){
+	m_lcdText = lcdText;
+	emit lcdTextChanged();
+}
 
 
 

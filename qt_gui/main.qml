@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.0
-import calculator.lcd 1.0
 
 ApplicationWindow
 {
@@ -27,11 +26,6 @@ ApplicationWindow
 				anchors.fill: parent
 			}
 		}
-
-		//lcd text from C++
-		CLcd {
-			id: clcd
-		}
 		
 		//LCD
 		Rectangle {
@@ -41,10 +35,9 @@ ApplicationWindow
 			height: 200
 			Text {
 				objectName: "lcd_text";
-				text: clcd.lcdText
+				text: _calculator.lcdText
+				font: _fixedFont
 				anchors.centerIn: parent
-
-				onTextChanged: clcd.lcdText = text
 			}
 		}
 		

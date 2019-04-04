@@ -29,7 +29,7 @@ public:
 	~Calculator();
 
 	inline QString lcdText(){return m_lcdText;}
-	inline void setLcdText(const QString &lcdText){m_lcdText = lcdText;}
+	void setLcdText(const QString &lcdText);
 
 signals:
 	void lcdTextChanged();

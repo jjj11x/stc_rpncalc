@@ -10,7 +10,7 @@
 #include "utils.h"
 #ifdef DESKTOP
 #include <stdio.h>
-#include <QMutex>
+#include <QSemaphore>
 #else
 #include "stc15.h"
 #endif
@@ -28,7 +28,8 @@ static const char KEY_MAP[20] = {
 
 
 #ifdef DESKTOP
-QMutex KeyMutex;
+QSemaphore KeysAvailable(1);
+QSemaphore LcdAvailable(1);
 #endif
 
 int8_t NewKeyBuf[4];
@@ -147,6 +148,7 @@ int main()
 	uint8_t no_lift = 0;
 	uint8_t exp_i = 0;
 	int8_t disp_exponent;
+	NewKeyEmpty = 1; //initially empty
 #ifdef DEBUG_KEYS
 	uint8_t j = 0;
 	const uint8_t* keys;
@@ -209,7 +211,7 @@ int main()
 
 		///get new key
 #ifdef DESKTOP
-		KeyMutex.lock();
+		KeysAvailable.acquire();
 #endif
 		if (!NewKeyEmpty){
 			int8_t i_key = NewKeyBuf[new_key_read_i];
@@ -218,7 +220,6 @@ int main()
 				NewKeyEmpty = 1;
 			}
 #ifdef DESKTOP
-			KeyMutex.unlock();
 			printf("\nprocessing key %c (r=%d, w=%d, e=%d)\n",
 					KEY_MAP[i_key], new_key_read_i, new_key_write_i, NewKeyEmpty);
 			printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);
@@ -386,9 +387,6 @@ int main()
 			} //switch(KEY_MAP[i_key])
 		} else { //else for (if found new key pressed)
 			//no new key pressed
-#ifdef DESKTOP
-			KeyMutex.unlock();
-#endif
 			continue;
 		}
 
@@ -474,6 +472,7 @@ int main()
 		print_lcd();
 		printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);
 		print_entry_bufs();
+		LcdAvailable.release();
 #endif
 		//turn backlight back on
 		BACKLIGHT_ON();

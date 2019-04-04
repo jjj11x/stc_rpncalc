@@ -5,15 +5,15 @@
 
 Calculator::Calculator(QObject *parent) :
 	QObject(parent),
-	m_lcdText("calculator initial text"),
-	m_timer(this)
+	lcd_thread(*this),
+	m_lcdText("calculator initial text")
 {
 	qDebug() << "Starting calculator thread";
 	calc_thread.start();
 	qDebug() << "calculator thread started";
-
-	QObject::connect(&m_timer, &QTimer::timeout, this, &Calculator::updateLcd);
-	m_timer.start(200);
+	qDebug() << "Starting lcd thread";
+	lcd_thread.start();
+	qDebug() << "lcd thread started";
 
 	updateLcd();
 }
@@ -21,6 +21,7 @@ Calculator::Calculator(QObject *parent) :
 Calculator::~Calculator(){
 	ExitCalcMain = 1;
 	while (!calc_thread.isFinished()); //TODO: timeout
+	while (!lcd_thread.isFinished()); //TODO: timeout
 }
 
 void Calculator::buttonClicked(const QString& in) {
@@ -35,17 +36,15 @@ void Calculator::buttonClicked(const QString& in) {
 //	qDebug() << "keycode: " << keycode;
 //	qDebug() << " row: " << row << ", col: " << col;
 	//push keycode
-	KeyMutex.lock();
 	#define INCR_NEW_KEY_I(i) i = (i + 1) & 3
 	if (!NewKeyEmpty && (new_key_write_i == new_key_read_i)){
 		printf("ERROR: key fifo full\n");
-		KeyMutex.unlock();
 		return;
 	}
 	NewKeyBuf[new_key_write_i] = keycode;
 	INCR_NEW_KEY_I(new_key_write_i);
 	NewKeyEmpty = 0;
-	KeyMutex.unlock();
+	KeysAvailable.release();
 }
 
 void Calculator::updateLcd() {
@@ -69,8 +68,24 @@ void Calculator::setLcdText(const QString &lcdText){
 }
 
 
+CalcLcdThread::CalcLcdThread(Calculator &calc) :
+	m_calc(calc)
+{
 
-void CalcThread::run() {
+}
+
+void CalcLcdThread::run(){
+	while(1){
+		if (ExitCalcMain){
+			return;
+		}
+		LcdAvailable.acquire();
+		m_calc.updateLcd();
+	}
+}
+
+
+void CalcMainThread::run() {
 	calc_main();
 }
 

@@ -10,6 +10,10 @@
 #include <stdint.h>
 #include "decn/decn.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void process_cmd(char cmd);
 
 void push_decn(const char* signif_str, int16_t exponent, uint8_t no_lift);
@@ -18,5 +22,9 @@ void clear_x(void);
 void set_x(const char* signif_str, int16_t exponent);
 __xdata dec80* get_x(void);
 __xdata dec80* get_y(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SRC_CALC_H_ */

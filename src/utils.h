@@ -9,6 +9,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void _delay_ms(uint8_t ms);
 
 #define ACCURATE_DELAY_US
@@ -42,6 +46,11 @@ char* u32str(uint32_t x, char* buf, uint8_t base);
 #define SDCC_ISR(isr, reg) __interrupt (isr) __using (reg)
 #define BACKLIGHT_ON()  P3_4 = 0
 #define TURN_OFF() P3_2 = 0
+#endif
+
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* SRC_UTILS_H_ */

@@ -8,7 +8,10 @@
 #include "decn/decn.h"
 #include "calc.h"
 #include "utils.h"
-#ifndef DESKTOP
+#ifdef DESKTOP
+#include <stdio.h>
+#include <QMutex>
+#else
 #include "stc15.h"
 #endif
 
@@ -24,10 +27,15 @@ static const char KEY_MAP[20] = {
 };
 
 
+#ifdef DESKTOP
+QMutex KeyMutex;
+#endif
+
 int8_t NewKeyBuf[4];
 volatile uint8_t new_key_write_i;
 volatile uint8_t new_key_read_i;
 volatile uint8_t NewKeyEmpty;
+
 #define INCR_NEW_KEY_I(i) i = (i + 1) & 3
 
 volatile uint8_t SecCount;
@@ -44,7 +52,11 @@ void timer0_isr() SDCC_ISR(1,1)
 	if (NewKeyPressed != -1){
 		if (!NewKeyEmpty && (new_key_write_i == new_key_read_i)){
 			//do not overwrite keymap currently being processed
-			INCR_NEW_KEY_I(new_key_write_i);
+//			INCR_NEW_KEY_I(new_key_write_i);
+#ifdef DESKTOP
+			printf("ERROR: key fifo full\n");
+#endif
+			return;
 		}
 		NewKeyBuf[new_key_write_i] = NewKeyPressed;
 		INCR_NEW_KEY_I(new_key_write_i);
@@ -106,9 +118,21 @@ char Buf[DECN_BUF_SIZE];
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
 
+#ifdef DESKTOP
+static void print_entry_bufs(void){
+	printf("EntryBuf:~%s~\n", EntryBuf);
+	printf("ExpBuf:%c%c\n", '0'+ExpBuf[1], '0'+ExpBuf[0]);
+}
+#endif
+
 //#define DEBUG_UPTIME
 /*********************************************/
+#ifdef DESKTOP
+uint8_t ExitCalcMain;
+int calc_main()
+#else
 int main()
+#endif
 {
 	enum {
 		ENTERING_DONE,
@@ -152,6 +176,11 @@ int main()
 		if (Keys[0] == 8 && Keys[4] == 8){
 			TURN_OFF();
 		}
+#ifdef DESKTOP
+		if (ExitCalcMain){
+			return 0;
+		}
+#endif
 
 		LCD_GoTo(0,0);
 #ifdef DEBUG_UPTIME
@@ -200,12 +229,21 @@ int main()
 
 
 		///get new key
+#ifdef DESKTOP
+		KeyMutex.lock();
+#endif
 		if (!NewKeyEmpty){
 			int8_t i_key = NewKeyBuf[new_key_read_i];
 			INCR_NEW_KEY_I(new_key_read_i);
 			if (new_key_read_i == new_key_write_i){
 				NewKeyEmpty = 1;
 			}
+#ifdef DESKTOP
+			KeyMutex.unlock();
+			printf("\nprocessing key %c (r=%d, w=%d, e=%d)\n",
+					KEY_MAP[i_key], new_key_read_i, new_key_write_i, NewKeyEmpty);
+			printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);
+#endif
 #ifdef DEBUG_KEYS
 			LCD_GoTo(1,j);
 			TERMIO_PutChar(KEY_MAP[i_key]);
@@ -367,10 +405,21 @@ int main()
 				default: process_cmd(KEY_MAP[i_key]);
 				//////////
 			} //switch(KEY_MAP[i_key])
-		} //if found new key pressed
+		} else { //else for (if found new key pressed)
+			//no new key pressed
+#ifdef DESKTOP
+			KeyMutex.unlock();
+#endif
+			continue;
+		}
 
 		//print X
 		LCD_ClearToEnd(0); //go to 2nd row
+#ifdef DESKTOP
+		print_lcd();
+		printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);
+		print_entry_bufs();
+#endif
 		if (entering_exp == ENTERING_DONE){
 			disp_exponent = decn_to_str(Buf, get_x());
 			if (disp_exponent == 0){
@@ -419,6 +468,11 @@ int main()
 			TERMIO_PutChar(ExpBuf[0] + '0');
 		}
 		LCD_ClearToEnd(1);
+#ifdef DESKTOP
+		print_lcd();
+		printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);
+		print_entry_bufs();
+#endif
 		//turn backlight back on
 		BACKLIGHT_ON();
 	} //while (1)

@@ -10,6 +10,10 @@
 #include <stdint.h>
 #include "../utils.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define DEC80_NUM_LSU 9
 
 //allow full range, but reserve -16384 for special numbers
@@ -55,6 +59,10 @@ int8_t decn_to_str(char* buf, const dec80* x);
 #ifdef DESKTOP
 //complete string including exponent
 void decn_to_str_complete(char* buf, const dec80* x);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* SRC_DEC_DECN_H_ */

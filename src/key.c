@@ -237,7 +237,7 @@ const uint8_t* DebugGetKeys(void){
 
 
 
-#ifdef DESKTOP
+#ifdef KEY_TEST_APP
 
 int main(void){
 	KeyInit();

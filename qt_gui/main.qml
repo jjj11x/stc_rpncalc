@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.0
-import Qt3D.Input 2.0
+import calculator.lcd 1.0
 
 ApplicationWindow
 {
@@ -14,14 +14,38 @@ ApplicationWindow
 		id: base;
 		spacing: 5;
 		width:  4 * (100 + 5)
-		height: 5 * (100 + 5) + 200
+		height: 5 * (100 + 5) + 200 + 30
+
+		//quit button
+		Rectangle{
+			width: 100
+			height: 25
+			color: "red"
+			Text {text: "Quit"}
+			MouseArea {
+				onClicked: Qt.quit()
+				anchors.fill: parent
+			}
+		}
+
+		//lcd text from C++
+		CLcd {
+			id: clcd
+		}
 		
 		//LCD
 		Rectangle {
-			id: lcd;
-			color: "gray"
+			objectName: "lcd";
+			color: "lightgray"
 			width: 4 * (100 + 5) - 5
 			height: 200
+			Text {
+				objectName: "lcd_text";
+				text: clcd.lcdText
+				anchors.centerIn: parent
+
+				onTextChanged: clcd.lcdText = text
+			}
 		}
 		
 		//Keyboard
@@ -29,8 +53,9 @@ ApplicationWindow
 			model: 5;
 			//row
 			delegate: Row {
-				id: key_row;
-				spacing: 5;
+				id: key_row
+				spacing: 5
+				objectName: index
 				//keys within row
 				Repeater {
 					model: 4;
@@ -38,14 +63,15 @@ ApplicationWindow
 						id: key_key;
 						width: 100;
 						height: 100;
-						color: "blue"
+						color: "gray"
 						border { width: 1; color: "black" }
 						Text {
 							text: index
 							anchors.centerIn: parent
 						}
-						MouseHandler {
-							onClicked: _calculator.buttonClicked(index)
+						MouseArea {
+							onClicked: _calculator.buttonClicked(parent.parent.objectName + "," + index)
+							anchors.fill: parent
 						}
 					}
 				}

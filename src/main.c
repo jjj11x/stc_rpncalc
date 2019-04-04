@@ -28,7 +28,7 @@ static const char KEY_MAP[20] = {
 
 
 #ifdef DESKTOP
-QSemaphore KeysAvailable(1);
+QSemaphore KeysAvailable(0);
 QSemaphore LcdAvailable(1);
 #endif
 
@@ -160,9 +160,9 @@ int main()
 #endif
 
 	latch_on();
-	Timer0Init(); // display refresh & switch read
 	LCD_Open();
 	KeyInit();
+	Timer0Init(); // display refresh & switch read
 	BACKLIGHT_ON(); //turn on led backlight
 
 	ExpBuf[0] = 0;

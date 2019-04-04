@@ -97,6 +97,9 @@ void KeyInit(void){
 			last_count[i][j] = COUNT_LIM_LOW;
 		}
 	}
+
+	//no new key
+	NewKeyPressed = -1;
 }
 
 static void raw_scan(void){

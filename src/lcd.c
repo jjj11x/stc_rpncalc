@@ -224,7 +224,7 @@ short TERMIO_PutChar(unsigned char letter) {
 	} else {
 		LCD_OutChar(letter);
 		col++;
-		if (col > MAX_CHARS_PER_LINE) {
+		if (col >= MAX_CHARS_PER_LINE) {
 			if (row == 0) {
 				to_row(1);
 			} else {

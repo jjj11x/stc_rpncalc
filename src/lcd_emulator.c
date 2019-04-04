@@ -101,7 +101,7 @@ short TERMIO_PutChar(unsigned char letter) {
 			lcd_buf[lcd_row][lcd_col] = letter;
 		}
 		lcd_col++;
-		if (lcd_col > MAX_CHARS_PER_LINE) {
+		if (lcd_col >= MAX_CHARS_PER_LINE) {
 			if (lcd_row == 0) {
 				to_row(1);
 			} else {

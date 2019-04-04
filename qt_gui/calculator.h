@@ -52,6 +52,7 @@ signals:
 public slots:
 	void buttonClicked(const QString& in);
 	void updateLcd();
+	void quit();
 
 private:
 	CalcMainThread calc_thread;

@@ -19,9 +19,16 @@ Calculator::Calculator(QObject *parent) :
 }
 
 Calculator::~Calculator(){
-	ExitCalcMain = 1;
+	quit();
 	while (!calc_thread.isFinished()); //TODO: timeout
 	while (!lcd_thread.isFinished()); //TODO: timeout
+}
+
+void Calculator::quit(){
+	ExitCalcMain = 1;
+	LcdAvailable.release();
+	KeysAvailable.release();
+	qDebug() << "quitting...";
 }
 
 void Calculator::buttonClicked(const QString& in) {

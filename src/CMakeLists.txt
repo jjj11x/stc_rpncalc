@@ -8,3 +8,6 @@ target_link_libraries(calc Qt5::Widgets)
 
 add_executable(keytest key.c)
 target_compile_definitions(keytest PRIVATE KEY_TEST_APP=1)
+
+add_executable(decn_test decn/decn_test.c utils.c)
+target_link_libraries(decn_test decn)

@@ -13,10 +13,10 @@ This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyu
 - CMakeLists.txt is for building the Qt desktop application.
 	- (still a work in progress)
 	- build similarly to other cmake projects:
-		- mkdir build_qt && cd build_qt
-		- cmake -DCMAKE_BUILD_TYPE=Debug -G "Eclipse CDT4 - Ninja" ..
+		- `mkdir build_qt && cd build_qt`
+		- `cmake -DCMAKE_BUILD_TYPE=Debug -G "Eclipse CDT4 - Ninja" ..`
 			- (you can choose a different generator, I prefer using Ninja to build, because it's fast)
-		- ninja
+		- `ninja`
 
 # Installing
 The STC microcontroller used has a bootloader permanently stored in ROM that allows downloading new firmware over a serial port. You can re-program it using a USB-to-logic-level-serial (5V) dongle, and the stcgal program. WARNING: a lot of USB-to-logic-level-serial dongles are for 3.3V logic levels. The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display. You have a couple of options:
@@ -112,7 +112,7 @@ The calculator uses RPN. To calculate (2+3)/(9^2), enter:
 - `*`
 - `÷`
 
-The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2.
+The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2. The stack is a classic 4-level RPN stack, where the T register duplicates.
 
 ## Keys
 The keys on the original calculator map as follows:

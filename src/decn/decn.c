@@ -191,11 +191,6 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent){
 				}
 			}
 			nibble_i++;
-			//track number of digits R of decimal point
-			//must do this before changing is_zero
-			if (curr_sign == SIGN_ZERO_SEEN_POINT || curr_sign == SIGN_NEG_ZERO_SEEN_POINT){
-				num_lr_points = -1;
-			}
 			//track sign
 			if (curr_sign == SIGN_ZERO){
 				curr_sign = SIGN_POS;

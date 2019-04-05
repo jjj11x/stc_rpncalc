@@ -16,7 +16,6 @@ extern "C" {
 
 void KeyInit(void);
 void KeyScan(void);
-const uint32_t GetNewKeys(void);
 
 #ifdef DEBUG_KEYS
 const uint8_t* DebugGetKeys(void);

@@ -64,6 +64,10 @@ void timer0_isr() SDCC_ISR(1,1)
 		NewKeyEmpty = 0;
 	}
 
+	if (Keys[0] == 8 && Keys[4] == 8){
+		TURN_OFF();
+	}
+
 	//track time
 #ifdef TRACK_TIME
 	count++;
@@ -162,11 +166,13 @@ int main()
 	latch_on();
 	LCD_Open();
 	KeyInit();
-	Timer0Init(); // display refresh & switch read
+	Timer0Init(); //for reading keyboard
 	BACKLIGHT_ON(); //turn on led backlight
 
 	ExpBuf[0] = 0;
 	ExpBuf[1] = 0;
+
+	LCD_OutString("STC RPN         Calculator v1.00", 32);
 
 #ifdef DEBUG_UPTIME
 	i = 0;

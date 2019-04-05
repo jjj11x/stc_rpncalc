@@ -8,12 +8,12 @@ Calculator::Calculator(QObject *parent) :
 	lcd_thread(*this),
 	m_lcdText("calculator initial text")
 {
-	qDebug() << "Starting calculator thread";
-	calc_thread.start();
-	qDebug() << "calculator thread started";
 	qDebug() << "Starting lcd thread";
 	lcd_thread.start();
 	qDebug() << "lcd thread started";
+	qDebug() << "Starting calculator thread";
+	calc_thread.start();
+	qDebug() << "calculator thread started";
 
 	updateLcd();
 }

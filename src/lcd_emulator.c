@@ -92,25 +92,28 @@ short TERMIO_PutChar(unsigned char letter) {
 		} else {
 			to_row(0);
 		}
-	} else if (is_valid_character(letter)) {
-		if (letter == CGRAM_EXP){
-			lcd_buf[lcd_row][lcd_col] = 'E';
-		} else if (letter == CGRAM_EXP_NEG) {
-			lcd_buf[lcd_row][lcd_col] = '-';
-		} else {
-			lcd_buf[lcd_row][lcd_col] = letter;
-		}
-		lcd_col++;
-		if (lcd_col >= MAX_CHARS_PER_LINE) {
-			if (lcd_row == 0) {
-				to_row(1);
-			} else {
-				to_row(0);
-			}
-		}
-	} else {
+	}
+	//warn if unknown character
+	if (!is_valid_character(letter)) {
 		printf("\nerror @%d,%d, invalid character %d\n",
 				lcd_row, lcd_col, letter);
+	}
+	//add character to buf
+	if (letter == CGRAM_EXP){
+		lcd_buf[lcd_row][lcd_col] = 'E';
+	} else if (letter == CGRAM_EXP_NEG) {
+		lcd_buf[lcd_row][lcd_col] = '-';
+	} else {
+		lcd_buf[lcd_row][lcd_col] = letter;
+	}
+	lcd_col++;
+	//check if new line
+	if (lcd_col >= MAX_CHARS_PER_LINE) {
+		if (lcd_row == 0) {
+			to_row(1);
+		} else {
+			to_row(0);
+		}
 	}
 
 	return 1;

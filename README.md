@@ -1,6 +1,10 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyuan.com/jc/L8Q.html). The calculator is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontorller) with a built in serial bootloder. This project uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyuan.com/jc/L8Q.html). The calculator is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built in serial bootloader. This project uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+
+The replacement firmware supports floating-point calculations, with a 4-level RPN stack. (The original firmware supported only fixed-point calculations in chain mode.) The new firmware currently completely fills the flash of the microcontroller (more on this below). I have not added in the resistor value calculator or decimal/hexadecimal converter on the original firmware.
+
+Note that once you change the firmware on the calculator, it isn't possible to go back to the original firmware (it isn't posted for download anywhere). It also isn't possible to read back the flash from an existing STC microcontroller. This is a deliberate "feature" of the STC bootloader to prevent readbacks.
 
 ![calculator](./calc.jpg)
 
@@ -19,7 +23,7 @@ This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyu
 		- `ninja`
 
 # Installing
-The STC microcontroller used has a bootloader permanently stored in ROM that allows downloading new firmware over a serial port. You can re-program it using a USB-to-logic-level-serial (5V) dongle, and the stcgal program. WARNING: a lot of USB-to-logic-level-serial dongles are for 3.3V logic levels. The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display. You have a couple of options:
+Note that once you change the firmware on the calculator, it isn't possible to go back to the original firmware. The STC microcontroller used has a bootloader permanently stored in ROM that allows downloading new firmware over a serial port (but not reading the existing firmware). You can re-program it using a USB-to-logic-level-serial (5V) dongle, and the stcgal program. WARNING: a lot of USB-to-logic-level-serial dongles are for 3.3V logic levels. The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display. You have a couple of options:
 
 1. Buy a USB to logic level serial dongle that supports 5V operation (these dongles may have a jumper you need to set to switch between 3.3V and 5V). This is the best option.
 	- Here is one that works: https://www.amazon.com/gp/product/B00N4MCS1A/
@@ -36,7 +40,7 @@ The STC microcontroller used has a bootloader permanently stored in ROM that all
 - Pin 15 of the STC microcontroller is RX to the microcontroller (green wire in the picture).
 - Pin 16 is TX from the microcontroller (purple wire in the picture).
 
-You must "cross over" TX/RX going between the microcontroller and the USB dongle (i.e. RX on the microcontroller goes to TX on the USB dongle, and TX on the microcontroller goes to RX on the USB dongle). You must also connect ground to the dongle. A good point ot use is either pin 1 of U1, or the header P1.
+You must "cross over" TX/RX going between the microcontroller and the USB dongle (i.e. RX on the microcontroller goes to TX on the USB dongle, and TX on the microcontroller goes to RX on the USB dongle). You must also connect ground to the dongle. A good point to use is either pin 1 of U1, or the header P1.
 
 Be careful when working on the calculator. The 7550 voltage regulator used has no short circuit protection. It does have a very low quiescent current and low dropout voltage though, and you must match the low dropout voltage if replacing the regulator. If you do end up damaging the regulator (like I did), a good replacement is the Microchip MCP1700-5002E/TO. In the picture, I have removed the 7550, shorted pins 2 and 3, and added a capacitor between pin 1 and pins 2/3. I am powering the calculator externally, instead of with batteries.
 
@@ -52,7 +56,7 @@ Here is the component layout from the diyleyuan website.
 
 ![component layout](./component.gif)
 
-The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050 (the switches included take quite a bit of force to depress). The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a postive FSTN type, although the one included is definitely usable.
+The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050 (the switches included take quite a bit of force to depress). The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a positive FSTN type, although the one included is definitely usable.
 
 ## Programming with stcgal
 
@@ -115,6 +119,10 @@ The calculator uses RPN. To calculate (2+3)/(9^2), enter:
 The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2. The stack is a classic 4-level RPN stack, where the T register duplicates.
 
 ## Keys
+Some of the keys have slightly different functions, see the picture of the emulator Qt GUI.
+
+![Qt GUI](./qt_gui.png)
+
 The keys on the original calculator map as follows:
 
 - `=   `: Enter
@@ -129,7 +137,7 @@ The keys on the original calculator map as follows:
 - `mode`: reserved for a future shift key
 
 ## Turning off
-Hold `mode` and `0` at the same time to turn off. NOTE: There is no auto power off.
+Hold `Shift` (the `mode` key on the physical calculator) and `0` at the same time to turn off. NOTE: There is no auto power off.
 
 # Bugs
 1. The calculator does not properly check for underflow or overflow.
@@ -144,9 +152,9 @@ This calculator firmware uses decimal floating point, using base-100 to store nu
 
 Each `uint8_t` stores a base-100 "`digit100`", referred to as an "`lsu`", for least significant unit (the terminology is borrowed from the decNumber library: I originally considered using the decNumber library similar to the WP-34S calculator, but just the library itself takes several times more flash than is available on this calculator). The number format is as follows:
 
-- `lsu[0]`: contains the most signifcant `digit100` (the most signifcant 2 decimal digits)
+- `lsu[0]`: contains the most significant `digit100` (the most significant 2 decimal digits)
 	- implicit decimal point between `lsu[0]/10` and `lsu[0]%10`
-- `lsu[1]` to `lsu[n-1]`: the resst of the array contains the next `digit100`s in order from most to least signifcant
+- `lsu[1]` to `lsu[n-1]`: the rest of the array contains the next `digit100`s in order from most to least significant
 - exponent: holds the exponent of the floating point number
 	- stored directly in 2's complement binary
 	- this is a base-10 exponent, not a base-100 exponent
@@ -172,12 +180,20 @@ There is an implicit decimal point between the 1 and 3 in `lsu[0]`, so the numbe
 ## Rounding
 Currently, to save code space, there is no rounding being done, and numbers are instead truncated.
 
-# Implementation
+# Key Debouncing
+The keyboard matrix is scanned once every 5ms. The keyboard debouncing is based on the quick draw/integrator hybrid algorithm described [here](https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/). This algorithm combines the advantages of both methods:
+
+1. It signals a key press immediately, the very first instant a keyboard matrix scan detects a key is pressed (similar to the "quick-draw" method).
+1. It has an "integrator" to determine both when a key is fully pressed and when a key is fully released. This prevents the mechanically bouncy keys from registering multiple times when pressed.
+
+In practice, the keyboard debouncing works much better than the original firmware (which would occasionally miss keystrokes).
+
+# Implementation on an STC 8051 Microcontroller
 This was my 1st time using an 8051 microcontroller. The architecture is a bit limiting for programming in C compared to more modern architectures -- even compared to other 8-bit microcontrollers such as the AVR. Most significantly, there is no stack-pointer-relative addressing, which makes C functions takes up a lot of code space, since they must emulate stack-pointer-relative addressing. Unfortunately, the microcontroller used only has 13K of code space. It's almost completely full just implementing a basic 4-function, decimal-floating-point calculator.
 
-I've avoided relying on the functions being able to be reentrant, so that they do not depend on having a stack. Some "large" local variables are declared as static in functions to save on the code space needed to emulate a stack.
+I've avoided relying on the functions being able to be re-entrant, so that they do not depend on having a stack. Some "large" local variables are declared as static in functions to save on the code space needed to emulate a stack.
 
-Another weird thing about the 8051 is that not all of the memory is addressed the same way. On this microcontorller, there are 512 bytes of ram total, of which:
+Another weird thing about the 8051 is that not all of the memory is addressed the same way. On this microcontroller, there are 512 bytes of ram total, of which:
 
 - only 128 bytes can be addressed directly (or indirectly)
 	- the start of this address space is also shared with general purpose registers, so you don't actually have the full 128 bytes

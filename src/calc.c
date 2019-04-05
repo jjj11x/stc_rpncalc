@@ -25,7 +25,7 @@ static void pop(){
 	StackPtr++; //adjust pointer
 }
 
-void push_decn(const char* signif_str, int16_t exponent, uint8_t no_lift){
+void push_decn(const char* signif_str, int8_t exponent, uint8_t no_lift){
 	if (!no_lift){
 		StackPtr--;
 	}
@@ -36,7 +36,7 @@ void clear_x(void){
 	set_dec80_zero(&stack(STACK_X));
 }
 
-void set_x(const char* signif_str, int16_t exponent){
+void set_x(const char* signif_str, int8_t exponent){
 	build_dec80(&stack(STACK_X), signif_str, exponent);
 }
 

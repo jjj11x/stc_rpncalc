@@ -138,12 +138,16 @@ The keys on the original calculator map as follows:
 	- The 3rd and subsequent presses negates the current exponent being entered.
 - `mode`: reserved for a future shift key
 
+## Floating Point
+The allowable range of exponents is +/-63. Trying to enter a number with a larger exponent will result in an error.
+
 ## Turning off
 Hold `Shift` (the `mode` key on the physical calculator) and `0` at the same time to turn off. NOTE: There is no auto power off.
 
 # Bugs
-1. The calculator does not properly check for underflow or overflow.
-1. After division by 0, it's possible to negate `Error` to get an invalid number.
+1. The calculator does not properly check for underflow or overflow sometimes.
+	1. Calculations with numbers with exponents near the max/min of +/-63 may give improper results, especially for division where intermediate results may go out of range, even if the result is in range.
+1. After division by 0 or over/underflow, it's possible to negate `Error` to get an invalid number. It's also possible to subtract `Error`.
 1. There are probably more bugs waiting to be discovered.
 
 # Internals

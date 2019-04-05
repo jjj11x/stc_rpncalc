@@ -80,7 +80,7 @@ int main(void){
 	printf("     : %s\n\n", Buf);
 
 	//new acc and b for divide test
-	build_dec80(&acc,  "3.14", 88);
+	build_dec80(&acc,  "3.14", 60);
 	build_dec80(&b,   "-1.5", -2);
 	decn_to_str_complete(Buf, &acc);
 	printf(" acc: %s\n", Buf);
@@ -89,8 +89,8 @@ int main(void){
 	div_decn(&acc, &b);
 	decn_to_str_complete(Buf, &acc);
 	printf("acc/b: %s\n", Buf);
-	printf("     : %s\n", "-2.09333333333333334E90");
-	build_dec80(&diff, "-2.09333333333333334", 90);
+	printf("     : %s\n", "-2.09333333333333334E62");
+	build_dec80(&diff, "-2.09333333333333334", 62);
 	negate_decn(&diff);
 	add_decn(&diff, &acc);
 	decn_to_str_complete(Buf, &diff);

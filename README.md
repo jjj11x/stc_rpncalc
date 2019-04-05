@@ -1,10 +1,12 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the [diyleyuan calculator](http://www.diyleyuan.com/jc/L8Q.html). The calculator is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built in serial bootloader. This project uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built in serial bootloader. This project uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
 
 The replacement firmware supports floating-point calculations, with a 4-level RPN stack. (The original firmware supported only fixed-point calculations in chain mode.) The new firmware currently completely fills the flash of the microcontroller (more on this below). I have not added in the resistor value calculator or decimal/hexadecimal converter on the original firmware.
 
 Note that once you change the firmware on the calculator, it isn't possible to go back to the original firmware (it isn't posted for download anywhere). It also isn't possible to read back the flash from an existing STC microcontroller. This is a deliberate "feature" of the STC bootloader to prevent readbacks.
+
+Here's a picture of the assembled calculator kit running the new firmware (it's impossible to keep the glossy black acrylic clean):
 
 ![calculator](./calc.jpg)
 

@@ -19,6 +19,7 @@ extern "C" {
 //allow full range, but reserve -16384 for special numbers
 #define DEC80_MIN_EXP (-16383)
 #define DEC80_MAX_EXP   16383
+#define DEC80_NAN_EXP (-16383 - 1)
 
 //decimal80 unpacked into 80 bits
 // for computation
@@ -45,6 +46,7 @@ void build_dec80(dec80* dest, const char* signif_str, int16_t exponent);
 
 void set_dec80_zero(dec80* dest);
 void set_dec80_NaN(dec80* dest);
+uint8_t decn_is_nan(const dec80* x);
 
 void negate_decn(dec80* x);
 int8_t compare_decn(const dec80* a, const dec80* b); //a<b: -1, a==b: 0, a>b: 1

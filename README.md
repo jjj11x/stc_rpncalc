@@ -132,7 +132,8 @@ The keys on the original calculator map as follows:
 Hold `mode` and `0` at the same time to turn off. NOTE: There is no auto power off.
 
 # Bugs
-1. The calculator does not properly check for overflow.
+1. The calculator does not properly check for underflow or overflow.
+1. After division by 0, it's possible to negate `Error` to get an invalid number.
 1. There are probably more bugs waiting to be discovered.
 
 # Internals

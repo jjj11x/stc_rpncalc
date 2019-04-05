@@ -48,7 +48,11 @@ __xdata dec80* get_y(void){
 }
 
 static void do_binary_op(void (*f_ptr)(dec80*, const dec80*)){
-	f_ptr(&stack(STACK_Y), &stack(STACK_X));
+	if (decn_is_nan(&stack(STACK_Y)) || decn_is_nan(&stack(STACK_X))){
+		set_dec80_NaN(&stack(STACK_Y));
+	} else {
+		f_ptr(&stack(STACK_Y), &stack(STACK_X));
+	}
 	pop();
 }
 

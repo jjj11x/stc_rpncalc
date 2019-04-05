@@ -339,15 +339,28 @@ static uint8_t decn_is_zero(const dec80* x){
 	return 1;
 }
 
+uint8_t decn_is_nan(const dec80* x){
+	uint8_t i;
+	if (x->exponent != DEC80_NAN_EXP){
+		return 0;
+	}
+	for (i = 0; i < DEC80_NUM_LSU; i++){
+		if (x->lsu[i] != 0xff){
+			return 0;
+		}
+	}
+	return 1;
+}
+
 #ifdef EXTRA_CHECKS
 void set_dec80_NaN(dec80* dest){
 	uint8_t i;
 
 	//set exponent to special val
-	dest->exponent = 0xff;
-	//clear nibbles
+	dest->exponent = DEC80_NAN_EXP;
+	//set all nibbles
 	for (i = 0; i < DEC80_NUM_LSU; i++){
-		dest->lsu[i] = 0;
+		dest->lsu[i] = 0xff;
 	}
 }
 #endif
@@ -713,6 +726,9 @@ void div_decn(dec80* acc, const dec80* x){
 #ifdef EXTRA_CHECKS
 	if (decn_is_zero(x)){
 		set_dec80_NaN(acc);
+#ifdef DESKTOP
+		printf("error division by 0\n");
+#endif
 		return;
 	}
 #endif
@@ -774,6 +790,20 @@ int8_t decn_to_str(char* buf, const dec80* x){
 	uint8_t trailing_zeros = 0;
 	uint8_t use_sci = 0;
 	static __xdata dec80 tmp;
+
+	//handle corner case of NaN
+	if (decn_is_nan(x)){
+		buf[0] = 'E';
+		buf[1] = 'r';
+		buf[2] = 'r';
+		buf[3] = 'o';
+		buf[4] = 'r';
+		buf[5] = '\0';
+#ifdef DEBUG
+		printf ("  corner case NaN ");
+#endif
+		return 0;
+	}
 
 	//copy and normalize
 	copy_decn(&tmp, x);

@@ -806,7 +806,9 @@ int8_t decn_to_str(char* buf, const dec80* x){
 		buf[i] = '0';
 		i++;
 		INSERT_DOT();
-		for (j = exponent + 1; j < 0; j++){
+		//pad zeros right of decimal point
+//		for (j = exponent + 1; j < 0; j++){ <--- results in undefined behavior (signed overflow), and causes crash
+		for (j = -exponent -1; j > 0; --j){
 			buf[i] = '0';
 			i++;
 		}

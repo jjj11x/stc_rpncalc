@@ -132,8 +132,7 @@ The keys on the original calculator map as follows:
 Hold `mode` and `0` at the same time to turn off. NOTE: There is no auto power off.
 
 # Bugs
-1. Currently, trying to display numbers between `[0.1, 1)` causes the calculator to crash.
-1. There are other calculations which can randomly cause the calculator to crash.
+1. The calculator does not properly check for overflow.
 1. There are probably more bugs waiting to be discovered.
 
 # Internals

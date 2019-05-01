@@ -1,7 +1,9 @@
 *.hex
+*.bak
 CMakeLists.txt.user
 build*/*
 .project
 .cproject
+*.kdev4
 .settings/*
 

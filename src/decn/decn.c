@@ -7,13 +7,16 @@
 
 #include "../utils.h"
 
+#include "decn.h"
+
+
 #define EXTRA_CHECKS
-//#define DEBUG
-//#define DEBUG_COMPARE_MAGN
-//#define DEBUG_ADD
-//#define DEBUG_MULT
-//#define DEBUG_MULT_ALL //even more verbose
-//#define DEBUG_DIV
+// #define DEBUG
+// #define DEBUG_COMPARE_MAGN
+// #define DEBUG_ADD
+// #define DEBUG_MULT
+// #define DEBUG_MULT_ALL //even more verbose
+// #define DEBUG_DIV
 
 #ifndef DESKTOP
 //#undef EXTRA_CHECKS
@@ -34,13 +37,13 @@
 #define assert(x)
 #endif
 
-#include "decn.h"
-
 #ifdef DESKTOP
 static const uint8_t num_digits_display = DEC80_NUM_LSU*2;
 #else
 static const uint8_t num_digits_display = 16;
 #endif
+
+__idata dec80 AccDecn, BDecn;
 
 
 void copy_decn(dec80* dest, const dec80* src){
@@ -149,7 +152,7 @@ static void remove_leading_zeros(dec80* x){
 	set_exponent(x, exponent, is_negative);
 }
 
-void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
+void build_dec80(const char* signif_str, exp_t exponent){
 	enum {
 		SIGN_ZERO,
 		SIGN_ZERO_SEEN_POINT,
@@ -175,7 +178,7 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 
 	//check first digit
 	if (signif_str[0] == '\0'){
-		set_dec80_zero(dest);
+		set_dec80_zero(&AccDecn);
 		return;
 	} else if (signif_str[0] == '-'){
 		curr_sign = SIGN_NEG_ZERO;
@@ -194,14 +197,14 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 #ifdef DEBUG
 				printf("  ERROR: multiple '.'s in string\n");
 #endif
-				set_dec80_NaN(dest);
+				set_dec80_NaN(&AccDecn);
 				return;
 			}
 #endif
 		} else if (signif_str[i] >= '1' && signif_str[i] <= '9'){
 			if (nibble_i < DEC80_NUM_LSU*2){
 				if (nibble_i & 1) { //odd
-					dest->lsu[nibble_i/2] = save_nibble * 10 + (signif_str[i] - '0');
+					AccDecn.lsu[nibble_i/2] = save_nibble * 10 + (signif_str[i] - '0');
 				} else {
 					save_nibble = signif_str[i] - '0';
 				}
@@ -233,7 +236,7 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 			if (!IS_ZERO(curr_sign)){ //non-zero value
 				if (nibble_i < DEC80_NUM_LSU*2){
 					if (nibble_i & 1) { //odd
-						dest->lsu[nibble_i/2] = save_nibble * 10 + 0;
+						AccDecn.lsu[nibble_i/2] = save_nibble * 10 + 0;
 					} else {
 						save_nibble = 0;
 					}
@@ -257,7 +260,7 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 		} else if (signif_str[i] == '\0'){ //done
 			if (IS_ZERO(curr_sign)){
 				//zero
-				set_dec80_zero(dest);
+				set_dec80_zero(&AccDecn);
 				return;
 			} else {
 				//not zero
@@ -265,11 +268,11 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 				//write out saved nibble, if it exists
 				// (saved while nibble_i even, nibble_i then incremented to odd)
 				if (nibble_i & 1){ //odd
-					dest->lsu[nibble_i/2] = save_nibble * 10;
+					AccDecn.lsu[nibble_i/2] = save_nibble * 10;
 					nibble_i++; //increment for zeroing out
 				}
 				//zero out any old data
-				zero_remaining_dec80(dest, nibble_i/2);
+				zero_remaining_dec80(&AccDecn, nibble_i/2);
 				// adjust exponent for left-aligned significand input
 				// or for number of digits past decimal point
 				if (num_lr_points > 0){ //left count exists
@@ -282,7 +285,7 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 						printf("   overflow (new_exp, exp)=(%d,%d)\n",
 						         new_exponent, exponent);
 	#endif
-						set_dec80_NaN(dest);
+						set_dec80_NaN(&AccDecn);
 						return;
 					}
 #endif
@@ -297,7 +300,7 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 						printf("   underflow (new_exp, exp)=(%d,%d)\n",
 						         new_exponent, exponent);
 	#endif
-						set_dec80_NaN(dest);
+						set_dec80_NaN(&AccDecn);
 						return;
 					}
 #endif
@@ -307,15 +310,15 @@ void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 				}
 				exponent = new_exponent;
 				//set negative bit
-				set_exponent(dest, exponent, IS_NEG(curr_sign));
+				set_exponent(&AccDecn, exponent, IS_NEG(curr_sign));
 				//normalize
-				remove_leading_zeros(dest);
+				remove_leading_zeros(&AccDecn);
 #ifdef DEBUG
 				printf("   num_lr_points (%d), new_exp (%d), sign (%d), exp (%d)\n",
 				        num_lr_points, new_exponent, curr_sign, exponent);
 				printf("   ");
 				for (i = 0; i < DEC80_NUM_LSU; i++){
-					printf("%02d,", dest->lsu[i]);
+					printf("%02d,", AccDecn.lsu[i]);
 				}
 				printf("\n");
 #endif
@@ -390,14 +393,14 @@ void negate_decn(dec80* x){
 	(x->exponent) ^= xor_val;
 }
 
-int8_t compare_magn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
+static int8_t compare_magn(void){ //returns a<b: -1, a==b: 0, a>b: 1
 	uint8_t a_i, b_i;
 	exp_t a_exp=0, b_exp=0;
 	int8_t a_signif_b = 0; //a<b: -1, a==b: 0, a>b: 1
 	static __xdata dec80 a_tmp, b_tmp;
 	//copy
-	copy_decn(&a_tmp, a);
-	copy_decn(&b_tmp, b);
+	copy_decn(&a_tmp, &AccDecn);
+	copy_decn(&b_tmp, &BDecn);
 	//normalize
 	remove_leading_zeros(&a_tmp);
 	remove_leading_zeros(&b_tmp);
@@ -445,35 +448,35 @@ int8_t compare_magn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 	return a_signif_b;
 }
 
-int8_t compare_decn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
+static int8_t compare_decn(void){ //returns a<b: -1, a==b: 0, a>b: 1
 	int8_t is_neg;
 
 	//handle zero special cases
-	if (decn_is_zero(a) && decn_is_zero(b)){
+	if (decn_is_zero(&AccDecn) && decn_is_zero(&BDecn)){
 		return 0;
-	} else if (decn_is_zero(a)){
-		if (b->exponent < 0){
+	} else if (decn_is_zero(&AccDecn)){
+		if (BDecn.exponent < 0){
 			return 1;
 		} else {
 			return -1;
 		}
-	} else if (decn_is_zero(b)){
-		if (a->exponent < 0){
+	} else if (decn_is_zero(&BDecn)){
+		if (AccDecn.exponent < 0){
 			return -1;
 		} else {
 			return 1;
 		}
 	}
 	//handle cases where signs differ
-	if (a->exponent < 0 && b->exponent > 0){
+	if (AccDecn.exponent < 0 && BDecn.exponent > 0){
 		return -1;
-	} else if (a->exponent > 0 && b->exponent < 0){
+	} else if (AccDecn.exponent > 0 && BDecn.exponent < 0){
 		return 1;
 	}
 	//signs must now be the same, either both pos, or both neg
-	is_neg = (a->exponent < 0 ? -1 : 1);
+	is_neg = (AccDecn.exponent < 0 ? -1 : 1);
 
-	return is_neg * compare_magn(a, b);
+	return is_neg * compare_magn();
 }
 
 //WARNING: for add_decn() and sub_mag() functions only
@@ -513,8 +516,8 @@ static void sub_mag(dec80* acc, const dec80* x){
 	}
 #ifdef DEBUG_ADD
 	extern char Buf[DECN_BUF_SIZE];
-	decn_to_str_complete(buf, &tmp);
-	printf("        incr_exp tmp: %s\n", buf);
+	decn_to_str_complete(Buf, &tmp);
+	printf("        incr_exp tmp: %s\n", Buf);
 #endif
 	//do subtraction
 	for (i = DEC80_NUM_LSU - 1; i >=0; i--){
@@ -532,128 +535,128 @@ static void sub_mag(dec80* acc, const dec80* x){
 	assert(carry == 0); //shouldn't be carry out if |acc| > |x|
 }
 
-void add_decn(dec80* acc, const dec80* x){
+void add_decn(void){
 	static __xdata dec80 tmp;
 	int8_t rel;
 	uint8_t carry = 0;
 	int8_t i;
 
 	//check if zero
-	if (decn_is_zero(x)){
+	if (decn_is_zero(&BDecn)){
 		return;
-	} else if (decn_is_zero(acc)){
-		copy_decn(acc, x);
+	} else if (decn_is_zero(&AccDecn)){
+		copy_decn(&AccDecn, &BDecn);
 		return;
 	}
 	//handle cases where signs differ
-	if (acc->exponent < 0 && x->exponent >= 0){
+	if (AccDecn.exponent < 0 && BDecn.exponent >= 0){
 		// -acc, +x
-		rel = compare_magn(acc, x);
+		rel = compare_magn();
 		if (rel == 1){
 #ifdef DEBUG_ADD
 			printf("|-acc| > |+x|\n");
 #endif
-			sub_mag(acc, x);
+			sub_mag(&AccDecn, &BDecn);
 			return;
 		} else if (rel == -1){
 #ifdef DEBUG_ADD
 			printf("|-acc| < |+x|\n");
 #endif
-			copy_decn(&tmp, x);
-			sub_mag(&tmp, acc);
-			copy_decn(acc, &tmp);
+			copy_decn(&tmp, &BDecn);
+			sub_mag(&tmp, &AccDecn);
+			copy_decn(&AccDecn, &tmp);
 			return;
 		} else { //equal
 #ifdef DEBUG_ADD
 			printf("|-acc| == |+x|\n");
 #endif
-			set_dec80_zero(acc);
+			set_dec80_zero(&AccDecn);
 			return;
 		}
-	} else if (acc->exponent >= 0 && x->exponent < 0){
+	} else if (AccDecn.exponent >= 0 && BDecn.exponent < 0){
 		// +acc, -x
-		rel = compare_magn(acc, x);
+		rel = compare_magn();
 		if (rel == 1){
 #ifdef DEBUG_ADD
 			printf("|+acc| > |-x|\n");
 #endif
-			sub_mag(acc, x);
+			sub_mag(&AccDecn, &BDecn);
 			return;
 		} else if (rel == -1){
 #ifdef DEBUG_ADD
 			printf("|+acc| < |-x|\n");
 #endif
-			copy_decn(&tmp, x);
-			sub_mag(&tmp, acc);
-			copy_decn(acc, &tmp);
+			copy_decn(&tmp, &BDecn);
+			sub_mag(&tmp, &AccDecn);
+			copy_decn(&AccDecn, &tmp);
 			return;
 		} else { //equal
 #ifdef DEBUG_ADD
 			printf("|+acc| == |-x|\n");
 #endif
-			set_dec80_zero(acc);
+			set_dec80_zero(&AccDecn);
 			return;
 		}
 	}
 	//signs must now be the same, begin adding
-	copy_decn(&tmp, x);
+	copy_decn(&tmp, &BDecn);
 	//normalize
-	remove_leading_zeros(acc);
+	remove_leading_zeros(&AccDecn);
 	remove_leading_zeros(&tmp);
 #ifdef DEBUG_ADD
 	extern char Buf[DECN_BUF_SIZE];
-	decn_to_str_complete(buf, acc);
-	printf("        rem_leading_zeros acc: %s\n", buf);
-	decn_to_str_complete(buf, &tmp);
-	printf("        rem_leading_zeros tmp: %s\n", buf);
+	decn_to_str_complete(Buf, &AccDecn);
+	printf("        rem_leading_zeros acc: %s\n", Buf);
+	decn_to_str_complete(Buf, &tmp);
+	printf("        rem_leading_zeros tmp: %s\n", Buf);
 #endif
-	if (get_exponent(acc) > get_exponent(&tmp)){
-		_incr_exp(&tmp, get_exponent(acc));
-	} else if (get_exponent(acc) < get_exponent(&tmp)){
+	if (get_exponent(&AccDecn) > get_exponent(&tmp)){
+		_incr_exp(&tmp, get_exponent(&AccDecn));
+	} else if (get_exponent(&AccDecn) < get_exponent(&tmp)){
 		//shift significand and adjust exponent to match
-		for (i = 0; i < get_exponent(&tmp) - get_exponent(acc); i++){
-			shift_right(acc);
+		for (i = 0; i < get_exponent(&tmp) - get_exponent(&AccDecn); i++){
+			shift_right(&AccDecn);
 		}
-		set_exponent(acc, get_exponent(&tmp), (acc->exponent < 0));
+		set_exponent(&AccDecn, get_exponent(&tmp), (AccDecn.exponent < 0));
 	}
 #ifdef DEBUG_ADD
 	extern char Buf[DECN_BUF_SIZE];
-	decn_to_str_complete(buf, acc);
-	printf("        incr_exp acc: %s\n", buf);
-	decn_to_str_complete(buf, &tmp);
-	printf("        incr_exp tmp: %s\n", buf);
+	decn_to_str_complete(Buf, &AccDecn);
+	printf("        incr_exp acc: %s\n", Buf);
+	decn_to_str_complete(Buf, &tmp);
+	printf("        incr_exp tmp: %s\n", Buf);
 #endif
 	//do addition
 	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){
-		uint8_t digit100 = acc->lsu[i] + tmp.lsu[i] + carry;
-		acc->lsu[i] = digit100 % 100;
+		uint8_t digit100 = AccDecn.lsu[i] + tmp.lsu[i] + carry;
+		AccDecn.lsu[i] = digit100 % 100;
 		carry = digit100 / 100;
 		assert(carry < 100);
 	}
 	//may need to rescale number
 	if (carry > 0){
-		exp_t curr_exp = get_exponent(acc);
-		rel = (acc->exponent < 0); //is_neg?
+		exp_t curr_exp = get_exponent(&AccDecn);
+		rel = (AccDecn.exponent < 0); //is_neg?
 #ifdef DEBUG_ADD
 		printf("        carry out: %d", carry);
 #endif
 		//shift right
 		if (carry < 10){
-			shift_right(acc);
-			acc->lsu[0] += carry*10; //carry gets shifted into most significant digit
+			shift_right(&AccDecn);
+			AccDecn.lsu[0] += carry*10; //carry gets shifted into most significant digit
 			curr_exp++;
 		} else {
-			shift_right(acc);
-			shift_right(acc);
-			acc->lsu[0] = carry;
+			shift_right(&AccDecn);
+			shift_right(&AccDecn);
+			AccDecn.lsu[0] = carry;
 			curr_exp+=2;
 		}
 		//track sign
-		set_exponent(acc, curr_exp, rel); //rel==is_neg?
+		set_exponent(&AccDecn, curr_exp, rel); //rel==is_neg?
 	}
 }
 
-void mult_decn(dec80* acc, const dec80* x){
+void mult_decn(void){
 	static __xdata dec80 tmp; //copy of x
 	static __xdata dec80 acc_tmp; //holds sum
 	int8_t i, j;
@@ -661,23 +664,23 @@ void mult_decn(dec80* acc, const dec80* x){
 	uint8_t is_neg;
 	exp_t new_exponent;
 	//initialize values
-	copy_decn(&tmp, x);
+	copy_decn(&tmp, &BDecn);
 	set_dec80_zero(&acc_tmp);
 	//normalize
-	remove_leading_zeros(acc);
+	remove_leading_zeros(&AccDecn);
 	remove_leading_zeros(&tmp);
 	//store new sign
 #ifdef EXP16
-	if ((acc->exponent & 0x8000) ^ (tmp.exponent & 0x8000)){ //signs differ
+	if ((AccDecn.exponent & 0x8000) ^ (tmp.exponent & 0x8000)){ //signs differ
 #else
-	if ((acc->exponent & 0x80) ^ (tmp.exponent & 0x80)){ //signs differ
+	if ((AccDecn.exponent & 0x80) ^ (tmp.exponent & 0x80)){ //signs differ
 #endif
 		is_neg = 1;
 	} else {
 		is_neg = 0;
 	}
 	//calculate new exponent
-	new_exponent = get_exponent(acc) + get_exponent(&tmp);
+	new_exponent = get_exponent(&AccDecn) + get_exponent(&tmp);
 #ifdef DEBUG_MULT
 		printf("\n new exponent: %d:", new_exponent);
 #endif
@@ -685,7 +688,7 @@ void mult_decn(dec80* acc, const dec80* x){
 	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){
 		//partial product
 		for (j = DEC80_NUM_LSU - 1; j >= 0; j--){
-			uint16_t digit100 = acc_tmp.lsu[j] + (tmp.lsu[i] * acc->lsu[j]) + carry;
+			uint16_t digit100 = acc_tmp.lsu[j] + (tmp.lsu[i] * AccDecn.lsu[j]) + carry;
 			acc_tmp.lsu[j] = digit100 % 100;
 			carry = digit100 / 100;
 			assert(carry < 100);
@@ -694,7 +697,7 @@ void mult_decn(dec80* acc, const dec80* x){
 		printf("\n%d:", i);
 		printf("\n      acc:");
 		for (j = 0; j < DEC80_NUM_LSU; j++){
-			printf(" %3d", acc->lsu[j]);
+			printf(" %3d", AccDecn.lsu[j]);
 		}
 		printf("\n        x:");
 		for (j = 0; j < DEC80_NUM_LSU; j++){
@@ -737,24 +740,25 @@ void mult_decn(dec80* acc, const dec80* x){
 	if (new_exponent < DEC80_MAX_EXP && new_exponent > DEC80_MIN_EXP){
 		set_exponent(&acc_tmp, new_exponent, is_neg);
 	} else {
-		set_dec80_NaN(acc);
+		set_dec80_NaN(&AccDecn);
 		return;
 	}
 	//copy back to acc
-	copy_decn(acc, &acc_tmp);
+	copy_decn(&AccDecn, &acc_tmp);
 	//normalize
-	remove_leading_zeros(acc);
+	remove_leading_zeros(&AccDecn);
 }
 
-void div_decn(dec80* acc, const dec80* x){
-	static __xdata dec80 tmp; //copy of x, holds current 1/x estimate
+void div_decn(void){
+	static __xdata dec80 curr_recip; //copy of x, holds current 1/x estimate
+	static __xdata dec80 x_copy; //holds copy of original x
 	static __xdata dec80 acc_copy; //holds copy of original acc
 	uint8_t i;
 	exp_t initial_exp;
 	//check divide by zero
 #ifdef EXTRA_CHECKS
-	if (decn_is_zero(x)){
-		set_dec80_NaN(acc);
+	if (decn_is_zero(&BDecn)){
+		set_dec80_NaN(&AccDecn);
 #ifdef DESKTOP
 		printf("error division by 0\n");
 #endif
@@ -762,9 +766,11 @@ void div_decn(dec80* acc, const dec80* x){
 	}
 #endif
 	//store copy of acc for final multiply by 1/x
-	copy_decn(&acc_copy, acc);
+	copy_decn(&acc_copy, &AccDecn);
+	//store copy of x
+	copy_decn(&x_copy, &BDecn);
 	//get initial estimate for 1/x, by negating exponent, and setting signif. to 1
-	initial_exp = get_exponent(x);
+	initial_exp = get_exponent(&BDecn);
 #ifdef DEBUG_DIV
 	printf("exponent %d", initial_exp);
 #endif
@@ -773,41 +779,45 @@ void div_decn(dec80* acc, const dec80* x){
 #ifdef DEBUG_DIV
 	printf(" -> %d\n", initial_exp);
 #endif
-	set_exponent(&tmp, initial_exp, (x->exponent < 0)); //set exponent, copy sign
-	tmp.lsu[0] = 10; //1 with implicit point
+	set_exponent(&curr_recip, initial_exp, (BDecn.exponent < 0)); //set exponent, copy sign
+	   curr_recip.lsu[0] = 10; //1 with implicit point
 	for (i = 1; i < DEC80_NUM_LSU; i++){
-		tmp.lsu[i] = 0;
+		      curr_recip.lsu[i] = 0;
 	}
-	copy_decn(acc, &tmp);
+	copy_decn(&AccDecn, &curr_recip);
 	//do newton raphson iterations
 	for (i = 0; i < DEC80_NUM_LSU; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
-		extern char Buf[80];
-		decn_to_str_complete(Buf, &tmp);
+		extern char Buf[DECN_BUF_SIZE];
+		decn_to_str_complete(Buf, &curr_recip);
 		printf("%2d: %s\n", i, Buf);
 #endif
-		mult_decn(acc, x);
+		copy_decn(&BDecn, &x_copy);
+		mult_decn();
 #ifdef DEBUG_DIV
-		decn_to_str_complete(Buf, acc);
+		decn_to_str_complete(Buf, &AccDecn);
 		printf("  %20s: %s\n", "recip*x", Buf);
 #endif
-		negate_decn(acc);
-		add_decn(acc, &DECN_1);
+		negate_decn(&AccDecn);
+		copy_decn(&BDecn, &DECN_1);
+		add_decn();
 #ifdef DEBUG_DIV
-		decn_to_str_complete(Buf, acc);
+		decn_to_str_complete(Buf, &AccDecn);
 		printf("  %20s: %s\n", "(1-recip*x)", Buf);
 #endif
-		mult_decn(acc, &tmp);
+		copy_decn(&BDecn, &curr_recip);
+		mult_decn();
 #ifdef DEBUG_DIV
-		decn_to_str_complete(Buf, acc);
+		decn_to_str_complete(Buf, &AccDecn);
 		printf("  %20s: %s\n", "recip * (1-recip*x)", Buf);
 #endif
-		add_decn(acc, &tmp);
+		add_decn();
 		//new_est(acc) = recip + (1 - recip*x)*recip, where tmp is current recip estimate
-		copy_decn(&tmp, acc);
+		copy_decn(&curr_recip, &AccDecn);
 	}
 	//acc now holds 1/x, multiply by original acc to complete division
-	mult_decn(acc, &acc_copy);
+	copy_decn(&BDecn, &acc_copy);
+	mult_decn();
 }
 
 static void set_str_error(char* buf){
@@ -983,8 +993,16 @@ void decn_to_str_complete(char* buf, const dec80* x){
 			u32str(exponent, &buf[i], 10); //adds null terminator automatically
 		}
 	}
-
 }
-#endif
+
+void build_decn_at(dec80* dest, const char* signif_str, exp_t exponent){
+	dec80 tmp;
+	copy_decn(&tmp, &AccDecn); //save
+	build_dec80(signif_str, exponent);
+	copy_decn(dest, &AccDecn);
+	copy_decn(&AccDecn, &tmp); //restore
+}
+
+#endif //DESKTOP
 
 

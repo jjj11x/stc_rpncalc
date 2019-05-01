@@ -7,6 +7,8 @@
 #include "decn/decn.h"
 #include "utils.h"
 
+#include "calc.h"
+
 #define STACK_SIZE 4 //must be a power of 2
 
 #define STACK_X 0
@@ -29,7 +31,7 @@ void push_decn(const char* signif_str, exp_t exponent, uint8_t no_lift){
 	if (!no_lift){
 		StackPtr--;
 	}
-	build_dec80(&stack(STACK_X), signif_str, exponent);
+	set_x(signif_str, exponent);
 }
 
 void clear_x(void){
@@ -37,7 +39,8 @@ void clear_x(void){
 }
 
 void set_x(const char* signif_str, exp_t exponent){
-	build_dec80(&stack(STACK_X), signif_str, exponent);
+	build_dec80(signif_str, exponent);
+	copy_decn(&stack(STACK_X), &AccDecn);
 }
 
 __xdata dec80* get_x(void){
@@ -47,11 +50,14 @@ __xdata dec80* get_y(void){
 	return &stack(STACK_Y);
 }
 
-static void do_binary_op(void (*f_ptr)(dec80*, const dec80*)){
+static void do_binary_op(void (*f_ptr)(void)){
 	if (decn_is_nan(&stack(STACK_Y)) || decn_is_nan(&stack(STACK_X))){
 		set_dec80_NaN(&stack(STACK_Y));
 	} else {
-		f_ptr(&stack(STACK_Y), &stack(STACK_X));
+		copy_decn(&AccDecn, &stack(STACK_Y));
+		copy_decn(&BDecn, &stack(STACK_X));
+		f_ptr();
+		copy_decn(&stack(STACK_Y), &AccDecn);
 	}
 	pop();
 }

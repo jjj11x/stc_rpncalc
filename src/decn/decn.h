@@ -50,21 +50,19 @@ static const dec80 DECN_1 = {
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits
 exp_t get_exponent(const dec80* x);
 
-//void dec64to80(dec80* dest, const dec64* src);
-
 void copy_decn(dec80* dest, const dec80* src);
+extern __idata dec80 AccDecn, BDecn;
 
-void build_dec80(dec80* dest, const char* signif_str, exp_t exponent);
+void build_dec80(const char* signif_str, exp_t exponent);
 
 void set_dec80_zero(dec80* dest);
 void set_dec80_NaN(dec80* dest);
 uint8_t decn_is_nan(const dec80* x);
 
 void negate_decn(dec80* x);
-int8_t compare_decn(const dec80* a, const dec80* b); //a<b: -1, a==b: 0, a>b: 1
-void add_decn(dec80* acc, const dec80* x);
-void mult_decn(dec80* acc, const dec80* x);
-void div_decn(dec80* acc, const dec80* x);
+void add_decn(void);
+void mult_decn(void);
+void div_decn(void);
 
 //buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28
@@ -73,6 +71,7 @@ int8_t decn_to_str(char* buf, const dec80* x);
 #ifdef DESKTOP
 //complete string including exponent
 void decn_to_str_complete(char* buf, const dec80* x);
+void build_decn_at(dec80* dest, const char* signif_str, exp_t exponent);
 #endif
 
 #ifdef __cplusplus

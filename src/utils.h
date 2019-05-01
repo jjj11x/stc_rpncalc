@@ -37,6 +37,7 @@ char* u32str(uint32_t x, char* buf, uint8_t base);
 
 #if defined(DESKTOP) || defined(IS_ECLIPSE)
 #define __xdata
+#define __idata
 #define __sfr
 #define __at uint8_t*
 #define SDCC_ISR(isr, reg)

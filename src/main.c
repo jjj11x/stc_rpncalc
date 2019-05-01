@@ -172,7 +172,7 @@ int main()
 	ExpBuf[0] = 0;
 	ExpBuf[1] = 0;
 
-	LCD_OutString("STC RPN         Calculator v1.01", 32);
+	LCD_OutString("STC RPN         Calculator v1.02", 32);
 #ifdef DESKTOP
 	LcdAvailable.release();
 #endif

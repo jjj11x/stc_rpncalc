@@ -865,7 +865,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 	}
 	//pad zeros right of decimal point if needed
 	if (!use_sci && exponent < 0){
-		int8_t j;
+		exp_t j;
 		buf[i] = '0';
 		i++;
 		INSERT_DOT();

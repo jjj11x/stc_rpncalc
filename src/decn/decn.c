@@ -756,7 +756,7 @@ void div_decn(dec80* acc, const dec80* x){
 	}
 	copy_decn(acc, &tmp);
 	//do newton raphson iterations
-	for (i = 0; i < DEC80_NUM_LSU + 4; i++){ //just fix number of iterations for now
+	for (i = 0; i < DEC80_NUM_LSU; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
 		extern char Buf[80];
 		decn_to_str_complete(Buf, &tmp);

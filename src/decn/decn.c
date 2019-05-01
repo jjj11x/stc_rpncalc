@@ -53,21 +53,37 @@ void copy_decn(dec80* dest, const dec80* src){
 	}
 }
 
-int8_t get_exponent(const dec80* x){
-	int8_t exponent = x->exponent;
+exp_t get_exponent(const dec80* x){
+	exp_t exponent = x->exponent;
+#ifdef EXP16
+	if (exponent & 0x4000){ //negative
+		return exponent | 0x8000;
+	} else { //positive
+		return exponent & 0x7fff;
+	}
+#else
 	if (exponent & 0x40){ //negative
 		return exponent | 0x80;
 	} else { //positive
 		return exponent & 0x7f;
 	}
+#endif
 }
 
-void set_exponent(dec80* acc, int8_t exponent, uint8_t num_is_neg){
+static void set_exponent(dec80* acc, exp_t exponent, uint8_t num_is_neg){
+#ifdef EXP16
+	if (num_is_neg){
+		exponent |= 0x8000;
+	} else {
+		exponent &= 0x7fff;
+	}
+#else
 	if (num_is_neg){
 		exponent |= 0x80;
 	} else {
 		exponent &= 0x7f;
 	}
+#endif
 
 	acc->exponent = exponent;
 }
@@ -103,7 +119,7 @@ static void shift_left(dec80* x){
 static void remove_leading_zeros(dec80* x){
 	uint8_t digit100;
 	uint8_t is_negative = (x->exponent < 0);
-	int8_t exponent = get_exponent(x);
+	exp_t exponent = get_exponent(x);
 
 	//find first non-zero digit100
 	for (digit100 = 0; digit100 < DEC80_NUM_LSU; digit100++){
@@ -133,7 +149,7 @@ static void remove_leading_zeros(dec80* x){
 	set_exponent(x, exponent, is_negative);
 }
 
-void build_dec80(dec80* dest, const char* signif_str, int8_t exponent){
+void build_dec80(dec80* dest, const char* signif_str, exp_t exponent){
 	enum {
 		SIGN_ZERO,
 		SIGN_ZERO_SEEN_POINT,
@@ -341,7 +357,11 @@ static uint8_t decn_is_zero(const dec80* x){
 
 uint8_t decn_is_nan(const dec80* x){
 	uint8_t i;
-	if (x->exponent & 0x7f != DEC80_NAN_EXP){
+#ifdef EXP16
+	if ((x->exponent & 0x7fff) != DEC80_NAN_EXP){
+#else
+	if ((x->exponent & 0x7f) != DEC80_NAN_EXP){
+#endif
 		return 0;
 	}
 	for (i = 0; i < DEC80_NUM_LSU; i++){
@@ -366,13 +386,17 @@ void set_dec80_NaN(dec80* dest){
 #endif
 
 void negate_decn(dec80* x){
-	static const int8_t xor_val = -(0x7f) - 1;
+#ifdef EXP16
+	static const exp_t xor_val = -(0x7fff) - 1;
+#else
+	static const exp_t xor_val = -(0x7f) - 1;
+#endif
 	(x->exponent) ^= xor_val;
 }
 
 int8_t compare_magn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 	uint8_t a_i, b_i;
-	int8_t a_exp=0, b_exp=0;
+	exp_t a_exp=0, b_exp=0;
 	int8_t a_signif_b = 0; //a<b: -1, a==b: 0, a>b: 1
 	static __xdata dec80 a_tmp, b_tmp;
 	//copy
@@ -460,8 +484,8 @@ int8_t compare_decn(const dec80* a, const dec80* b){ //a<b: -1, a==b: 0, a>b: 1
 //acc and the number from which exponent was taken MUST be stripped of leading 0s first
 //rescales acc up to exponent (increase exponent of acc, while shifting right)
 //the actual value of acc->exponent remains unchanged
-static void _incr_exp(dec80* acc, int8_t exponent){
-	int8_t curr_exp = get_exponent(acc);
+static void _incr_exp(dec80* acc, exp_t exponent){
+	exp_t curr_exp = get_exponent(acc);
 #ifdef DEBUG_ADD
 	uint8_t is_neg = (acc->exponent < 0);
 	printf("   (is_neg,curr_exp,exponent)=(%d,%d,%d)\n",
@@ -612,7 +636,7 @@ void add_decn(dec80* acc, const dec80* x){
 	}
 	//may need to rescale number
 	if (carry > 0){
-		int8_t curr_exp = get_exponent(acc);
+		exp_t curr_exp = get_exponent(acc);
 		rel = (acc->exponent < 0); //is_neg?
 #ifdef DEBUG_ADD
 		printf("        carry out: %d", carry);
@@ -639,7 +663,7 @@ void mult_decn(dec80* acc, const dec80* x){
 	int8_t i, j;
 	uint8_t carry = 0;
 	uint8_t is_neg;
-	int8_t new_exponent;
+	exp_t new_exponent;
 	//initialize values
 	copy_decn(&tmp, x);
 	set_dec80_zero(&acc_tmp);
@@ -647,7 +671,11 @@ void mult_decn(dec80* acc, const dec80* x){
 	remove_leading_zeros(acc);
 	remove_leading_zeros(&tmp);
 	//store new sign
+#ifdef EXP16
+	if ((acc->exponent & 0x8000) ^ (tmp.exponent & 0x8000)){ //signs differ
+#else
 	if ((acc->exponent & 0x80) ^ (tmp.exponent & 0x80)){ //signs differ
+#endif
 		is_neg = 1;
 	} else {
 		is_neg = 0;
@@ -726,7 +754,7 @@ void div_decn(dec80* acc, const dec80* x){
 	static __xdata dec80 tmp; //copy of x, holds current 1/x estimate
 	static __xdata dec80 acc_copy; //holds copy of original acc
 	uint8_t i;
-	int8_t initial_exp;
+	exp_t initial_exp;
 	//check divide by zero
 #ifdef EXTRA_CHECKS
 	if (decn_is_zero(x)){
@@ -800,7 +828,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 #define INSERT_DOT() buf[i++]='.'
 	uint8_t i = 0;
 	uint8_t digit100;
-	int8_t exponent = 0;
+	exp_t exponent = 0;
 	uint8_t trailing_zeros = 0;
 	uint8_t use_sci = 0;
 	static __xdata dec80 tmp;
@@ -923,6 +951,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 #endif
 	//print exponent
 	if (use_sci){
+		//check for overflow
 		if (exponent > DEC80_MAX_EXP || exponent < DEC80_MIN_EXP){
 			set_str_error(buf);
 			return 0;

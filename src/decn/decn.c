@@ -357,11 +357,7 @@ static uint8_t decn_is_zero(const dec80* x){
 
 uint8_t decn_is_nan(const dec80* x){
 	uint8_t i;
-#ifdef EXP16
-	if ((x->exponent & 0x7fff) != DEC80_NAN_EXP){
-#else
-	if ((x->exponent & 0x7f) != DEC80_NAN_EXP){
-#endif
+	if (x->exponent != DEC80_NAN_EXP){
 		return 0;
 	}
 	for (i = 0; i < DEC80_NUM_LSU; i++){

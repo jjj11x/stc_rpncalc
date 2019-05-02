@@ -66,6 +66,7 @@ int main(void){
 	build_dec80("-92.3456789012345678", 1);
 	copy_decn(&BDecn, &AccDecn);
 	copy_decn(&AccDecn, &tmp_copy); //restore
+	copy_decn(&tmp_copy, &BDecn); //save
 	decn_to_str_complete(&BDecn);
 	printf("   b: %s\n", Buf);
 
@@ -85,6 +86,7 @@ int main(void){
 	//new acc for acc - b test
 	decn_to_str_complete(&AccDecn);
 	printf("acc: %s\n", Buf);
+	copy_decn(&BDecn, &tmp_copy); //restore
 	negate_decn(&BDecn);
 	decn_to_str_complete(&BDecn);
 	printf(" -b: %s\n", Buf);

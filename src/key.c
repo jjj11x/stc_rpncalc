@@ -24,10 +24,10 @@ const char state_names[4][32] = {
 
 #define M_COLS 4
 
-uint8_t Keys[TOTAL_ROWS]; //only bottom nibbles get set
+__idata uint8_t Keys[TOTAL_ROWS]; //only bottom nibbles get set
 int8_t NewKeyPressed; //row*M_COLS + col, see KEY_MAP[] in main.c
-static uint8_t last_state[TOTAL_ROWS]; //all used, 2 bits per key
-static int8_t last_count[TOTAL_ROWS][M_COLS]; //all used
+__idata static uint8_t last_state[TOTAL_ROWS]; //all used, 2 bits per key
+__idata static int8_t last_count[TOTAL_ROWS][M_COLS]; //all used
 static uint8_t unexpected_count; //count of unexpected transitions
 
 static const int8_t COUNT_LIM_LOW  = -30;
@@ -52,7 +52,7 @@ void KeyInit(void){
 	}
 }
 
-static void raw_scan(void){
+void raw_scan(void){
 	static uint8_t i = 0;
 	static const uint8_t data[] = {
 		0,0,0,0,0,0,0,0,0,0,0,0,
@@ -102,7 +102,8 @@ void KeyInit(void){
 	NewKeyPressed = -1;
 }
 
-static void raw_scan(void){
+#pragma nooverlay
+void raw_scan(void) __using(1){
 	//top row not part of matrix
 	static const uint8_t M_ROWS = 4;
 	uint8_t i, j;
@@ -137,7 +138,8 @@ static void raw_scan(void){
 
 //based on quick draw/integrator hybrid debounce algorithm from
 //https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/
-static void debounce(void){
+#pragma nooverlay
+void debounce(void) __using(1){
 	uint8_t i, j;
 	NewKeyPressed = -1; //initially
 //	new_keys_pressed = 0; //initially
@@ -225,11 +227,6 @@ static void debounce(void){
 	} //for rows
 }
 
-
-void KeyScan(void){
-	raw_scan();
-	debounce();
-}
 
 #ifdef DEBUG_KEYS
 const uint8_t* DebugGetKeys(void){

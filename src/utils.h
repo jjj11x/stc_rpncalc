@@ -24,7 +24,6 @@ void _delay_us(uint8_t us);
 
 void backlight_off(void);
 
-char* u32str(uint32_t x, char* buf, uint8_t base);
 
 
 #ifdef __linux__
@@ -36,11 +35,13 @@ char* u32str(uint32_t x, char* buf, uint8_t base);
 #endif
 
 #if defined(DESKTOP) || defined(IS_ECLIPSE)
+char* u32str(uint32_t x, char* buf, uint8_t base);
 #define __xdata
 #define __idata
 #define __sfr
 #define __at uint8_t*
 #define SDCC_ISR(isr, reg)
+#define __using(x)
 #define BACKLIGHT_ON()
 #define TURN_OFF()
 #else

@@ -46,6 +46,9 @@ static const uint8_t num_digits_display = 16;
 __idata dec80 AccDecn, BDecn;
 
 
+__xdata char Buf[DECN_BUF_SIZE];
+
+
 void copy_decn(dec80* dest, const dec80* src){
 	uint8_t i;
 	dest->exponent = src->exponent;
@@ -152,7 +155,7 @@ static void remove_leading_zeros(dec80* x){
 	set_exponent(x, exponent, is_negative);
 }
 
-void build_dec80(const char* signif_str, exp_t exponent){
+void build_dec80(__xdata const char* signif_str, exp_t exponent){
 	enum {
 		SIGN_ZERO,
 		SIGN_ZERO_SEEN_POINT,
@@ -515,7 +518,6 @@ static void sub_mag(dec80* acc, const dec80* x){
 		_incr_exp(&tmp, get_exponent(acc));
 	}
 #ifdef DEBUG_ADD
-	extern char Buf[DECN_BUF_SIZE];
 	decn_to_str_complete(Buf, &tmp);
 	printf("        incr_exp tmp: %s\n", Buf);
 #endif
@@ -604,7 +606,6 @@ void add_decn(void){
 	remove_leading_zeros(&AccDecn);
 	remove_leading_zeros(&tmp);
 #ifdef DEBUG_ADD
-	extern char Buf[DECN_BUF_SIZE];
 	decn_to_str_complete(Buf, &AccDecn);
 	printf("        rem_leading_zeros acc: %s\n", Buf);
 	decn_to_str_complete(Buf, &tmp);
@@ -620,7 +621,6 @@ void add_decn(void){
 		set_exponent(&AccDecn, get_exponent(&tmp), (AccDecn.exponent < 0));
 	}
 #ifdef DEBUG_ADD
-	extern char Buf[DECN_BUF_SIZE];
 	decn_to_str_complete(Buf, &AccDecn);
 	printf("        incr_exp acc: %s\n", Buf);
 	decn_to_str_complete(Buf, &tmp);
@@ -788,7 +788,6 @@ void div_decn(void){
 	//do newton raphson iterations
 	for (i = 0; i < DEC80_NUM_LSU; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
-		extern char Buf[DECN_BUF_SIZE];
 		decn_to_str_complete(Buf, &curr_recip);
 		printf("%2d: %s\n", i, Buf);
 #endif
@@ -820,18 +819,17 @@ void div_decn(void){
 	mult_decn();
 }
 
-static void set_str_error(char* buf){
-	buf[0] = 'E';
-	buf[1] = 'r';
-	buf[2] = 'r';
-	buf[3] = 'o';
-	buf[4] = 'r';
-	buf[5] = '\0';
+static void set_str_error(){
+	Buf[0] = 'E';
+	Buf[1] = 'r';
+	Buf[2] = 'r';
+	Buf[3] = 'o';
+	Buf[4] = 'r';
+	Buf[5] = '\0';
 }
 
-//buf should hold at least 18 + 4 + 5 + 1 = 28
-int8_t decn_to_str(char* buf, const dec80* x){
-#define INSERT_DOT() buf[i++]='.'
+int8_t decn_to_str(const dec80* x){
+#define INSERT_DOT() Buf[i++]='.'
 	uint8_t i = 0;
 	uint8_t digit100;
 	exp_t exponent = 0;
@@ -841,7 +839,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 
 	//handle corner case of NaN
 	if (decn_is_nan(x)){
-		set_str_error(buf);
+		set_str_error();
 #ifdef DEBUG
 		printf ("  corner case NaN ");
 #endif
@@ -856,8 +854,8 @@ int8_t decn_to_str(char* buf, const dec80* x){
 #ifdef DEBUG
 		printf ("  corner case, set to 0  ");
 #endif
-		buf[0] = '0';
-		buf[1] = '\0';
+		Buf[0] = '0';
+		Buf[1] = '\0';
 		return 0;
 	}
 	//check sign of number
@@ -865,7 +863,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 #ifdef DEBUG
 		printf ("  negative  ");
 #endif
-		buf[i] = '-';
+		Buf[i] = '-';
 		i++;
 	}
 	//check if we should use scientific notation
@@ -876,18 +874,18 @@ int8_t decn_to_str(char* buf, const dec80* x){
 	//pad zeros right of decimal point if needed
 	if (!use_sci && exponent < 0){
 		exp_t j;
-		buf[i] = '0';
+		Buf[i] = '0';
 		i++;
 		INSERT_DOT();
 		//pad zeros right of decimal point
 //		for (j = exponent + 1; j < 0; j++){ <--- results in undefined behavior (signed overflow), and causes crash
 		for (j = -exponent -1; j > 0; --j){
-			buf[i] = '0';
+			Buf[i] = '0';
 			i++;
 		}
 	}
 	//print 1st digit
-	buf[i] = (tmp.lsu[0] / 10) + '0';
+	Buf[i] = (tmp.lsu[0] / 10) + '0';
 	i++;
 	if (use_sci) {
 		INSERT_DOT();
@@ -898,7 +896,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 		exponent--;
 	}
 	//print 2nd digit
-	buf[i] = (tmp.lsu[0] % 10) + '0';
+	Buf[i] = (tmp.lsu[0] % 10) + '0';
 	if (tmp.lsu[0] % 10 == 0 && (use_sci || exponent < 0)){
 
 		trailing_zeros = 1;
@@ -913,7 +911,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 	//print rest of significand
 	for (digit100 = 1 ; digit100 < DEC80_NUM_LSU; digit100++){
 		//print 1st digit
-		buf[i] = (tmp.lsu[digit100] / 10) + '0';
+		Buf[i] = (tmp.lsu[digit100] / 10) + '0';
 		i++;
 		if (!use_sci){
 			if (exponent == 0){
@@ -922,7 +920,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 			exponent--;
 		}
 		//print 2nd digit
-		buf[i] = (tmp.lsu[digit100] % 10) + '0';
+		Buf[i] = (tmp.lsu[digit100] % 10) + '0';
 		i++;
 		if (!use_sci){
 			if (exponent == 0){
@@ -948,7 +946,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 	if (use_sci || exponent <= 0){
 		i -= trailing_zeros;
 	}
-	buf[i] = '\0';
+	Buf[i] = '\0';
 
 	//calculate exponent
 	exponent = get_exponent(&tmp); //base 100
@@ -959,7 +957,7 @@ int8_t decn_to_str(char* buf, const dec80* x){
 	if (use_sci){
 		//check for overflow
 		if (exponent > DEC80_MAX_EXP || exponent < DEC80_MIN_EXP){
-			set_str_error(buf);
+			set_str_error();
 			return 0;
 		}
 		return exponent;
@@ -978,19 +976,19 @@ int8_t decn_to_str(char* buf, const dec80* x){
 
 #ifdef DESKTOP
 //complete string including exponent
-void decn_to_str_complete(char* buf, const dec80* x){
-	int8_t exponent = decn_to_str(buf, x);
+void decn_to_str_complete(const dec80* x){
+	int8_t exponent = decn_to_str(x);
 	int i;
 	//find end of string
-	for (i = 0; buf[i] != '\0'; i++);
+	for (i = 0; Buf[i] != '\0'; i++);
 	//add exponent
 	if (exponent != 0){
-		buf[i++] = 'E';
+		Buf[i++] = 'E';
 		if (exponent < 0){
-			buf[i++] = '-';
-			u32str(-exponent, &buf[i], 10); //adds null terminator automatically
+			Buf[i++] = '-';
+			u32str(-exponent, &Buf[i], 10); //adds null terminator automatically
 		} else {
-			u32str(exponent, &buf[i], 10); //adds null terminator automatically
+			u32str(exponent, &Buf[i], 10); //adds null terminator automatically
 		}
 	}
 }

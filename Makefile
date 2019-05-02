@@ -1,6 +1,6 @@
 SDCC ?= sdcc
 STCCODESIZE ?= 13312
-SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 256 --stack-auto --idata-loc 0x80
+SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 256 --idata-loc 0x80
 #SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 256 --stack-auto --model-large
 FLASHFILE ?= main.hex
 LARGE_LDFLAGS += -L/usr/share/sdcc/lib/large/

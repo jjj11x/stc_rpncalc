@@ -46,7 +46,7 @@ void LCD_Clear(void){
 	lcd_col=0;
 }
 
-void LCD_GoTo(unsigned int row, unsigned int col){
+void LCD_GoTo(uint8_t row, uint8_t col){
 	if (row < MAX_ROWS && col < MAX_CHARS_PER_LINE){
 		lcd_row = row;
 		lcd_col = col;

@@ -16,7 +16,7 @@ extern "C" {
 
 #define DEC80_NUM_LSU 9
 
-//#define EXP16
+#define EXP16
 
 #ifdef EXP16
 typedef int16_t exp_t;
@@ -53,7 +53,7 @@ exp_t get_exponent(const dec80* x);
 void copy_decn(dec80* dest, const dec80* src);
 extern __idata dec80 AccDecn, BDecn;
 
-void build_dec80(const char* signif_str, exp_t exponent);
+void build_dec80(__xdata const char* signif_str, exp_t exponent);
 
 void set_dec80_zero(dec80* dest);
 void set_dec80_NaN(dec80* dest);
@@ -64,13 +64,14 @@ void add_decn(void);
 void mult_decn(void);
 void div_decn(void);
 
-//buf should hold at least 18 + 4 + 5 + 1 = 28
+//Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28
-int8_t decn_to_str(char* buf, const dec80* x);
+extern __xdata char Buf[DECN_BUF_SIZE];
+int8_t decn_to_str(const dec80* x);
 
 #ifdef DESKTOP
 //complete string including exponent
-void decn_to_str_complete(char* buf, const dec80* x);
+void decn_to_str_complete(const dec80* x);
 void build_decn_at(dec80* dest, const char* signif_str, exp_t exponent);
 #endif
 

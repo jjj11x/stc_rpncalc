@@ -60,6 +60,7 @@ void backlight_off(void){
 
 #endif //ifdef desktop
 
+#ifdef DESKTOP
 char* u32str(uint32_t x, char* buf, uint8_t base)
 {
 	int i = 0, j;
@@ -87,4 +88,5 @@ char* u32str(uint32_t x, char* buf, uint8_t base)
 
 	return buf;
 }
+#endif
 

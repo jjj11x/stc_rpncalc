@@ -32,17 +32,17 @@ static void div_test(
 {
 	build_dec80(a_str, a_exp);
 	build_decn_at(&BDecn,   b_str, b_exp);
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf(" acc: %s\n", Buf);
-	decn_to_str_complete(Buf, &BDecn);
+	decn_to_str_complete(&BDecn);
 	printf("   b: %s\n", Buf);
 	div_decn();
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("acc/b: %s\n", Buf);
 	printf("     : %s\n", res_str);
 	build_decn_at(&diff, res_calc, res_exp);
 	take_diff();
-	decn_to_str_complete(Buf, &diff);
+	decn_to_str_complete(&diff);
 	printf("     : %s\n\n", Buf);
 }
 
@@ -50,15 +50,15 @@ int main(void){
 //	dec80 acc, b;
 
 	build_dec80("0.0009234567890123456", 7);
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf(" acc: %s\n", Buf);
 
 	build_dec80("9.234567890123456", 3);
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf(" acc: %s\n", Buf);
 
 	negate_decn(&AccDecn);
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("-acc:  %s\n", Buf);
 
 	dec80 tmp_copy;
@@ -66,54 +66,54 @@ int main(void){
 	build_dec80("-92.3456789012345678", 1);
 	copy_decn(&BDecn, &AccDecn);
 	copy_decn(&AccDecn, &tmp_copy); //restore
-	decn_to_str_complete(Buf, &BDecn);
+	decn_to_str_complete(&BDecn);
 	printf("   b: %s\n", Buf);
 
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("-acc:  %s\n", Buf);
 
 	//compare result of b - acc
 	add_decn();
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("b - a: %s\n", Buf);
 	printf("     : %s\n", "-10158.0246791358016");
 	build_decn_at(&diff, "-1.01580246791358016", 4);
 	take_diff();
-	decn_to_str_complete(Buf, &diff);
+	decn_to_str_complete(&diff);
 	printf("     : %s\n\n", Buf);
 
 	//new acc for acc - b test
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("acc: %s\n", Buf);
 	negate_decn(&BDecn);
-	decn_to_str_complete(Buf, &BDecn);
+	decn_to_str_complete(&BDecn);
 	printf(" -b: %s\n", Buf);
 
 	add_decn();
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	//compare result of new acc - b
 	printf("acc - b: %s\n", Buf);
 	printf("       : %s\n", "-9234.567890123456");
 	build_decn_at(&diff, "-9.234567890123456", 3);
 	take_diff();
-	decn_to_str_complete(Buf, &diff);
+	decn_to_str_complete(&diff);
 	printf("       : %s\n\n", Buf);
 
 	//new acc and b for multiply test
 //	build_dec80("7", 2);
 	build_dec80("92.34567890123456", 2);
 	build_decn_at(&BDecn,   "-92.3456789012345678", 1);
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf(" acc: %s\n", Buf);
-	decn_to_str_complete(Buf, &BDecn);
+	decn_to_str_complete(&BDecn);
 	printf("   b: %s\n", Buf);
 	mult_decn();
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("acc*b: %s\n", Buf);
 	printf("     : %s\n", "-8527724.41172991849");
 	build_decn_at(&diff, "-8.52772441172991849", 6);
 	take_diff();
-	decn_to_str_complete(Buf, &diff);
+	decn_to_str_complete(&diff);
 	printf("     : %s\n\n", Buf);
 
 	//new acc and b for divide test
@@ -143,13 +143,13 @@ int main(void){
 	//small fractions >= 1/10
 	build_dec80("0.333", 0);
 	build_decn_at(&BDecn,   "3.33", -1);
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("  a  : %s\n", Buf);
-	decn_to_str_complete(Buf, &BDecn);
+	decn_to_str_complete(&BDecn);
 	printf("  b  : %s\n", Buf);
 	negate_decn(&BDecn);
 	add_decn();
-	decn_to_str_complete(Buf, &AccDecn);
+	decn_to_str_complete(&AccDecn);
 	printf("a - b: %s\n", Buf);
 
 	//new acc and b for divide test

@@ -186,7 +186,7 @@ void LCD_Open(void) {
 }
 
 //row and columns indexed from 0
-void LCD_GoTo(unsigned int row_to, unsigned int col_to) {
+void LCD_GoTo(uint8_t row_to, uint8_t col_to) {
 	if (row_to < MAX_ROWS && col_to < MAX_CHARS_PER_LINE) {
 		outCsr(0x80 + 0x40 * row_to + col_to); //set ddram address to position
 		row = row_to;
@@ -205,7 +205,7 @@ static void to_row(unsigned char row_to) {
 	col = 0;
 }
 
-void LCD_OutString(const char *string, uint8_t max_chars) {
+void LCD_OutString(__xdata const char *string, uint8_t max_chars) {
 	const char *s;
 	for (s = string; *s && max_chars > 0; s++, max_chars--) {
 		TERMIO_PutChar(*s);

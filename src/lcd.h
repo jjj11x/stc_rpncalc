@@ -5,14 +5,17 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include "utils.h"
+
 #define MAX_CHARS_PER_LINE 16
 #define MAX_ROWS 2
 
 void LCD_Open(void);
 void LCD_Clear(void);
-void LCD_GoTo(unsigned int row, unsigned int col);
+void LCD_GoTo(uint8_t row, uint8_t col);
 
-void LCD_OutString(const char* string, uint8_t max_chars);
+void LCD_OutString(__xdata const char* string, uint8_t max_chars);
 short TERMIO_PutChar(unsigned char letter);
 void LCD_OutNibble(uint8_t x);
 void LCD_ClearToEnd(uint8_t curr_row);

@@ -39,8 +39,12 @@ volatile uint8_t NewKeyEmpty;
 
 #define INCR_NEW_KEY_I(i) i = (i + 1) & 3
 
-volatile uint8_t SecCount;
 //#define TRACK_TIME
+#ifdef TRACK_TIME
+volatile uint8_t SecCount;
+#endif
+
+
 void timer0_isr() SDCC_ISR(1,1)
 {
 #ifdef TRACK_TIME
@@ -119,9 +123,9 @@ static void latch_on(void)
 #endif //!DESKTOP
 
 
-char Buf[DECN_BUF_SIZE];
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
+__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.03";
 
 #ifdef DESKTOP
 static void print_entry_bufs(void){
@@ -149,7 +153,6 @@ int main()
 	};
 	uint8_t entry_i = 0;
 	uint8_t entering_exp = ENTERING_DONE;
-	uint8_t no_lift = 0;
 	uint8_t exp_i = 0;
 	int8_t disp_exponent;
 	NewKeyEmpty = 1; //initially empty
@@ -172,7 +175,7 @@ int main()
 	ExpBuf[0] = 0;
 	ExpBuf[1] = 0;
 
-	LCD_OutString("STC RPN         Calculator v1.02", 32);
+	LCD_OutString(VER_STR, 32);
 #ifdef DESKTOP
 	LcdAvailable.release();
 #endif
@@ -324,7 +327,7 @@ int main()
 							exponent = -exponent;
 						}
 						EntryBuf[entry_i] = '\0';
-						push_decn(EntryBuf, exponent, no_lift);
+						push_decn(EntryBuf, exponent);
 						process_cmd(KEY_MAP[i_key]);
 						//reset state as initial ENTERING_DONE state
 						entering_exp = ENTERING_DONE;
@@ -336,14 +339,14 @@ int main()
 						//dup
 						process_cmd(KEY_MAP[i_key]);
 					}
-					no_lift = 1;
+					NoLift = 1;
 				} break;
 				//////////
 				case 'c': {
 					if (entering_exp == ENTERING_DONE){
 						//clear
 						clear_x();
-						no_lift = 1;
+						NoLift = 1;
 						entering_exp = ENTERING_SIGNIF;
 						EntryBuf[entry_i] = '0';
 						//do not increment entry_i from 0, until first non-0 entry
@@ -376,7 +379,7 @@ int main()
 							exponent = -exponent;
 						}
 						EntryBuf[entry_i] = '\0';
-						push_decn(EntryBuf, exponent, no_lift);
+						push_decn(EntryBuf, exponent);
 						process_cmd(KEY_MAP[i_key]);
 						//reset state as initial ENTERING_DONE state
 						entering_exp = ENTERING_DONE;
@@ -388,7 +391,7 @@ int main()
 						//process key
 						process_cmd(KEY_MAP[i_key]);
 					}
-					no_lift = 0;
+					NoLift = 0;
 				} break;
 				//////////
 				default: process_cmd(KEY_MAP[i_key]);
@@ -403,10 +406,10 @@ int main()
 		LCD_GoTo(0,0);
 		//display y register on first line
 		if (entering_exp == ENTERING_DONE){
-			disp_exponent = decn_to_str(Buf, get_y());
+			disp_exponent = decn_to_str(get_y());
 		} else {
 			//display x on 1st line, entered number on 2nd line
-			disp_exponent = decn_to_str(Buf, get_x());
+			disp_exponent = decn_to_str(get_x());
 		}
 		if (disp_exponent == 0){
 			LCD_OutString(Buf, MAX_CHARS_PER_LINE);
@@ -430,7 +433,7 @@ int main()
 		print_entry_bufs();
 #endif
 		if (entering_exp == ENTERING_DONE){
-			disp_exponent = decn_to_str(Buf, get_x());
+			disp_exponent = decn_to_str(get_x());
 			if (disp_exponent == 0){
 				LCD_OutString(Buf, MAX_CHARS_PER_LINE);
 			} else { //have exponent to display

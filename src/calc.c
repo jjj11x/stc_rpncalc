@@ -16,6 +16,8 @@
 #define STACK_Z 2
 #define STACK_T 3
 
+uint8_t NoLift = 0;
+
 //stack "grows" towards 0
 __xdata dec80 Stack[STACK_SIZE]; //0->x, 1->y, 2->z, 3->t initially
 uint8_t StackPtr = 0;
@@ -27,20 +29,16 @@ static void pop(){
 	StackPtr++; //adjust pointer
 }
 
-void push_decn(const char* signif_str, exp_t exponent, uint8_t no_lift){
-	if (!no_lift){
+void push_decn(__xdata const char* signif_str, exp_t exponent){
+	if (!NoLift){
 		StackPtr--;
 	}
-	set_x(signif_str, exponent);
+	build_dec80(signif_str, exponent);
+	copy_decn(&stack(STACK_X), &AccDecn);
 }
 
 void clear_x(void){
 	set_dec80_zero(&stack(STACK_X));
-}
-
-void set_x(const char* signif_str, exp_t exponent){
-	build_dec80(signif_str, exponent);
-	copy_decn(&stack(STACK_X), &AccDecn);
 }
 
 __xdata dec80* get_x(void){

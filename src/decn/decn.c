@@ -657,6 +657,8 @@ void add_decn(void){
 	}
 }
 
+//AccDecn *= BDecn
+// (the BDecn register is preserved)
 void mult_decn(void){
 	int8_t i, j;
 	uint8_t carry = 0;
@@ -801,30 +803,35 @@ void div_decn(void){
 		decn_to_str_complete(&curr_recip);
 		printf("%2d: %s\n", i, Buf);
 #endif
+		//Accum *= x_copy
 		copy_decn(&BDecn, &X_COPY);
 		mult_decn();
 #ifdef DEBUG_DIV
 		decn_to_str_complete(&AccDecn);
 		printf("  %20s: %s\n", "recip*x", Buf);
 #endif
+		//Accum *= -1
 		negate_decn(&AccDecn);
+		//Accum += 1
 		copy_decn(&BDecn, &DECN_1);
 		add_decn();
 #ifdef DEBUG_DIV
 		decn_to_str_complete(&AccDecn);
 		printf("  %20s: %s\n", "(1-recip*x)", Buf);
 #endif
+		//Accum *= curr_recip
 		copy_decn(&BDecn, &CURR_RECIP);
 		mult_decn();
 #ifdef DEBUG_DIV
 		decn_to_str_complete(&AccDecn);
 		printf("  %20s: %s\n", "recip * (1-recip*x)", Buf);
 #endif
+		//Accum += curr_recip
 		add_decn();
-		//new_est(acc) = recip + (1 - recip*x)*recip, where tmp is current recip estimate
+		//new_est(Accum) = recip + (1 - recip*x)*recip, where recip is current recip estimate
 		copy_decn(&CURR_RECIP, &AccDecn);
 	}
-	//acc now holds 1/x, multiply by original acc to complete division
+	//Accum now holds 1/x, multiply by original acc to complete division
 	copy_decn(&BDecn, &ACC_COPY);
 	mult_decn();
 	

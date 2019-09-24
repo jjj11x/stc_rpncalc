@@ -18,10 +18,14 @@ extern "C" {
 
 void KeyInit(void);
 
+#ifndef DESKTOP
 #pragma nooverlay
+#endif
 void raw_scan(void) __using(1);
 
+#ifndef DESKTOP
 #pragma nooverlay
+#endif
 void debounce(void) __using(1);
 
 

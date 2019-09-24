@@ -916,7 +916,7 @@ int8_t decn_to_str(const dec80* x){
 		exponent--;
 	}
 	//print rest of significand
-	for (digit100 = 1 ; digit100 < DEC80_NUM_LSU; digit100++){
+	for (digit100 = 1 ; digit100 < num_digits_display/2; digit100++){
 		//print 1st digit
 		Buf[i] = (tmp.lsu[digit100] / 10) + '0';
 		i++;

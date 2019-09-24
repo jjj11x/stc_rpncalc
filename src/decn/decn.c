@@ -760,11 +760,14 @@ void div_decn(void){
 		return;
 	}
 #endif
+	//normalize
+	remove_leading_zeros(&AccDecn);
+	remove_leading_zeros(&BDecn);
 	//store copy of acc for final multiply by 1/x
 	copy_decn(&acc_copy, &AccDecn);
 	//store copy of x
 	copy_decn(&x_copy, &BDecn);
-	//get initial estimate for 1/x, by negating exponent, and setting signif. to 1
+	//get initial exponent of estimate for 1/x
 	initial_exp = get_exponent(&BDecn);
 #ifdef DEBUG_DIV
 	printf("exponent %d", initial_exp);
@@ -775,13 +778,22 @@ void div_decn(void){
 	printf(" -> %d\n", initial_exp);
 #endif
 	set_exponent(&curr_recip, initial_exp, (BDecn.exponent < 0)); //set exponent, copy sign
-	   curr_recip.lsu[0] = 10; //1 with implicit point
+	//get initial estimate for 1/x
+	if        (BDecn.lsu[0] < 20){       //mantissa between 1 and 2
+		curr_recip.lsu[0] = 50; //0.50 with implicit point and exponent
+	} else if (BDecn.lsu[0] < 33){
+		curr_recip.lsu[0] = 30;
+	} else if (BDecn.lsu[0] < 50){
+		curr_recip.lsu[0] = 20;
+	} else {
+		curr_recip.lsu[0] = 10; //0.1 with implicit point and exponent
+	}
 	for (i = 1; i < DEC80_NUM_LSU; i++){
-		      curr_recip.lsu[i] = 0;
+		curr_recip.lsu[i] = 0;
 	}
 	copy_decn(&AccDecn, &curr_recip);
 	//do newton raphson iterations
-	for (i = 0; i < DEC80_NUM_LSU; i++){ //just fix number of iterations for now
+	for (i = 0; i < 6; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
 		decn_to_str_complete(&curr_recip);
 		printf("%2d: %s\n", i, Buf);

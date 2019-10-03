@@ -140,7 +140,7 @@ static uint8_t EnteringExp = ENTERING_DONE;
 static uint8_t Exp_i = 0;
 static int8_t I_Key;
 
-static inline void finish_process_entry (void){
+static void entering_done(void){
 	//reset state as initial ENTERING_DONE state
 	EnteringExp = ENTERING_DONE;
 	Entry_i = 0;
@@ -149,6 +149,7 @@ static inline void finish_process_entry (void){
 	ExpBuf[1] = 0;
 }
 
+static inline void finish_process_entry(void){
 	//finish entry
 	int8_t exponent; //exponent is only 2 digits
 	exponent = 10*ExpBuf[1] + ExpBuf[0];

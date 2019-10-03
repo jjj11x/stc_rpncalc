@@ -162,11 +162,11 @@ static inline void finish_process_entry(void){
 			exponent = -exponent;
 		}
 		EntryBuf[Entry_i] = '\0';
+		push_decn(EntryBuf, exponent);
 		//reset to done
 		entering_done();
 	}
 	//process cmd
-	push_decn(EntryBuf, exponent);
 	process_cmd(KEY_MAP[I_Key]);
 	EnteringExp = ENTERING_DONE;
 }
@@ -403,7 +403,7 @@ int main()
 
 		LCD_GoTo(0,0);
 		//display y register on first line
-		if (is_entering_done()){
+		if (is_entering_done() || NoLift){
 			disp_exponent = decn_to_str(get_y());
 		} else {
 			//display x on 1st line, entered number on 2nd line

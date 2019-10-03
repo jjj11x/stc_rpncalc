@@ -17,6 +17,7 @@
 #define STACK_T 3
 
 uint8_t NoLift = 0;
+uint8_t IsShifted = 0;
 
 //stack "grows" towards 0
 __xdata dec80 Stack[STACK_SIZE]; //0->x, 1->y, 2->z, 3->t initially
@@ -58,6 +59,10 @@ static void do_binary_op(void (*f_ptr)(void)){
 		copy_decn(&stack(STACK_Y), &AccDecn);
 	}
 	pop();
+}
+
+static void toggle_shifted(void){
+	IsShifted ^= 1;
 }
 
 void process_cmd(char cmd){
@@ -108,6 +113,18 @@ void process_cmd(char cmd){
 				copy_decn(&stack(STACK_Y), &tmp);
 			}
 		} break;
+		//////////
+		case 'm':{ //use as shift
+			toggle_shifted();
+		} break;
+		//////////
+		case '8':{
+			if (IsShifted && !decn_is_nan(&stack(STACK_X))){ //ln(x)
+				copy_decn(&AccDecn, &stack(STACK_X));
+				ln_decn();
+				copy_decn(&stack(STACK_X), &AccDecn);
+				toggle_shifted();
+			}
 		} break;
 		//////////
 	} //switch(cmd)

@@ -125,7 +125,7 @@ static void latch_on(void)
 
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
-__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.03";
+__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.04";
 
 #ifdef DESKTOP
 static void print_entry_bufs(int entering_exp){
@@ -276,7 +276,9 @@ int main()
 				case '7': //fallthrough
 				case '8': //fallthrough
 				case '9': {
-					if (entering_exp >= ENTERING_EXP){
+					if (IsShifted){
+						process_cmd(KEY_MAP[i_key]);
+					} else if (entering_exp >= ENTERING_EXP){
 						if (exp_i == 0){
 							ExpBuf[0] = KEY_MAP[i_key] - '0';
 							exp_i = 1;
@@ -342,7 +344,7 @@ int main()
 				} break;
 				//////////
 				case 'c': {
-					if (entering_exp == ENTERING_DONE){
+					if (IsShifted || entering_exp == ENTERING_DONE){
 						//clear
 						clear_x();
 						NoLift = 1;
@@ -479,6 +481,12 @@ int main()
 			TERMIO_PutChar(ExpBuf[0] + '0');
 		}
 		LCD_ClearToEnd(1);
+
+		//print shifted status
+		if (IsShifted){
+			TERMIO_PutChar('^');
+		}
+
 #ifdef DESKTOP
 		print_lcd();
 		printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);

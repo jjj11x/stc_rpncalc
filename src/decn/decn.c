@@ -17,6 +17,7 @@
 // #define DEBUG_MULT
 // #define DEBUG_MULT_ALL //even more verbose
 // #define DEBUG_DIV
+#define DEBUG_LOG
 
 #ifndef DESKTOP
 //#undef EXTRA_CHECKS
@@ -25,6 +26,7 @@
 #undef DEBUG_ADD
 #undef DEBUG_MULT
 #undef DEBUG_DIV
+#undef DEBUG_LOG
 #endif
 
 #ifdef DESKTOP
@@ -834,14 +836,184 @@ void div_decn(void){
 	//Accum now holds 1/x, multiply by original acc to complete division
 	copy_decn(&BDecn, &ACC_COPY);
 	mult_decn();
-	
-	//try not to pollute namespace
+
+//try not to pollute namespace
 #undef CURR_RECIP
 #undef X_COPY
 #undef ACC_COPY
 }
 
-static void set_str_error(){
+void ln_decn(void){
+#define NUM_A_ARR 9
+	static const dec80 LN_A_ARR[NUM_A_ARR] = {
+		{0, {69, 31, 47, 18,  5, 59, 94, 53,  9}},
+		{0, {95, 31,  1, 79, 80, 43, 24, 86,  0}},
+		{0, {99, 50, 33,  8, 53, 16, 80, 82, 84}},
+		{0, {99, 95,  0, 33, 30, 83, 53, 31, 67}},
+		{0, {99, 99, 50,  0, 33, 33,  8, 33, 33}},
+		{0, {99, 99, 95,  0,  0, 33, 33, 29, 95}},
+		{0, {99, 99, 99, 50,  0,  0, 33,  5, 35}},
+		{0, {99, 99, 99, 95,  0,  0,  2, 76, 40}},
+		{0, {99, 99, 99, 99, 50,  0, 15, 98, 65}},
+// 		{0, {99, 99, 99, 99, 95,  2, 19, 27, 11}},
+	};
+	uint8_t j, k;
+#define B_j Tmp2Decn
+#define NUM_TIMES Tmp3Decn
+#define A_ARR_j Tmp4Decn
+	//normalize
+	exp_t initial_exp;
+	remove_leading_zeros(&AccDecn);
+	//TODO: error for negative numbers
+	//scale to between 1 and 10
+	initial_exp = get_exponent(&AccDecn) + 1;
+	AccDecn.exponent = 0;
+#ifdef DEBUG_LOG
+	decn_to_str_complete(&AccDecn);
+	printf("ln() accum scaled between 1,10: %s\n", Buf);
+#endif
+	//get initial a_arr[0] = 2
+	set_dec80_zero(&A_ARR_j);
+	A_ARR_j.lsu[0] = 20;
+	//get initial estimate (accum = 10 - A)
+	copy_decn(&BDecn, &DECN_1);
+	BDecn.exponent = 1; //BDecn = 10
+	negate_decn(&AccDecn);
+	add_decn();
+	copy_decn(&B_j, &AccDecn); //b_j = accum = 10 - A
+#ifdef DEBUG_LOG
+	decn_to_str_complete(&AccDecn);
+	printf("ln() initial accum: %s (%d)\n", Buf, initial_exp);
+#endif
+
+	//track number of times multiplied by a_arr[j]
+	for (j = 0; j < NUM_A_ARR; j++){
+		uint8_t k_j;
+		if (j != 0){
+			//b_j *= 10.0 //TODO: necessary?
+			shift_left(&B_j);
+		}
+		copy_decn(&AccDecn, &B_j); //accum = b_j
+		k_j = 0;
+		while (!(AccDecn.exponent < 0)){ //while >= 0 (!negative) TODO: should just be >
+			copy_decn(&B_j, &AccDecn); //b_j = accum
+			//accum *= a_arr[i]
+			copy_decn(&BDecn, &A_ARR_j);
+			mult_decn();
+			//accum -= 10
+			copy_decn(&BDecn, &DECN_1);
+			BDecn.exponent = 1; //BDecn = 10
+			negate_decn(&BDecn);
+			add_decn();
+#ifdef DEBUG_LOG
+// 			decn_to_str_complete(&B_j);
+// 			printf("    %u: %s\n", k_j, Buf);
+#endif
+			k_j++;
+		}
+		//track num times
+		NUM_TIMES.lsu[j] = k_j - 1;
+#ifdef DEBUG_LOG
+		decn_to_str_complete(&B_j);
+		printf("  %u: num_times: %u, %s\n", j, NUM_TIMES.lsu[j], Buf);
+#endif
+
+		//find next a_j (1 + 10^-j)
+		if (j == 0) {
+			//build value 1.1
+			set_dec80_zero(&A_ARR_j);
+			A_ARR_j.lsu[0] = 11;
+		} else {
+			//get next 1.000...1 value
+			A_ARR_j.lsu[0] &= 1;
+			shift_right(&A_ARR_j);
+			A_ARR_j.lsu[0] = 10;
+		}
+#ifdef DEBUG_LOG
+		decn_to_str_complete(&A_ARR_j);
+		printf("  new a_j val: %s\n", Buf);
+#endif
+	}
+
+	//build final value
+	copy_decn(&AccDecn, &B_j); //remainder
+#ifdef DEBUG_LOG
+	decn_to_str_complete(&AccDecn);
+	printf("ln() remainder: %s\n", Buf);
+#endif
+	//TODO: scale remainder?
+	for (j = NUM_A_ARR - 1; j < NUM_A_ARR; j--){ //sum in reverse order, note: (j < NUM_A_ARR) == signed(j >= 0)
+		for (k = 0; k < NUM_TIMES.lsu[j]; k++){
+			//accum += ln_a_arr[j];
+			copy_decn(&BDecn, &LN_A_ARR[j]);
+			add_decn();
+		}
+		shift_right(&AccDecn);
+#ifdef DEBUG_LOG
+		decn_to_str_complete(&AccDecn);
+		printf("%u: ln() remainder: %s\n", j, Buf);
+#endif
+	}
+#ifdef DEBUG_LOG
+	decn_to_str_complete(&AccDecn);
+	printf("ln() accum after summing: %s\n", Buf);
+#endif
+	//accum = -accum;
+	negate_decn(&AccDecn);
+
+	//add back in initial exponent
+	copy_decn(&B_j, &AccDecn); //temporarily store accum in B_j
+	set_dec80_zero(&AccDecn);
+	//check if negative
+	if (initial_exp < 0){
+		j = 1; //track is_neg
+		initial_exp = -initial_exp;
+	} else {
+		j = 0;
+	}
+	//check if too big for single lsu
+#ifdef EXP16
+	if (initial_exp >= 10000){
+		AccDecn.lsu[0] = initial_exp / 10000;
+		initial_exp    = initial_exp % 10000;
+		AccDecn.lsu[1] = initial_exp / 100;
+		AccDecn.lsu[2] = initial_exp % 100;
+		AccDecn.exponent = 4;
+	} else
+#endif
+	if (initial_exp >= 100){
+		AccDecn.lsu[0] = initial_exp / 100;
+		AccDecn.lsu[1] = initial_exp % 100;
+		AccDecn.exponent = 2;
+	} else {
+		AccDecn.lsu[0] = initial_exp;
+		AccDecn.exponent = 1;
+	}
+	//check if need to negate
+	if (j) { //was negative
+		negate_decn(&AccDecn);
+	}
+#ifdef DEBUG_LOG
+	decn_to_str_complete(&AccDecn);
+	printf("ln() exponent from initial: %s\n", Buf);
+#endif
+	//initial exp * ln(10)
+	copy_decn(&BDecn, &DECN_LN_10);
+	mult_decn();
+	//add back stored accum
+	copy_decn(&BDecn, &B_j);
+	add_decn();
+
+	//TODO: AccDecn.exponent += ;
+
+//try not to pollute namespace
+#undef B_j
+#undef NUM_TIMES
+#undef A_ARR_j
+#undef NUM_A_ARR
+}
+
+static void set_str_error(void){
 	Buf[0] = 'E';
 	Buf[1] = 'r';
 	Buf[2] = 'r';

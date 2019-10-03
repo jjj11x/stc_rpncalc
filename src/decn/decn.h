@@ -43,8 +43,12 @@ typedef struct {
 
 //1 constant
 static const dec80 DECN_1 = {
-	0,
-	{10, 0}
+	0, {10, 0}
+};
+
+//ln(10) constant
+static const dec80 DECN_LN_10 = {
+	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
 };
 
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits
@@ -63,6 +67,8 @@ void negate_decn(dec80* x);
 void add_decn(void);
 void mult_decn(void);
 void div_decn(void);
+
+void ln_decn(void);
 
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

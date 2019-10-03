@@ -141,6 +141,14 @@ static uint8_t Exp_i = 0;
 static int8_t I_Key;
 
 static inline void finish_process_entry (void){
+	//reset state as initial ENTERING_DONE state
+	EnteringExp = ENTERING_DONE;
+	Entry_i = 0;
+	Exp_i = 0;
+	ExpBuf[0] = 0;
+	ExpBuf[1] = 0;
+}
+
 	//finish entry
 	int8_t exponent; //exponent is only 2 digits
 	exponent = 10*ExpBuf[1] + ExpBuf[0];
@@ -148,14 +156,11 @@ static inline void finish_process_entry (void){
 		exponent = -exponent;
 	}
 	EntryBuf[Entry_i] = '\0';
+	//process cmd
 	push_decn(EntryBuf, exponent);
 	process_cmd(KEY_MAP[I_Key]);
-	//reset state as initial ENTERING_DONE state
-	EnteringExp = ENTERING_DONE;
-	Entry_i = 0;
-	Exp_i = 0;
-	ExpBuf[0] = 0;
-	ExpBuf[1] = 0;
+	//reset to done
+	entering_done();
 }
 
 #ifdef DESKTOP
@@ -359,10 +364,9 @@ int main()
 				case 'c': {
 					if (IsShifted || EnteringExp == ENTERING_DONE){
 						//clear
-						clear_x();
+						IsShifted = 0;
 						NoLift = 1;
-						EnteringExp = ENTERING_SIGNIF;
-						EntryBuf[Entry_i] = '0';
+						entering_done();
 						//do not increment entry_i from 0, until first non-0 entry
 					} else if ( EnteringExp >= ENTERING_EXP){
 						//go back to digit entry
@@ -432,7 +436,7 @@ int main()
 		printf("entry_i=%d,exp_i=%d\n", Entry_i, Exp_i );
 		print_entry_bufs();
 #endif
-		if ( EnteringExp == ENTERING_DONE){
+		if ( EnteringExp == ENTERING_DONE && !NoLift){
 			disp_exponent = decn_to_str(get_x());
 			if (disp_exponent == 0){
 				LCD_OutString(Buf, MAX_CHARS_PER_LINE);

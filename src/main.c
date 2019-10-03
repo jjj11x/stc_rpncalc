@@ -128,8 +128,8 @@ __xdata uint8_t ExpBuf[2];
 __xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.03";
 
 #ifdef DESKTOP
-static void print_entry_bufs(void){
-	printf("EntryBuf:~%s~\n", EntryBuf);
+static void print_entry_bufs(int entering_exp){
+	printf("EntryBuf:~%s~ (%d)\n", EntryBuf, entering_exp);
 	printf("ExpBuf:%c%c\n", '0'+ExpBuf[1], '0'+ExpBuf[0]);
 }
 #endif
@@ -145,7 +145,6 @@ int main()
 {
 	enum {
 		ENTERING_DONE,
-		ENTERING_SIGNIF_NOLIFT,
 		ENTERING_SIGNIF,
 		ENTERING_FRAC,
 		ENTERING_EXP,
@@ -358,10 +357,10 @@ int main()
 						ExpBuf[1] = 0;
 					} else if (entry_i > 0){
 						//backspace
-						if (EntryBuf[entry_i] == '.'){
-							entering_exp--;
-						}
 						entry_i--;
+						if (EntryBuf[entry_i] == '.'){
+							entering_exp = ENTERING_SIGNIF;
+						}
 					}
 				} break;
 				//////////
@@ -430,7 +429,7 @@ int main()
 #ifdef DESKTOP
 		print_lcd();
 		printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);
-		print_entry_bufs();
+		print_entry_bufs(entering_exp);
 #endif
 		if (entering_exp == ENTERING_DONE){
 			disp_exponent = decn_to_str(get_x());
@@ -483,7 +482,7 @@ int main()
 #ifdef DESKTOP
 		print_lcd();
 		printf("entry_i=%d,exp_i=%d\n", entry_i, exp_i);
-		print_entry_bufs();
+		print_entry_bufs(entering_exp);
 		LcdAvailable.release();
 #endif
 		//turn backlight back on

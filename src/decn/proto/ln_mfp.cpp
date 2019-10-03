@@ -14,7 +14,7 @@ static const int BSIZE = 200;
 char buf[BSIZE];
 char pbuf[BSIZE];
 
-static const int NUM_A_ARR = 10;
+static const int NUM_A_ARR = 9;
 mpfr_float a_arr[NUM_A_ARR];
 mpfr_float ln_a_arr[NUM_A_ARR];
 
@@ -23,6 +23,9 @@ static const unsigned int CALC_PRECISION = 18;
 
 int main(void){
 	cout << std::scientific << std::setprecision(CALC_PRECISION);
+	mpfr_float a(10, CALC_PRECISION);
+	a = log(a);
+	cout << "ln(10):" << a << endl;
 	//initiallize a_arr and ln_a_arr
 	for (int i = 0; i < NUM_A_ARR; i++){
 		// a[i] = (1 + 10^-i)
@@ -47,6 +50,7 @@ int main(void){
 		actual = log(A);
 		
 		int num_times[NUM_A_ARR];
+		//track number of times multiplied by a_arr[j]
 		for (int j = 0; j < NUM_A_ARR; j++){
 			if (j != 0){
 				b_j *= 10.0;
@@ -57,6 +61,8 @@ int main(void){
 				b_j = accum;
 				accum *= a_arr[j];
 				accum -= 1.0;
+// 				printf("     %d: ", k_j);
+// 				cout << b_j << endl;
 				k_j++;
 			}
 			num_times[j] = k_j - 1;

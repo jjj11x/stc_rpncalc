@@ -47,9 +47,9 @@ static const uint8_t num_digits_display = 16;
 
 __idata dec80 AccDecn, BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn()
-__idata dec80 Tmp2Decn; //used by div_decn()
-__idata dec80 Tmp3Decn; //used by div_decn()
-__idata dec80 Tmp4Decn; //used by div_decn()
+__idata dec80 Tmp2Decn; //used by div_decn() and ln_decn()
+__idata dec80 Tmp3Decn; //used by div_decn() and ln_decn()
+__idata dec80 Tmp4Decn; //used by div_decn() and ln_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
 
@@ -1013,6 +1013,12 @@ void ln_decn(void){
 #undef NUM_TIMES
 #undef A_ARR_j
 #undef NUM_A_ARR
+}
+
+void log10_decn(void){
+	ln_decn();
+	copy_decn(&BDecn, &DECN_LN_10);
+	div_decn();
 }
 
 static void set_str_error(void){

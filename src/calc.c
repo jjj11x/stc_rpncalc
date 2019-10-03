@@ -118,12 +118,21 @@ void process_cmd(char cmd){
 			toggle_shifted();
 		} break;
 		//////////
+		case '9':{
+			if (IsShifted && !decn_is_nan(&stack(STACK_X))){ //log10(x)
+				copy_decn(&AccDecn, &stack(STACK_X));
+				log10_decn();
+				copy_decn(&stack(STACK_X), &AccDecn);
+				IsShifted = 0;
+			}
+		} break;
+		//////////
 		case '8':{
 			if (IsShifted && !decn_is_nan(&stack(STACK_X))){ //ln(x)
 				copy_decn(&AccDecn, &stack(STACK_X));
 				ln_decn();
 				copy_decn(&stack(STACK_X), &AccDecn);
-				toggle_shifted();
+				IsShifted = 0;
 			}
 		} break;
 		//////////

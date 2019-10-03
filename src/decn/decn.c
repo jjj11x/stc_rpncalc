@@ -858,13 +858,18 @@ void ln_decn(void){
 // 		{0, {99, 99, 99, 99, 95,  2, 19, 27, 11}},
 	};
 	uint8_t j, k;
+	exp_t initial_exp;
 #define B_j Tmp2Decn
 #define NUM_TIMES Tmp3Decn
 #define A_ARR_j Tmp4Decn
+
+	//check not negative
+	if (AccDecn.exponent < 0){
+		set_dec80_NaN(AccDecn);
+		return;
+	}
 	//normalize
-	exp_t initial_exp;
 	remove_leading_zeros(&AccDecn);
-	//TODO: error for negative numbers
 	//scale to between 1 and 10
 	initial_exp = get_exponent(&AccDecn) + 1;
 	AccDecn.exponent = 0;
@@ -890,7 +895,7 @@ void ln_decn(void){
 	for (j = 0; j < NUM_A_ARR; j++){
 		uint8_t k_j;
 		if (j != 0){
-			//b_j *= 10.0 //TODO: necessary?
+			//b_j *= 10.0
 			shift_left(&B_j);
 		}
 		copy_decn(&AccDecn, &B_j); //accum = b_j
@@ -941,7 +946,6 @@ void ln_decn(void){
 	decn_to_str_complete(&AccDecn);
 	printf("ln() remainder: %s\n", Buf);
 #endif
-	//TODO: scale remainder?
 	for (j = NUM_A_ARR - 1; j < NUM_A_ARR; j--){ //sum in reverse order, note: (j < NUM_A_ARR) == signed(j >= 0)
 		for (k = 0; k < NUM_TIMES.lsu[j]; k++){
 			//accum += ln_a_arr[j];
@@ -1003,8 +1007,6 @@ void ln_decn(void){
 	//add back stored accum
 	copy_decn(&BDecn, &B_j);
 	add_decn();
-
-	//TODO: AccDecn.exponent += ;
 
 //try not to pollute namespace
 #undef B_j

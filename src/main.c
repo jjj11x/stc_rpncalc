@@ -129,6 +129,7 @@ __xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.04";
 
 
 enum {
+	ENTERING_DONE_CLEARED,
 	ENTERING_DONE,
 	ENTERING_SIGNIF,
 	ENTERING_FRAC,
@@ -140,9 +141,12 @@ static uint8_t EnteringExp = ENTERING_DONE;
 static uint8_t Exp_i = 0;
 static int8_t I_Key;
 
+static inline uint8_t is_entering_done(void){
+	return EnteringExp <= ENTERING_DONE;
+}
+
 static void entering_done(void){
-	//reset state as initial ENTERING_DONE state
-	EnteringExp = ENTERING_DONE;
+	//reset pointers
 	Entry_i = 0;
 	Exp_i = 0;
 	ExpBuf[0] = 0;
@@ -150,18 +154,21 @@ static void entering_done(void){
 }
 
 static inline void finish_process_entry(void){
-	//finish entry
-	int8_t exponent; //exponent is only 2 digits
-	exponent = 10*ExpBuf[1] + ExpBuf[0];
-	if ( EnteringExp == ENTERING_EXP_NEG){
-		exponent = -exponent;
+	if (!is_entering_done()){
+		//finish entry
+		int8_t exponent; //exponent is only 2 digits
+		exponent = 10*ExpBuf[1] + ExpBuf[0];
+		if ( EnteringExp == ENTERING_EXP_NEG){
+			exponent = -exponent;
+		}
+		EntryBuf[Entry_i] = '\0';
+		//reset to done
+		entering_done();
 	}
-	EntryBuf[Entry_i] = '\0';
 	//process cmd
 	push_decn(EntryBuf, exponent);
 	process_cmd(KEY_MAP[I_Key]);
-	//reset to done
-	entering_done();
+	EnteringExp = ENTERING_DONE;
 }
 
 #ifdef DESKTOP
@@ -284,7 +291,7 @@ int main()
 								Exp_i = 1;
 							}
 						}
-					} else if ( EnteringExp == ENTERING_DONE){
+					} else if (is_entering_done()){
 						EnteringExp = ENTERING_SIGNIF;
 						EntryBuf[Entry_i] = KEY_MAP[I_Key];
 						//do not increment entry_i from 0, until first non-0 entry
@@ -304,12 +311,7 @@ int main()
 				case '8': //fallthrough
 				case '9': {
 					if (IsShifted){
-						if ( EnteringExp != ENTERING_DONE){
-							finish_process_entry();
-						} else {
-							//process key
-							process_cmd(KEY_MAP[I_Key]);
-						}
+						finish_process_entry();
 						NoLift = 0;
 					} else if ( EnteringExp >= ENTERING_EXP){
 						if ( Exp_i == 0){
@@ -323,7 +325,7 @@ int main()
 								Exp_i = 1;
 							}
 						}
-					} else if ( EnteringExp == ENTERING_DONE){
+					} else if (is_entering_done()){
 						EnteringExp = ENTERING_SIGNIF;
 						EntryBuf[Entry_i] = KEY_MAP[I_Key];
 						Entry_i++;
@@ -334,7 +336,7 @@ int main()
 				} break;
 				//////////
 				case '.': {
-					if ( EnteringExp == ENTERING_DONE){
+					if (is_entering_done()){
 						EntryBuf[Entry_i++] = '0';
 						EntryBuf[Entry_i++] = '.';
 						EnteringExp = ENTERING_FRAC;
@@ -353,21 +355,17 @@ int main()
 				//////////
 				case '=': {
 					//track stack lift
-					if ( EnteringExp != ENTERING_DONE){
-						finish_process_entry();
-					} else {
-						//dup
-						process_cmd(KEY_MAP[I_Key]);
-					}
+					finish_process_entry();
 					NoLift = 1;
 				} break;
 				//////////
 				case 'c': {
-					if (IsShifted || EnteringExp == ENTERING_DONE){
+					if (IsShifted || is_entering_done()){
 						//clear
 						IsShifted = 0;
 						NoLift = 1;
 						entering_done();
+						EnteringExp = ENTERING_DONE_CLEARED;
 						//do not increment entry_i from 0, until first non-0 entry
 					} else if ( EnteringExp >= ENTERING_EXP){
 						//go back to digit entry
@@ -390,12 +388,7 @@ int main()
 				case '/': //fallthrough
 				case '<': //fallthrough //use as +/-
 				case 'r': { //use as swap
-					if ( EnteringExp != ENTERING_DONE){
-						finish_process_entry();
-					} else {
-						//process key
-						process_cmd(KEY_MAP[I_Key]);
-					}
+					finish_process_entry();
 					NoLift = 0;
 				} break;
 				//////////
@@ -410,7 +403,7 @@ int main()
 
 		LCD_GoTo(0,0);
 		//display y register on first line
-		if ( EnteringExp == ENTERING_DONE){
+		if (is_entering_done()){
 			disp_exponent = decn_to_str(get_y());
 		} else {
 			//display x on 1st line, entered number on 2nd line
@@ -437,7 +430,7 @@ int main()
 		printf("entry_i=%d,exp_i=%d\n", Entry_i, Exp_i );
 		print_entry_bufs();
 #endif
-		if ( EnteringExp == ENTERING_DONE && !NoLift){
+		if ( EnteringExp == ENTERING_DONE){ //does not cover cleared case
 			disp_exponent = decn_to_str(get_x());
 			if (disp_exponent == 0){
 				LCD_OutString(Buf, MAX_CHARS_PER_LINE);

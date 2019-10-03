@@ -863,8 +863,8 @@ void ln_decn(void){
 #define NUM_TIMES Tmp3Decn
 #define A_ARR_j Tmp4Decn
 
-	//check not negative
-	if (AccDecn.exponent < 0){
+	//check not negative or zero
+	if (AccDecn.exponent < 0 || decn_is_zero(&AccDecn)){
 		set_dec80_NaN(&AccDecn);
 		return;
 	}

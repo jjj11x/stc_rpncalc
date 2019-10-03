@@ -865,7 +865,7 @@ void ln_decn(void){
 
 	//check not negative
 	if (AccDecn.exponent < 0){
-		set_dec80_NaN(AccDecn);
+		set_dec80_NaN(&AccDecn);
 		return;
 	}
 	//normalize

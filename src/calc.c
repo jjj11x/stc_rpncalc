@@ -84,8 +84,10 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case '=':{
-			StackPtr--;
-			copy_decn(&stack(STACK_X), &stack(STACK_Y));
+			if (!decn_is_nan(&stack(STACK_X))){
+				StackPtr--;
+				copy_decn(&stack(STACK_X), &stack(STACK_Y));
+			}
 		} break;
 		//////////
 		case 'c':{
@@ -93,14 +95,19 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case '<':{ //use as +/-
-			negate_decn(&stack(STACK_X));
+			if (!decn_is_nan(&stack(STACK_X))){
+				negate_decn(&stack(STACK_X));
+			}
 		} break;
 		//////////
 		case 'r':{ //use as swap
-			dec80 tmp;
-			copy_decn(&tmp, &stack(STACK_X));
-			copy_decn(&stack(STACK_X), &stack(STACK_Y));
-			copy_decn(&stack(STACK_Y), &tmp);
+			if (!decn_is_nan(&stack(STACK_X))){
+				dec80 tmp;
+				copy_decn(&tmp, &stack(STACK_X));
+				copy_decn(&stack(STACK_X), &stack(STACK_Y));
+				copy_decn(&stack(STACK_Y), &tmp);
+			}
+		} break;
 		} break;
 		//////////
 	} //switch(cmd)

@@ -64,3 +64,183 @@ acc/b: 0.666666666666666672
      : 0.666666666666666672
      : 0
 
+  a  : 0.155
+ln() accum scaled between 1,10: 1.55
+ln() initial accum: 8.45 (0)
+  0: num_times: 2, 3.8
+  new a_j val: 1.1
+  1: num_times: 5, 0.14838
+  new a_j val: 1.01
+  2: num_times: 0, 1.4838
+  new a_j val: 1.001
+  3: num_times: 1, 4.852838
+  new a_j val: 1.0001
+  4: num_times: 4, 8.5417938638869182
+  new a_j val: 1.00001
+  5: num_times: 8, 5.4219722571346027
+  new a_j val: 1.000001
+  6: num_times: 5, 4.2198936704010812
+  new a_j val: 1.0000001
+  7: num_times: 4, 2.1989475835876253
+  new a_j val: 1.00000001
+  8: num_times: 2, 1.9894761756657718
+  new a_j val: 1.000000001
+ln() remainder: 1.9894761756657718
+8: ln() remainder: 2.1989476075668969
+7: ln() remainder: 4.2198945607568002
+6: ln() remainder: 5.4219869560773326
+5: ln() remainder: 8.5421586958743971
+4: ln() remainder: 4.854015882919773
+3: ln() remainder: 1.4849019213755104
+2: ln() remainder: 0.148490192137551
+1: ln() remainder: 4.7803580094299981
+0: ln() remainder: 1.8643301620628904
+ln() accum after summing: 1.8643301620628904
+ln() exponent from initial: 0
+ln(a): -1.8643301620628904
+     : 3.E-17
+
+  a  : 10.
+ln() accum scaled between 1,10: 1.
+ln() initial accum: 9. (2)
+  0: num_times: 3, 2.
+  new a_j val: 1.1
+  1: num_times: 2, 3.2
+  new a_j val: 1.01
+  2: num_times: 3, 2.668632
+  new a_j val: 1.001
+  3: num_times: 2, 6.72971932632
+  new a_j val: 1.0001
+  4: num_times: 6, 7.3225796749329481
+  new a_j val: 1.00001
+  5: num_times: 7, 3.2288226738783197
+  new a_j val: 1.000001
+  6: num_times: 3, 2.2882936035502779
+  new a_j val: 1.0000001
+  7: num_times: 2, 2.8829396120902148
+  new a_j val: 1.00000001
+  8: num_times: 2, 8.8293965974900732
+  new a_j val: 1.000000001
+ln() remainder: 8.8293965974900732
+8: ln() remainder: 2.882939649749327
+7: ln() remainder: 2.2882938649749879
+6: ln() remainder: 3.2288278864984903
+5: ln() remainder: 7.3228477888831799
+4: ln() remainder: 6.7319847988868179
+3: ln() remainder: 2.6721991460557481
+2: ln() remainder: 3.2523191705559996
+1: ln() remainder: 2.2314355131420971
+0: ln() remainder: 2.3025850929940456
+ln() accum after summing: 2.3025850929940456
+ln() exponent from initial: 2.
+ln(a): 2.30258509299404576
+     : 8.E-17
+
+  a  : 11000000000.
+ln() accum scaled between 1,10: 1.1
+ln() initial accum: 8.9 (11)
+  0: num_times: 3, 1.2
+  new a_j val: 1.1
+  1: num_times: 1, 3.2
+  new a_j val: 1.01
+  2: num_times: 3, 2.668632
+  new a_j val: 1.001
+  3: num_times: 2, 6.72971932632
+  new a_j val: 1.0001
+  4: num_times: 6, 7.3225796749329481
+  new a_j val: 1.00001
+  5: num_times: 7, 3.2288226738783197
+  new a_j val: 1.000001
+  6: num_times: 3, 2.2882936035502779
+  new a_j val: 1.0000001
+  7: num_times: 2, 2.8829396120902148
+  new a_j val: 1.00000001
+  8: num_times: 2, 8.8293965974900732
+  new a_j val: 1.000000001
+ln() remainder: 8.8293965974900732
+8: ln() remainder: 2.882939649749327
+7: ln() remainder: 2.2882938649749879
+6: ln() remainder: 3.2288278864984903
+5: ln() remainder: 7.3228477888831799
+4: ln() remainder: 6.7319847988868179
+3: ln() remainder: 2.6721991460557481
+2: ln() remainder: 3.2523191705559996
+1: ln() remainder: 1.2783337150988485
+0: ln() remainder: 2.2072749131897207
+ln() accum after summing: 2.2072749131897207
+ln() exponent from initial: 11.
+ln(a): 23.1211611097447817
+     : 0
+
+  a  : 2.02E-10
+ln() accum scaled between 1,10: 2.02
+ln() initial accum: 7.98 (-9)
+  0: num_times: 2, 1.92
+  new a_j val: 1.1
+  1: num_times: 2, 2.232
+  new a_j val: 1.01
+  2: num_times: 2, 2.668632
+  new a_j val: 1.001
+  3: num_times: 2, 6.72971932632
+  new a_j val: 1.0001
+  4: num_times: 6, 7.3225796749329481
+  new a_j val: 1.00001
+  5: num_times: 7, 3.2288226738783197
+  new a_j val: 1.000001
+  6: num_times: 3, 2.2882936035502779
+  new a_j val: 1.0000001
+  7: num_times: 2, 2.8829396120902148
+  new a_j val: 1.00000001
+  8: num_times: 2, 8.8293965974900732
+  new a_j val: 1.000000001
+ln() remainder: 8.8293965974900732
+8: ln() remainder: 2.882939649749327
+7: ln() remainder: 2.2882938649749879
+6: ln() remainder: 3.2288278864984903
+5: ln() remainder: 7.3228477888831799
+4: ln() remainder: 6.7319847988868179
+3: ln() remainder: 2.6721991460557481
+2: ln() remainder: 2.2572860852391913
+1: ln() remainder: 2.1319322046104163
+0: ln() remainder: 1.5994875815809322
+ln() accum after summing: 1.5994875815809322
+ln() exponent from initial: -9.
+ln(a): -22.3227534185273433
+     : 1.E-16
+
+  a  : 1.5
+ln() accum scaled between 1,10: 1.5
+ln() initial accum: 8.5 (1)
+  0: num_times: 2, 4.
+  new a_j val: 1.1
+  1: num_times: 5, 3.3694
+  new a_j val: 1.01
+  2: num_times: 3, 4.413961894
+  new a_j val: 1.001
+  3: num_times: 4, 4.2564024200762553
+  new a_j val: 1.0001
+  4: num_times: 4, 2.5750519644445702
+  new a_j val: 1.00001
+  5: num_times: 2, 5.7509346574136428
+  new a_j val: 1.000001
+  6: num_times: 5, 7.5095341213443924
+  new a_j val: 1.0000001
+  7: num_times: 7, 5.0953727801950431
+  new a_j val: 1.00000001
+  8: num_times: 5, 0.953729349636862
+  new a_j val: 1.000000001
+ln() remainder: 0.953729349636862
+8: ln() remainder: 5.0953729099644855
+7: ln() remainder: 7.509536940996642
+6: ln() remainder: 5.7509511941013168
+5: ln() remainder: 2.5750851194767976
+4: ln() remainder: 4.257308525280013
+3: ln() remainder: 4.4237321848621339
+2: ln() remainder: 3.4274724744366382
+1: ln() remainder: 5.1082562376599068
+0: ln() remainder: 1.8971199848858812
+ln() accum after summing: 1.8971199848858812
+ln() exponent from initial: 1.
+ln(a): 0.176091259055681285
+     : 5.5681285E-11
+

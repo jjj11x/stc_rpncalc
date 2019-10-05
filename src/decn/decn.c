@@ -18,6 +18,7 @@
 // #define DEBUG_MULT_ALL //even more verbose
 // #define DEBUG_DIV
 #define DEBUG_LOG
+// #define DEBUG_LOG_ALL //even more verbose
 
 #ifndef DESKTOP
 //#undef EXTRA_CHECKS
@@ -906,15 +907,24 @@ void ln_decn(void){
 			copy_decn(&BDecn, &A_ARR_j);
 			mult_decn();
 			//accum -= 10
-			copy_decn(&BDecn, &DECN_1);
-			BDecn.exponent = 1; //BDecn = 10
-			negate_decn(&BDecn);
-			add_decn();
-#ifdef DEBUG_LOG
-// 			decn_to_str_complete(&B_j);
-// 			printf("    %u: %s\n", k_j, Buf);
+			if (AccDecn.lsu[0] >= 10 && get_exponent(&AccDecn) > 0){ //accum.exponent is 1 while needs subtracting
+				AccDecn.lsu[0] -= 10;
+			} else {
+				//set as negative to get out of while(), accum will get overwritten with b_j
+				AccDecn.exponent = -1;
+			}
+#ifdef DEBUG_LOG_ALL
+			decn_to_str_complete(&AccDecn);
+			printf("    %u: %s\t", k_j, Buf);
+			for (int ii = 0; ii < DEC80_NUM_LSU; ii++){
+				printf("%2d ", AccDecn.lsu[ii]);
+			}
+			printf(" (%d)\n", get_exponent(&AccDecn));
 #endif
 			k_j++;
+#ifdef DEBUG_LOG
+			assert(k_j != 255);
+#endif
 		}
 		//track num times
 		NUM_TIMES.lsu[j] = k_j - 1;
@@ -930,7 +940,6 @@ void ln_decn(void){
 			A_ARR_j.lsu[0] = 11;
 		} else {
 			//get next 1.000...1 value
-			A_ARR_j.lsu[0] &= 1;
 			shift_right(&A_ARR_j);
 			A_ARR_j.lsu[0] = 10;
 		}

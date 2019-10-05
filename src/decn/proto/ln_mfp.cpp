@@ -10,10 +10,6 @@ using namespace boost::multiprecision;
 using std::cout;
 using std::endl;
 
-static const int BSIZE = 200;
-char buf[BSIZE];
-char pbuf[BSIZE];
-
 static const int NUM_A_ARR = 9;
 mpfr_float a_arr[NUM_A_ARR];
 mpfr_float ln_a_arr[NUM_A_ARR];
@@ -48,7 +44,7 @@ int main(void){
 		mpfr_float accum(b_j, CALC_PRECISION);
 		mpfr_float_1000 actual;
 		actual = log(A);
-		
+
 		int num_times[NUM_A_ARR];
 		//track number of times multiplied by a_arr[j]
 		for (int j = 0; j < NUM_A_ARR; j++){
@@ -69,7 +65,7 @@ int main(void){
 // 			printf("  %d: num_times: %d, ", j, num_times[j]);
 // 			cout << b_j << endl;
 		}
-		
+
 		//build final value
 		accum = b_j; //remainder
 		accum *= pow(10.0, -(NUM_A_ARR - 1)); //scale remainder
@@ -81,10 +77,11 @@ int main(void){
 		}
 		accum = -accum;
 
+		//calculate relative error
 		mpfr_float_1000 calc, diff;
 		calc = accum;
 		diff = (actual - calc)/actual;
-		
+
 		if (diff > 5e-17){
 			cout << x << ": ";
 			cout << std::setprecision(18) << accum << ", ";

@@ -1015,11 +1015,11 @@ void ln_decn(void){
 #undef NUM_A_ARR
 }
 
-void log10_decn(void){
-	ln_decn();
-	copy_decn(&BDecn, &DECN_LN_10);
-	div_decn();
-}
+//inline void log10_decn(void){
+//	ln_decn();
+//	copy_decn(&BDecn, &DECN_LN_10);
+//	div_decn();
+//}
 
 static void set_str_error(void){
 	Buf[0] = 'E';

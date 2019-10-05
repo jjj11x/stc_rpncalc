@@ -69,7 +69,13 @@ void mult_decn(void);
 void div_decn(void);
 
 void ln_decn(void);
-void log10_decn(void);
+//inline void log10_decn(void);
+#define log10_decn() do {               \
+		ln_decn();                      \
+		copy_decn(&BDecn, &DECN_LN_10); \
+		div_decn();                     \
+	} while(0);
+
 
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

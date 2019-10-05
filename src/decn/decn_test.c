@@ -62,6 +62,22 @@ static void log_test(
 	printf("     : %s\n\n", Buf);
 }
 
+static void log10_test(
+	const char* x_str, int x_exp,
+	const char* res_str, int res_exp)
+{
+	build_dec80(x_str, x_exp);
+	decn_to_str_complete(&AccDecn);
+	printf("  a  : %s\n", Buf);
+	log10_decn();
+	decn_to_str_complete(&AccDecn);
+	printf("ln(a): %s\n", Buf);
+	build_decn_at(&diff, res_str, res_exp);
+	take_diff();
+	decn_to_str_complete(&diff);
+	printf("     : %s\n\n", Buf);
+}
+
 int main(void){
 //	dec80 acc, b;
 
@@ -226,5 +242,10 @@ int main(void){
 		"-22.3227534185273434", 0
 	);
 
+	//new acc for log test
+	log10_test(
+		"1.5", 0,
+		"0.176091259", 0
+	);
 	return 0;
 }

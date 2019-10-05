@@ -862,7 +862,6 @@ void ln_decn(void){
 	exp_t initial_exp;
 #define B_j Tmp2Decn
 #define NUM_TIMES Tmp3Decn
-#define A_ARR_j Tmp4Decn
 
 	//check not negative or zero
 	if (AccDecn.exponent < 0 || decn_is_zero(&AccDecn)){
@@ -878,9 +877,6 @@ void ln_decn(void){
 	decn_to_str_complete(&AccDecn);
 	printf("ln() accum scaled between 1,10: %s\n", Buf);
 #endif
-	//get initial a_arr[0] = 2
-	set_dec80_zero(&A_ARR_j);
-	A_ARR_j.lsu[0] = 20;
 	//get initial estimate (accum = 10 - A)
 	copy_decn(&BDecn, &DECN_1);
 	BDecn.exponent = 1; //BDecn = 10
@@ -902,12 +898,18 @@ void ln_decn(void){
 		copy_decn(&AccDecn, &B_j); //accum = b_j
 		k_j = 0;
 		while (!(AccDecn.exponent < 0)){ //while >= 0 (!negative) TODO: should just be >
+			uint8_t i;
 			copy_decn(&B_j, &AccDecn); //b_j = accum
-			//accum *= a_arr[i]
-			copy_decn(&BDecn, &A_ARR_j);
-			mult_decn();
+			//accum *= a_arr[j]
+			// since a_arr[j] is of the form 1 + 10^-j, just shift accum and add to self
+			copy_decn(&BDecn, &AccDecn);
+			for (i = 0; i < j; i++){
+				shift_right(&BDecn);
+			}
+			add_decn();
 			//accum -= 10
-			if (AccDecn.lsu[0] >= 10 && get_exponent(&AccDecn) > 0){ //accum.exponent is 1 while needs subtracting
+			// accum.exponent is 1 while needs subtracting
+			if (AccDecn.lsu[0] >= 10 && get_exponent(&AccDecn) > 0){
 				AccDecn.lsu[0] -= 10;
 			} else {
 				//set as negative to get out of while(), accum will get overwritten with b_j
@@ -931,21 +933,6 @@ void ln_decn(void){
 #ifdef DEBUG_LOG
 		decn_to_str_complete(&B_j);
 		printf("  %u: num_times: %u, %s\n", j, NUM_TIMES.lsu[j], Buf);
-#endif
-
-		//find next a_j (1 + 10^-j)
-		if (j == 0) {
-			//build value 1.1
-			set_dec80_zero(&A_ARR_j);
-			A_ARR_j.lsu[0] = 11;
-		} else {
-			//get next 1.000...1 value
-			shift_right(&A_ARR_j);
-			A_ARR_j.lsu[0] = 10;
-		}
-#ifdef DEBUG_LOG
-		decn_to_str_complete(&A_ARR_j);
-		printf("  new a_j val: %s\n", Buf);
 #endif
 	}
 
@@ -1020,7 +1007,6 @@ void ln_decn(void){
 //try not to pollute namespace
 #undef B_j
 #undef NUM_TIMES
-#undef A_ARR_j
 #undef NUM_A_ARR
 }
 

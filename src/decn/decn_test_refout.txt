@@ -68,23 +68,14 @@ acc/b: 0.666666666666666672
 ln() accum scaled between 1,10: 1.55
 ln() initial accum: 8.45 (0)
   0: num_times: 2, 3.8
-  new a_j val: 1.1
   1: num_times: 5, 0.14838
-  new a_j val: 1.01
   2: num_times: 0, 1.4838
-  new a_j val: 1.001
   3: num_times: 1, 4.852838
-  new a_j val: 1.0001
   4: num_times: 4, 8.5417938638869182
-  new a_j val: 1.00001
   5: num_times: 8, 5.4219722571346027
-  new a_j val: 1.000001
   6: num_times: 5, 4.2198936704010812
-  new a_j val: 1.0000001
   7: num_times: 4, 2.1989475835876253
-  new a_j val: 1.00000001
   8: num_times: 2, 1.9894761756657718
-  new a_j val: 1.000000001
 ln() remainder: 1.9894761756657718
 8: ln() remainder: 2.1989476075668969
 7: ln() remainder: 4.2198945607568002
@@ -104,23 +95,14 @@ ln(a): -1.8643301620628904
 ln() accum scaled between 1,10: 1.
 ln() initial accum: 9. (2)
   0: num_times: 3, 2.
-  new a_j val: 1.1
   1: num_times: 2, 3.2
-  new a_j val: 1.01
   2: num_times: 3, 2.668632
-  new a_j val: 1.001
   3: num_times: 2, 6.72971932632
-  new a_j val: 1.0001
   4: num_times: 6, 7.3225796749329481
-  new a_j val: 1.00001
   5: num_times: 7, 3.2288226738783197
-  new a_j val: 1.000001
   6: num_times: 3, 2.2882936035502779
-  new a_j val: 1.0000001
   7: num_times: 2, 2.8829396120902148
-  new a_j val: 1.00000001
   8: num_times: 2, 8.8293965974900732
-  new a_j val: 1.000000001
 ln() remainder: 8.8293965974900732
 8: ln() remainder: 2.882939649749327
 7: ln() remainder: 2.2882938649749879
@@ -140,23 +122,14 @@ ln(a): 2.30258509299404576
 ln() accum scaled between 1,10: 1.1
 ln() initial accum: 8.9 (11)
   0: num_times: 3, 1.2
-  new a_j val: 1.1
   1: num_times: 1, 3.2
-  new a_j val: 1.01
   2: num_times: 3, 2.668632
-  new a_j val: 1.001
   3: num_times: 2, 6.72971932632
-  new a_j val: 1.0001
   4: num_times: 6, 7.3225796749329481
-  new a_j val: 1.00001
   5: num_times: 7, 3.2288226738783197
-  new a_j val: 1.000001
   6: num_times: 3, 2.2882936035502779
-  new a_j val: 1.0000001
   7: num_times: 2, 2.8829396120902148
-  new a_j val: 1.00000001
   8: num_times: 2, 8.8293965974900732
-  new a_j val: 1.000000001
 ln() remainder: 8.8293965974900732
 8: ln() remainder: 2.882939649749327
 7: ln() remainder: 2.2882938649749879
@@ -176,23 +149,14 @@ ln(a): 23.1211611097447817
 ln() accum scaled between 1,10: 2.02
 ln() initial accum: 7.98 (-9)
   0: num_times: 2, 1.92
-  new a_j val: 1.1
   1: num_times: 2, 2.232
-  new a_j val: 1.01
   2: num_times: 2, 2.668632
-  new a_j val: 1.001
   3: num_times: 2, 6.72971932632
-  new a_j val: 1.0001
   4: num_times: 6, 7.3225796749329481
-  new a_j val: 1.00001
   5: num_times: 7, 3.2288226738783197
-  new a_j val: 1.000001
   6: num_times: 3, 2.2882936035502779
-  new a_j val: 1.0000001
   7: num_times: 2, 2.8829396120902148
-  new a_j val: 1.00000001
   8: num_times: 2, 8.8293965974900732
-  new a_j val: 1.000000001
 ln() remainder: 8.8293965974900732
 8: ln() remainder: 2.882939649749327
 7: ln() remainder: 2.2882938649749879
@@ -212,23 +176,14 @@ ln(a): -22.3227534185273433
 ln() accum scaled between 1,10: 1.5
 ln() initial accum: 8.5 (1)
   0: num_times: 2, 4.
-  new a_j val: 1.1
   1: num_times: 5, 3.3694
-  new a_j val: 1.01
   2: num_times: 3, 4.413961894
-  new a_j val: 1.001
   3: num_times: 4, 4.2564024200762553
-  new a_j val: 1.0001
   4: num_times: 4, 2.5750519644445702
-  new a_j val: 1.00001
   5: num_times: 2, 5.7509346574136428
-  new a_j val: 1.000001
   6: num_times: 5, 7.5095341213443924
-  new a_j val: 1.0000001
   7: num_times: 7, 5.0953727801950431
-  new a_j val: 1.00000001
   8: num_times: 5, 0.953729349636862
-  new a_j val: 1.000000001
 ln() remainder: 0.953729349636862
 8: ln() remainder: 5.0953729099644855
 7: ln() remainder: 7.509536940996642

@@ -80,7 +80,7 @@ int main(void){
 		//calculate relative error
 		mpfr_float_1000 calc, diff;
 		calc = accum;
-		diff = (actual - calc)/actual;
+		diff = abs((actual - calc)/actual);
 
 		if (diff > 5e-17){
 			cout << x << ": ";

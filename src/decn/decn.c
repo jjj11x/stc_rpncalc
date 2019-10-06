@@ -19,6 +19,8 @@
 // #define DEBUG_DIV
 #define DEBUG_LOG
 // #define DEBUG_LOG_ALL //even more verbose
+#define DEBUG_EXP
+// #define DEBUG_EXP_ALL //even more verbose
 
 #ifndef DESKTOP
 //#undef EXTRA_CHECKS
@@ -48,8 +50,8 @@ static const uint8_t num_digits_display = 16;
 
 __idata dec80 AccDecn, BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn()
-__idata dec80 Tmp2Decn; //used by div_decn() and ln_decn()
-__idata dec80 Tmp3Decn; //used by div_decn() and ln_decn()
+__idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn()
+__idata dec80 Tmp3Decn; //used by recip_decn() and ln_decn()
 __idata dec80 Tmp4Decn; //used by div_decn() and ln_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
@@ -553,6 +555,8 @@ void add_decn(void){
 		copy_decn(&AccDecn, &BDecn);
 		return;
 	}
+	//save b for restoring later
+	copy_decn(&TmpDecn, &BDecn);
 	//handle cases where signs differ
 	if (AccDecn.exponent < 0 && BDecn.exponent >= 0){
 		// -acc, +x
@@ -562,23 +566,23 @@ void add_decn(void){
 			printf("|-acc| > |+x|\n");
 #endif
 			sub_mag();
-			return;
 		} else if (rel == -1){
 #ifdef DEBUG_ADD
 			printf("|-acc| < |+x|\n");
 #endif
-			copy_decn(&TmpDecn, &BDecn);
 			copy_decn(&BDecn, &AccDecn);
 			copy_decn(&AccDecn, &TmpDecn);
 			sub_mag();
-			return;
 		} else { //equal
 #ifdef DEBUG_ADD
 			printf("|-acc| == |+x|\n");
 #endif
 			set_dec80_zero(&AccDecn);
-			return;
 		}
+		//restore b
+		copy_decn(&BDecn, &TmpDecn);
+
+		return;
 	} else if (AccDecn.exponent >= 0 && BDecn.exponent < 0){
 		// +acc, -x
 		rel = compare_magn();
@@ -587,23 +591,23 @@ void add_decn(void){
 			printf("|+acc| > |-x|\n");
 #endif
 			sub_mag();
-			return;
 		} else if (rel == -1){
 #ifdef DEBUG_ADD
 			printf("|+acc| < |-x|\n");
 #endif
-			copy_decn(&TmpDecn, &BDecn);
 			copy_decn(&BDecn, &AccDecn);
 			copy_decn(&AccDecn, &TmpDecn);
 			sub_mag();
-			return;
 		} else { //equal
 #ifdef DEBUG_ADD
 			printf("|+acc| == |-x|\n");
 #endif
 			set_dec80_zero(&AccDecn);
-			return;
 		}
+		//restore b
+		copy_decn(&BDecn, &TmpDecn);
+
+		return;
 	}
 	//signs must now be the same, begin adding
 	//normalize
@@ -658,6 +662,9 @@ void add_decn(void){
 		//track sign
 		set_exponent(&AccDecn, curr_exp, rel); //rel==is_neg?
 	}
+
+	//restore b
+	copy_decn(&BDecn, &TmpDecn);
 }
 
 //AccDecn *= BDecn
@@ -752,10 +759,9 @@ void mult_decn(void){
 	remove_leading_zeros(&AccDecn);
 }
 
-void div_decn(void){
+void recip_decn(void){
 #define CURR_RECIP Tmp2Decn //copy of x, holds current 1/x estimate
 #define X_COPY     Tmp3Decn //holds copy of original x
-#define ACC_COPY   Tmp4Decn //holds copy of original acc
 	uint8_t i;
 	exp_t initial_exp;
 	//check divide by zero
@@ -771,8 +777,6 @@ void div_decn(void){
 	//normalize
 	remove_leading_zeros(&AccDecn);
 	remove_leading_zeros(&BDecn);
-	//store copy of acc for final multiply by 1/x
-	copy_decn(&ACC_COPY, &AccDecn);
 	//store copy of x
 	copy_decn(&X_COPY, &BDecn);
 	//get initial exponent of estimate for 1/x
@@ -834,30 +838,41 @@ void div_decn(void){
 		//new_est(Accum) = recip + (1 - recip*x)*recip, where recip is current recip estimate
 		copy_decn(&CURR_RECIP, &AccDecn);
 	}
+
+//try not to pollute namespace
+#undef CURR_RECIP
+#undef X_COPY
+}
+
+inline void div_decn(void){
+#define ACC_COPY   Tmp4Decn //holds copy of original acc
+	//store copy of acc for final multiply by 1/x
+	copy_decn(&ACC_COPY, &AccDecn);
+	recip_decn();
 	//Accum now holds 1/x, multiply by original acc to complete division
 	copy_decn(&BDecn, &ACC_COPY);
 	mult_decn();
 
 //try not to pollute namespace
-#undef CURR_RECIP
-#undef X_COPY
 #undef ACC_COPY
 }
 
-void ln_decn(void){
+
+//constants used for ln(x) and exp(x)
 #define NUM_A_ARR 9
-	static const dec80 LN_A_ARR[NUM_A_ARR] = {
-		{0, {69, 31, 47, 18,  5, 59, 94, 53,  9}},
-		{0, {95, 31,  1, 79, 80, 43, 24, 86,  0}},
-		{0, {99, 50, 33,  8, 53, 16, 80, 82, 84}},
-		{0, {99, 95,  0, 33, 30, 83, 53, 31, 67}},
-		{0, {99, 99, 50,  0, 33, 33,  8, 33, 33}},
-		{0, {99, 99, 95,  0,  0, 33, 33, 29, 95}},
-		{0, {99, 99, 99, 50,  0,  0, 33,  5, 35}},
-		{0, {99, 99, 99, 95,  0,  0,  2, 76, 40}},
-		{0, {99, 99, 99, 99, 50,  0, 15, 98, 65}},
-// 		{0, {99, 99, 99, 99, 95,  2, 19, 27, 11}},
-	};
+static const dec80 LN_A_ARR[NUM_A_ARR] = {
+	{-1 & 0x7fff, {69, 31, 47, 18,  5, 59, 94, 53,  9}},
+	{-2 & 0x7fff, {95, 31,  1, 79, 80, 43, 24, 86,  0}},
+	{-3 & 0x7fff, {99, 50, 33,  8, 53, 16, 80, 82, 84}},
+	{-4 & 0x7fff, {99, 95,  0, 33, 30, 83, 53, 31, 67}},
+	{-5 & 0x7fff, {99, 99, 50,  0, 33, 33,  8, 33, 33}},
+	{-6 & 0x7fff, {99, 99, 95,  0,  0, 33, 33, 29, 95}},
+	{-7 & 0x7fff, {99, 99, 99, 50,  0,  0, 33,  5, 35}},
+	{-8 & 0x7fff, {99, 99, 99, 95,  0,  0,  2, 76, 40}},
+	{-9 & 0x7fff, {99, 99, 99, 99, 50,  0, 15, 98, 65}},
+};
+
+void ln_decn(void){
 	uint8_t j, k;
 	exp_t initial_exp;
 #define B_j Tmp2Decn
@@ -946,6 +961,7 @@ void ln_decn(void){
 		for (k = 0; k < NUM_TIMES.lsu[j]; k++){
 			//accum += ln_a_arr[j];
 			copy_decn(&BDecn, &LN_A_ARR[j]);
+			BDecn.exponent = 0; //tracking exponent through shifts/saved initial exponent
 			add_decn();
 		}
 		shift_right(&AccDecn);
@@ -1007,7 +1023,6 @@ void ln_decn(void){
 //try not to pollute namespace
 #undef B_j
 #undef NUM_TIMES
-#undef NUM_A_ARR
 }
 
 //inline void log10_decn(void){
@@ -1015,6 +1030,158 @@ void ln_decn(void){
 //	copy_decn(&BDecn, &DECN_LN_10);
 //	div_decn();
 //}
+
+
+
+void exp_decn(void){
+	uint8_t j, k;
+	uint8_t need_recip;
+	#define SAVED Tmp2Decn
+	#define NUM_TIMES Tmp3Decn
+
+	//check if negative
+	if (AccDecn.exponent < 0){
+		negate_decn(&AccDecn);
+		need_recip = 1;
+	}
+
+	//check if in range
+	copy_decn(&SAVED, &AccDecn); //save = accum
+	set_dec80_zero(&BDecn);
+	BDecn.lsu[0] = 23;
+	BDecn.lsu[1] = 02;
+	BDecn.lsu[2] = 58;
+	BDecn.lsu[2] = 51;
+	BDecn.exponent = 2; //b = 230.25851
+	negate_decn(&BDecn);
+	add_decn(); //accum = x - 230.25851 (should be negative if in range)
+	if (!(AccDecn.exponent < 0)){ //if not negative
+		set_dec80_NaN(&AccDecn);
+		return;
+	}
+	copy_decn(&AccDecn, &SAVED); //restore
+
+// 	//normalize
+// 	remove_leading_zeros(&AccDecn);
+
+	//initial b = -10*ln(10)
+	copy_decn(&BDecn, &DECN_LN_10); //b=ln(10)
+	copy_decn(&SAVED, &AccDecn); //save = accum
+	copy_decn(&AccDecn, &DECN_1);
+	AccDecn.exponent = 1; //accum = 10
+	mult_decn();             //accum =  10*ln(10)
+	copy_decn(&BDecn, &AccDecn); //b =  10*ln(10)
+	negate_decn(&BDecn);         //b = -10*ln(10)
+	copy_decn(&AccDecn, &SAVED); //restore
+	//track number of times 10*ln(10) can be subtracted
+	k = 0;
+	while (!(AccDecn.exponent < 0)){ //while not negative
+		copy_decn(&SAVED, &AccDecn); //save = accum
+		//accum -= 10*ln10
+		add_decn();
+		k++;
+	}
+	//subtracted 1 time too many
+	NUM_TIMES.exponent = (k - 1) * 10; //use exp to store number of times ln(10) subtracted
+	copy_decn(&AccDecn, &SAVED); //restore
+#ifdef DEBUG_EXP
+	decn_to_str_complete(&AccDecn);
+	printf("exp() num_times for 10*ln(10): %s (%d)\n", Buf, NUM_TIMES.exponent);
+#endif
+
+	//load b with -ln(10)
+	copy_decn(&BDecn, &DECN_LN_10); //b =  ln(10)
+	negate_decn(&BDecn);            //b = -ln(10)
+	//track number of times ln(10) and then (1 + 10^-j) can be subtracted
+	j = UINT8_MAX; //becomes 0 after incrementing to start (1 + 10^-j) series
+	do {
+		k = 0;
+		while (!(AccDecn.exponent < 0)){ //while not negative
+			copy_decn(&SAVED, &AccDecn); //save = accum
+			//accum -= b (ln10, then ln(1 + 10^-j) series)
+			add_decn();
+#ifdef DEBUG_EXP_ALL
+			decn_to_str_complete(&AccDecn);
+			printf("    %u: %s\n", k, Buf);
+// 			decn_to_str_complete(&BDecn);
+// 			printf("(%s)\n", Buf);
+#endif
+			k++;
+#ifdef DEBUG_EXP
+			assert(k != 255);
+#endif
+		}
+		//subtracted 1 time too many:
+		if (j == UINT8_MAX){
+			NUM_TIMES.exponent += k - 1;
+		} else {
+			NUM_TIMES.lsu[j] = k - 1;
+		}
+		copy_decn(&AccDecn, &SAVED); //restore
+#ifdef DEBUG_EXP
+		decn_to_str_complete(&AccDecn);
+		printf("exp() num_times for %d: %s (%d)\n", j, Buf, k-1);
+#endif
+		//next j
+		j++;
+		if (j < NUM_A_ARR){
+			//get next ln(1 + 10^-j) for subtraction
+			copy_decn(&BDecn, &LN_A_ARR[j]);
+			negate_decn(&BDecn);
+		} else {
+			break;
+		}
+	} while (1);
+
+	//build final value
+	// (currently accum = save = remainder)
+	// calculate 1+remainder
+	copy_decn(&BDecn, &DECN_1);
+	add_decn();
+	//get initial multiplier (10) for ln(10)
+	copy_decn(&BDecn, &DECN_1);
+	BDecn.exponent = 1; //BDecn = 10
+	//do multiplies
+	j = UINT8_MAX; //becomes 0 after incrementing to start (1 + 10^-j) series
+	do {
+		for (k = 0; k < (j==UINT8_MAX ? NUM_TIMES.exponent : NUM_TIMES.lsu[j]); k++){
+			mult_decn();
+		}
+#ifdef DEBUG_EXP
+		decn_to_str_complete(&AccDecn);
+		printf("exp() current val for %d: %s\n", j, Buf);
+#endif
+		//next j
+		j++;
+		if (j < NUM_A_ARR){
+			//get next multiplier (1 + 10^-j) for ln(1 + 10^-j)
+			if (j == 0){
+				//set to 2
+				BDecn.lsu[0] = 20;
+				BDecn.exponent = 0;
+			} else if (j == 1) {
+				//set to 1.1
+				BDecn.lsu[0] = 11;
+				//exponent is already 0
+			} else {
+				//get next (1 + 10^-j)
+				shift_right(&BDecn);
+				BDecn.lsu[0] = 10;
+			}
+		} else {
+			break;
+		}
+	} while (1);
+
+	//take reciprocal if exp was negative
+	if (need_recip){
+		recip_decn();
+	}
+
+//try not to pollute namespace
+#undef SAVED
+#undef NUM_TIMES
+}
 
 static void set_str_error(void){
 	Buf[0] = 'E';

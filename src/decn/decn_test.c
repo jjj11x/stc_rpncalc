@@ -68,14 +68,30 @@ static void log10_test(
 {
 	build_dec80(x_str, x_exp);
 	decn_to_str_complete(&AccDecn);
-	printf("  a  : %s\n", Buf);
+	printf("   a  : %s\n", Buf);
 	log10_decn();
 	decn_to_str_complete(&AccDecn);
-	printf("ln(a): %s\n", Buf);
+	printf("log(a): %s\n", Buf);
 	build_decn_at(&diff, res_str, res_exp);
 	take_diff();
 	decn_to_str_complete(&diff);
 	printf("     : %s\n\n", Buf);
+}
+
+static void exp_test(
+	const char* x_str, int x_exp,
+	const char* res_str, int res_exp)
+{
+	build_dec80(x_str, x_exp);
+	decn_to_str_complete(&AccDecn);
+	printf("  a  : %s\n", Buf);
+	exp_decn();
+	decn_to_str_complete(&AccDecn);
+	printf("exp(a): %s\n", Buf);
+	build_decn_at(&diff, res_str, res_exp);
+	take_diff();
+	decn_to_str_complete(&diff);
+	printf("      : %s\n\n", Buf);
 }
 
 int main(void){
@@ -245,7 +261,29 @@ int main(void){
 	//new acc for log test
 	log10_test(
 		"1.5", 0,
-		"0.176091259", 0
+		"0.176091259055681242", 0
 	);
+
+	//new acc for exp test
+	exp_test(
+		"4.4", 0,
+		"81.4508686649681174", 0
+	);
+
+	//get new acc for exp test (calculate 3^201)
+// 	build_dec80("3", 0);
+// 	ln_decn();
+	log_test(
+		"3", 0,
+		"1.09861228866810969", 0
+	);
+	build_decn_at(&BDecn, "201", 0);
+	mult_decn(); //acc = 201*ln(3)
+	int8_t exp_test_exp = decn_to_str(&AccDecn);
+	exp_test(
+		Buf, exp_test_exp,
+		"7.96841966627624308", 95
+	);
+
 	return 0;
 }

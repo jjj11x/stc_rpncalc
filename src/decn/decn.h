@@ -64,18 +64,26 @@ void set_dec80_NaN(dec80* dest);
 uint8_t decn_is_nan(const dec80* x);
 
 void negate_decn(dec80* x);
-void add_decn(void);
-void mult_decn(void);
+void add_decn(void);   //calculate AccDecn -= BDecn (BDecn is preserved)
+void mult_decn(void);  //calculate AccDecn *= BDecn (BDecn is preserved)
+void recip_decn(void);
 void div_decn(void);
 
 void ln_decn(void);
 //inline void log10_decn(void);
-#define log10_decn() do {               \
-		ln_decn();                      \
-		copy_decn(&BDecn, &DECN_LN_10); \
-		div_decn();                     \
-	} while(0);
+#define log10_decn() do {           \
+	ln_decn();                      \
+	copy_decn(&BDecn, &DECN_LN_10); \
+	div_decn();                     \
+} while(0);
 
+void exp_decn(void);
+//exp10_decn() = exp_decn(AccDecn * ln(10))
+#define exp10_decn() do {           \
+	copy_decn(&BDecn, &DECN_LN_10); \
+	mult_decn();                    \
+	exp_decn();                     \
+} while(0);
 
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

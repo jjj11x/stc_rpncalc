@@ -30,6 +30,9 @@
 #undef DEBUG_MULT
 #undef DEBUG_DIV
 #undef DEBUG_LOG
+#undef DEBUG_LOG_ALL
+#undef DEBUG_EXP
+#undef DEBUG_EXP_ALL
 #endif
 
 #ifdef DESKTOP
@@ -52,7 +55,7 @@ __idata dec80 AccDecn, BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn()
 __idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn()
 __idata dec80 Tmp3Decn; //used by recip_decn() and ln_decn()
-__idata dec80 Tmp4Decn; //used by div_decn() and ln_decn()
+__idata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
 
@@ -1025,17 +1028,17 @@ void ln_decn(void){
 #undef NUM_TIMES
 }
 
-//inline void log10_decn(void){
-//	ln_decn();
-//	copy_decn(&BDecn, &DECN_LN_10);
-//	div_decn();
-//}
+inline void log10_decn(void){
+	ln_decn();
+	copy_decn(&BDecn, &DECN_LN_10);
+	div_decn();
+}
 
 
 
 void exp_decn(void){
 	uint8_t j, k;
-	uint8_t need_recip;
+	uint8_t need_recip = 0;
 	#define SAVED Tmp2Decn
 	#define NUM_TIMES Tmp3Decn
 
@@ -1173,15 +1176,41 @@ void exp_decn(void){
 		}
 	} while (1);
 
+#ifdef DEBUG_EXP
+	decn_to_str_complete(&AccDecn);
+	printf("exp() before recip: %s\n", Buf);
+#endif
 	//take reciprocal if exp was negative
 	if (need_recip){
 		recip_decn();
 	}
 
+#ifdef DEBUG_EXP
+	decn_to_str_complete(&AccDecn);
+	printf("exp() final val: %s\n", Buf);
+#endif
+
 //try not to pollute namespace
 #undef SAVED
 #undef NUM_TIMES
 }
+
+inline void exp10_decn(void){
+	//exp10_decn() = exp_decn(AccDecn * ln(10))
+	copy_decn(&BDecn, &DECN_LN_10);
+	mult_decn();
+	exp_decn();
+}
+
+//inline void pow_decn(void)
+//{
+//	copy_decn(&Tmp4Decn, &BDecn); //save b
+//	ln_decn();
+//	copy_decn(&BDecn, &Tmp4Decn); //restore b
+//	mult_decn(); //accum = b*ln(accum)
+//	exp_decn();
+//}
+
 
 static void set_str_error(void){
 	Buf[0] = 'E';

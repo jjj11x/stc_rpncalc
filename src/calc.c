@@ -61,6 +61,14 @@ static void do_binary_op(void (*f_ptr)(void)){
 	pop();
 }
 
+static void do_unary_op(void (*f_ptr)(void)){
+	if (!decn_is_nan(&stack(STACK_X))){
+		copy_decn(&AccDecn, &stack(STACK_X));
+		f_ptr();
+		copy_decn(&stack(STACK_X), &AccDecn);
+	}
+}
+
 static void toggle_shifted(void){
 	IsShifted ^= 1;
 }
@@ -118,22 +126,45 @@ void process_cmd(char cmd){
 			toggle_shifted();
 		} break;
 		//////////
+		case '5':{
+			if (IsShifted){ //e^x
+				do_unary_op(exp_decn);
+				IsShifted = 0;
+			}
+		} break;
+		//////////
+		case '6':{
+			if (IsShifted){ //10^x
+				do_unary_op(exp10_decn);
+				IsShifted = 0;
+			}
+		} break;
+		//////////
 		case '9':{
-			if (IsShifted && !decn_is_nan(&stack(STACK_X))){ //log10(x)
-				copy_decn(&AccDecn, &stack(STACK_X));
-				log10_decn();
-				copy_decn(&stack(STACK_X), &AccDecn);
+			if (IsShifted){ //log10(x)
+				do_unary_op(log10_decn);
 				IsShifted = 0;
 			}
 		} break;
 		//////////
 		case '8':{
-			if (IsShifted && !decn_is_nan(&stack(STACK_X))){ //ln(x)
-				copy_decn(&AccDecn, &stack(STACK_X));
-				ln_decn();
-				copy_decn(&stack(STACK_X), &AccDecn);
+			if (IsShifted){ //ln(x)
+				do_unary_op(ln_decn);
 				IsShifted = 0;
 			}
+		} break;
+		//////////
+		case '7':{
+			if (decn_is_nan(&stack(STACK_Y)) || decn_is_nan(&stack(STACK_X))){
+				set_dec80_NaN(&stack(STACK_Y));
+			} else {
+				copy_decn(&AccDecn, &stack(STACK_Y));
+				copy_decn(&BDecn, &stack(STACK_X));
+				pow_decn();
+				copy_decn(&stack(STACK_Y), &AccDecn);
+			}
+			pop();
+			IsShifted = 0;
 		} break;
 		//////////
 	} //switch(cmd)

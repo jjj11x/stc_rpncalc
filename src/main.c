@@ -125,7 +125,7 @@ static void latch_on(void)
 
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
-__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.04";
+__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.05";
 
 
 enum {

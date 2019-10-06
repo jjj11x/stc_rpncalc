@@ -55,7 +55,7 @@ static const dec80 DECN_LN_10 = {
 exp_t get_exponent(const dec80* x);
 
 void copy_decn(dec80* dest, const dec80* src);
-extern __idata dec80 AccDecn, BDecn;
+extern __idata dec80 AccDecn, BDecn, Tmp4Decn;
 
 void build_dec80(__xdata const char* signif_str, exp_t exponent);
 
@@ -70,20 +70,19 @@ void recip_decn(void);
 void div_decn(void);
 
 void ln_decn(void);
-//inline void log10_decn(void);
-#define log10_decn() do {           \
-	ln_decn();                      \
-	copy_decn(&BDecn, &DECN_LN_10); \
-	div_decn();                     \
-} while(0);
+void log10_decn(void);
 
 void exp_decn(void);
-//exp10_decn() = exp_decn(AccDecn * ln(10))
-#define exp10_decn() do {           \
-	copy_decn(&BDecn, &DECN_LN_10); \
-	mult_decn();                    \
-	exp_decn();                     \
-} while(0);
+void exp10_decn(void);
+
+//calculate AccDecn = AccDecn ^ BDecn
+#define pow_decn() do {\
+	copy_decn(&Tmp4Decn, &BDecn); \
+	ln_decn(); \
+	copy_decn(&BDecn, &Tmp4Decn); \
+	mult_decn(); \
+	exp_decn(); \
+} while (0);
 
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

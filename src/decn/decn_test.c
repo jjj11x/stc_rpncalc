@@ -263,6 +263,12 @@ int main(void){
 	);
 
 	//new acc for log test
+	log_test(
+		"2.02", 0,
+		"0.703097511413113392", 0
+	);
+
+	//new acc for log test
 	log10_test(
 		"1.5", 0,
 		"0.176091259055681242", 0

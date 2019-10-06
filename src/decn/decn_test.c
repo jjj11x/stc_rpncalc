@@ -12,13 +12,17 @@ char Buf[DECN_BUF_SIZE];
 
 static dec80 diff;
 
-static void take_diff(void){ //diff = acc - diff
-	negate_decn(&diff);
+//diff = (acc - diff) / diff
+// (diff holds expected/actual value)
+static void take_diff(void){
 	dec80 tmp_copy, tmp_copy2;
 	copy_decn(&tmp_copy, &AccDecn); //save
 	copy_decn(&tmp_copy2, &BDecn); //save
 	copy_decn(&BDecn, &diff);
+	negate_decn(&BDecn);
 	add_decn();
+	copy_decn(&BDecn, &diff);
+	div_decn();
 	copy_decn(&diff, &AccDecn);
 	copy_decn(&AccDecn, &tmp_copy); //restore
 	copy_decn(&BDecn, &tmp_copy2); //restore

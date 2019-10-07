@@ -769,12 +769,9 @@ void recip_decn(void){
 #define X_COPY     Tmp3Decn //holds copy of original x
 	uint8_t i;
 	exp_t initial_exp;
-	//denominator is already in BDecn for division, but x is in Accum for 1/x
-	// copy accum to be for 1/x case
-	copy_decn(&BDecn, &AccDecn);
 	//check divide by zero
 #ifdef EXTRA_CHECKS
-	if (decn_is_zero(&BDecn)){
+	if (decn_is_zero(&AccDecn)){
 		set_dec80_NaN(&AccDecn);
 #ifdef DESKTOP
 		printf("error division by 0\n");
@@ -784,11 +781,10 @@ void recip_decn(void){
 #endif
 	//normalize
 	remove_leading_zeros(&AccDecn);
-	remove_leading_zeros(&BDecn);
 	//store copy of x
-	copy_decn(&X_COPY, &BDecn);
+	copy_decn(&X_COPY, &AccDecn);
 	//get initial exponent of estimate for 1/x
-	initial_exp = get_exponent(&BDecn);
+	initial_exp = get_exponent(&AccDecn);
 #ifdef DEBUG_DIV
 	printf("exponent %d", initial_exp);
 #endif
@@ -797,13 +793,13 @@ void recip_decn(void){
 #ifdef DEBUG_DIV
 	printf(" -> %d\n", initial_exp);
 #endif
-	set_exponent(&CURR_RECIP, initial_exp, (BDecn.exponent < 0)); //set exponent, copy sign
+	set_exponent(&CURR_RECIP, initial_exp, (AccDecn.exponent < 0)); //set exponent, copy sign
 	//get initial estimate for 1/x
-	if        (BDecn.lsu[0] < 20){       //mantissa between 1 and 2
+	if        (AccDecn.lsu[0] < 20){       //mantissa between 1 and 2
 		      CURR_RECIP.lsu[0] = 50; //0.50 with implicit point and exponent
-	} else if (BDecn.lsu[0] < 33){
+	} else if (AccDecn.lsu[0] < 33){
 		      CURR_RECIP.lsu[0] = 30;
-	} else if (BDecn.lsu[0] < 50){
+	} else if (AccDecn.lsu[0] < 50){
 		      CURR_RECIP.lsu[0] = 20;
 	} else {
 		      CURR_RECIP.lsu[0] = 10; //0.1 with implicit point and exponent
@@ -856,6 +852,7 @@ inline void div_decn(void){
 #define ACC_COPY   Tmp4Decn //holds copy of original acc
 	//store copy of acc for final multiply by 1/x
 	copy_decn(&ACC_COPY, &AccDecn);
+	copy_decn(&AccDecn, &BDecn);
 	recip_decn();
 	//Accum now holds 1/x, multiply by original acc to complete division
 	copy_decn(&BDecn, &ACC_COPY);
@@ -864,6 +861,7 @@ inline void div_decn(void){
 //try not to pollute namespace
 #undef ACC_COPY
 }
+
 
 
 //constants used for ln(x) and exp(x)

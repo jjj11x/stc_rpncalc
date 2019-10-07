@@ -107,18 +107,38 @@ void process_cmd(char cmd){
 			set_dec80_zero(&stack(STACK_X));
 		} break;
 		//////////
-		case '<':{ //use as +/-
-			if (!decn_is_nan(&stack(STACK_X))){
-				negate_decn(&stack(STACK_X));
+		case '<':{ //use as +/- and sqrt
+			if (IsShifted){ //take sqrt
+				IsShifted = 0;
+				if (!decn_is_nan(&stack(STACK_X))){
+					copy_decn(&AccDecn, &stack(STACK_X));
+					if (AccDecn.exponent < 0){ //negative
+						set_dec80_NaN(&stack(STACK_X));
+						break;
+					}
+					set_dec80_zero(&BDecn);
+					BDecn.lsu[0] = 5;
+					pow_decn();
+					copy_decn(&stack(STACK_X), &AccDecn);
+				}
+			} else { // +/-
+				if (!decn_is_nan(&stack(STACK_X))){
+					negate_decn(&stack(STACK_X));
+				}
 			}
 		} break;
 		//////////
-		case 'r':{ //use as swap
-			if (!decn_is_nan(&stack(STACK_X))){
-				dec80 tmp;
-				copy_decn(&tmp, &stack(STACK_X));
-				copy_decn(&stack(STACK_X), &stack(STACK_Y));
-				copy_decn(&stack(STACK_Y), &tmp);
+		case 'r':{ //use as swap and 1/x
+			if (IsShifted){ //take 1/x
+				IsShifted = 0;
+				do_unary_op(recip_decn);
+			} else { // swap
+				if (!decn_is_nan(&stack(STACK_X))){
+					dec80 tmp;
+					copy_decn(&tmp, &stack(STACK_X));
+					copy_decn(&stack(STACK_X), &stack(STACK_Y));
+					copy_decn(&stack(STACK_Y), &tmp);
+				}
 			}
 		} break;
 		//////////

@@ -19,7 +19,7 @@ ApplicationWindow
 		Rectangle{
 			width: 100
 			height: 25
-			color: "red"
+			color: "#ff9494"
 			Text {text: "Quit"}
 			MouseArea {
 				onClicked: Qt.quit()
@@ -56,10 +56,21 @@ ApplicationWindow
 						id: key_key;
 						width: 100;
 						height: 100;
-						color: "gray"
+						color: getBackgroundColor(parent.objectName, index)
 						border { width: 1; color: "black" }
 						Text {
-							text: {getText(parent.parent.objectName, index)}
+							horizontalAlignment: Text.AlignHCenter
+							font.pointSize: 16
+							color: "gray"
+							text: {getShiftedText(parent.parent.objectName, index) + "<br><br>"}
+								textFormat: Text.RichText
+								anchors.centerIn: parent
+						}
+						Text {
+							horizontalAlignment: Text.AlignHCenter
+							font.pointSize: 24
+							text: {"<br>" + getText(parent.parent.objectName, index) + "<br>"}
+							textFormat: Text.RichText
 							anchors.centerIn: parent
 						}
 						MouseArea {
@@ -74,13 +85,37 @@ ApplicationWindow
 
 	function getText(row, col) {
 		var keys = [
-			["Shift", "x<->y", "+/-", "C"],
-			["7", "8", "9", "/"],
-			["4", "5", "6", "*"],
-			["1", "2", "3", "-"],
-			["0", ".", "Enter", "+"]
+			["Shift", "x ⇄ y", "±",     "←"],
+			["7",     "8",     "9",     "÷"],
+			["4",     "5",     "6",     "×"],
+			["1",     "2",     "3",     "-"],
+			["0",     ".",     "Enter", "+"]
 		]
 
-		return keys[row][col]
+		return "<b>" + keys[row][col] + "</b>"
+	}
+	
+	function getShiftedText(row, col) {
+		var shifted_keys = [
+		["Shift", "1/x", " √<span style=\"text-decoration: overline\">x</span> ",   "CL<i>x</i>"],
+		["y<sup>x</sup> ",   "ln(x)", "log(x)", ""],
+		["",      "e<sup>x</sup>",   "10<sup>x</sup>",   ""],
+		["",      "",      "",       ""],
+		["off",   "",      "",       ""]
+		]
+		
+		return "<small>" + shifted_keys[row][col] + "</small>"
+	}
+	
+	function getBackgroundColor(row, col) {
+		var background_color = [
+			["white",   "white",   "white", "#ff9494"],
+			["#eeeeee", "#eeeeee", "#eeeeee", "white"],
+			["#eeeeee", "#eeeeee", "#eeeeee", "white"],
+			["#eeeeee", "#eeeeee", "#eeeeee", "white"],
+			["#eeeeee", "#eeeeee", "white",   "white"]
+		]
+		
+		return background_color[row][col]
 	}
 }

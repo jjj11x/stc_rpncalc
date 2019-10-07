@@ -15,6 +15,8 @@
 static uint8_t lcd_row, lcd_col;
 static char lcd_buf[MAX_ROWS][MAX_CHARS_PER_LINE];
 
+static char enable_checks = 1;
+
 const char* get_lcd_buf(void){
 	return &lcd_buf[0][0];
 }
@@ -71,12 +73,20 @@ void LCD_OutString(const char *string, uint8_t max_chars) {
 	}
 }
 
+void LCD_OutString_Initial(const char *string, uint8_t max_chars) {
+	enable_checks = 0;
+	LCD_OutString(string, max_chars);
+	enable_checks = 1;
+}
+
 static int is_valid_character(char letter){
 	if (isdigit(letter)){
 		return 1;
 	} else if(letter == CGRAM_EXP || letter == CGRAM_EXP_NEG){
 		return 1;
 	} else if(letter == '.' || letter == ' ' || letter == '-'){
+		return 1;
+	} else if(letter == '^'){
 		return 1;
 	}
 
@@ -94,7 +104,7 @@ short TERMIO_PutChar(unsigned char letter) {
 		}
 	}
 	//warn if unknown character
-	if (!is_valid_character(letter)) {
+	if (!is_valid_character(letter) && enable_checks) {
 		printf("\nerror @%d,%d, invalid character %d\n",
 				lcd_row, lcd_col, letter);
 	}

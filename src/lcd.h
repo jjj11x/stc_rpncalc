@@ -16,6 +16,11 @@ void LCD_Clear(void);
 void LCD_GoTo(uint8_t row, uint8_t col);
 
 void LCD_OutString(__xdata const char* string, uint8_t max_chars);
+#ifdef DESKTOP
+void LCD_OutString_Initial(__xdata const char* string, uint8_t max_chars);
+#else
+#define LCD_OutString_Initial(a, b) LCD_OutString(a, b)
+#endif
 short TERMIO_PutChar(unsigned char letter);
 void LCD_OutNibble(uint8_t x);
 void LCD_ClearToEnd(uint8_t curr_row);

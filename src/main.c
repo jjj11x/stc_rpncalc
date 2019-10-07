@@ -208,7 +208,7 @@ int main()
 	ExpBuf[0] = 0;
 	ExpBuf[1] = 0;
 
-	LCD_OutString(VER_STR, 32);
+	LCD_OutString_Initial(VER_STR, 32);
 #ifdef DESKTOP
 	LcdAvailable.release();
 #endif

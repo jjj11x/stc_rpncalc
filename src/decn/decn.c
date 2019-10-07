@@ -769,6 +769,9 @@ void recip_decn(void){
 #define X_COPY     Tmp3Decn //holds copy of original x
 	uint8_t i;
 	exp_t initial_exp;
+	//denominator is already in BDecn for division, but x is in Accum for 1/x
+	// copy accum to be for 1/x case
+	copy_decn(&BDecn, &AccDecn);
 	//check divide by zero
 #ifdef EXTRA_CHECKS
 	if (decn_is_zero(&BDecn)){

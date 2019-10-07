@@ -55,7 +55,9 @@ static const dec80 DECN_LN_10 = {
 exp_t get_exponent(const dec80* x);
 
 void copy_decn(dec80* dest, const dec80* src);
-extern __idata dec80 AccDecn, BDecn, Tmp4Decn;
+
+extern dec80 AccDecn;
+extern __idata dec80 BDecn, Tmp4Decn;
 
 void build_dec80(__xdata const char* signif_str, exp_t exponent);
 

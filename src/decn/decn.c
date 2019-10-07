@@ -51,7 +51,8 @@ static const uint8_t num_digits_display = DEC80_NUM_LSU*2;
 static const uint8_t num_digits_display = 16;
 #endif
 
-__idata dec80 AccDecn, BDecn;
+dec80 AccDecn;
+__idata dec80 BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn()
 __idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn()
 __idata dec80 Tmp3Decn; //used by recip_decn() and ln_decn()
@@ -111,25 +112,26 @@ static void zero_remaining_dec80(dec80* dest, uint8_t digit100){
 	}
 }
 
+
+static uint8_t shift_high = 0, shift_low = 0, shift_old = 0;
+static uint8_t shift_i;
 static void shift_right(dec80* x){
-	uint8_t high = 0, low = 0, old_low = 0;
-	uint8_t i;
-	for (i = 0; i < DEC80_NUM_LSU; i++){
-		high = x->lsu[i] / 10;
-		low = x->lsu[i] % 10;
-		x->lsu[i] = high + (old_low*10);
-		old_low = low;
+	shift_high = shift_low = shift_old = 0;
+	for (shift_i = 0; shift_i < DEC80_NUM_LSU; shift_i++){
+		shift_high = x->lsu[shift_i] / 10;
+		shift_low = x->lsu[shift_i] % 10;
+		x->lsu[shift_i] = shift_high + ( shift_old*10);
+		shift_old = shift_low;
 	}
 }
 
 static void shift_left(dec80* x){
-	uint8_t high = 0, low = 0, old_high = 0;
-	int8_t i;
-	for (i = DEC80_NUM_LSU - 1; i >= 0 ; i--){
-		high = x->lsu[i] / 10;
-		low = x->lsu[i] % 10;
-		x->lsu[i] = old_high + (low*10);
-		old_high = high;
+	shift_high = shift_low = shift_old = 0;
+	for (shift_i = DEC80_NUM_LSU - 1; shift_i < 255; shift_i--){
+		shift_high = x->lsu[shift_i] / 10;
+		shift_low = x->lsu[shift_i] % 10;
+		x->lsu[shift_i] = shift_old + ( shift_low*10);
+		shift_old = shift_high;
 	}
 }
 
@@ -877,7 +879,6 @@ static const dec80 LN_A_ARR[NUM_A_ARR] = {
 
 void ln_decn(void){
 	uint8_t j, k;
-	exp_t initial_exp;
 #define B_j Tmp2Decn
 #define NUM_TIMES Tmp3Decn
 
@@ -889,7 +890,7 @@ void ln_decn(void){
 	//normalize
 	remove_leading_zeros(&AccDecn);
 	//scale to between 1 and 10
-	initial_exp = get_exponent(&AccDecn) + 1;
+	NUM_TIMES.exponent = get_exponent(&AccDecn) + 1; //store initial exp in NUM_TIMES.exponent
 	AccDecn.exponent = 0;
 #ifdef DEBUG_LOG
 	decn_to_str_complete(&AccDecn);
@@ -903,7 +904,7 @@ void ln_decn(void){
 	copy_decn(&B_j, &AccDecn); //b_j = accum = 10 - A
 #ifdef DEBUG_LOG
 	decn_to_str_complete(&AccDecn);
-	printf("ln() initial accum: %s (%d)\n", Buf, initial_exp);
+	printf("ln() initial accum: %s (%d)\n", Buf, NUM_TIMES.exponent);
 #endif
 
 	//track number of times multiplied by a_arr[j]
@@ -980,32 +981,32 @@ void ln_decn(void){
 	//accum = -accum;
 	negate_decn(&AccDecn);
 
-	//add back in initial exponent
+	//add back in initial exponent (stored in NUM_TIMES.exponent)
 	copy_decn(&B_j, &AccDecn); //temporarily store accum in B_j
 	set_dec80_zero(&AccDecn);
 	//check if negative
-	if (initial_exp < 0){
+	if (NUM_TIMES.exponent < 0){
 		j = 1; //track is_neg
-		initial_exp = -initial_exp;
+		NUM_TIMES.exponent = -NUM_TIMES.exponent;
 	} else {
 		j = 0;
 	}
 	//check if too big for single lsu
 #ifdef EXP16
-	if (initial_exp >= 10000){
-		AccDecn.lsu[0] = initial_exp / 10000;
-		initial_exp    = initial_exp % 10000;
-		AccDecn.lsu[1] = initial_exp / 100;
-		AccDecn.lsu[2] = initial_exp % 100;
+	if (NUM_TIMES.exponent >= 10000){
+		AccDecn.lsu[0] = NUM_TIMES.exponent / 10000;
+		NUM_TIMES.exponent    = NUM_TIMES.exponent % 10000;
+		AccDecn.lsu[1] = NUM_TIMES.exponent / 100;
+		AccDecn.lsu[2] = NUM_TIMES.exponent % 100;
 		AccDecn.exponent = 4;
 	} else
 #endif
-	if (initial_exp >= 100){
-		AccDecn.lsu[0] = initial_exp / 100;
-		AccDecn.lsu[1] = initial_exp % 100;
+	if (NUM_TIMES.exponent >= 100){
+		AccDecn.lsu[0] = NUM_TIMES.exponent / 100;
+		AccDecn.lsu[1] = NUM_TIMES.exponent % 100;
 		AccDecn.exponent = 2;
 	} else {
-		AccDecn.lsu[0] = initial_exp;
+		AccDecn.lsu[0] = NUM_TIMES.exponent;
 		AccDecn.exponent = 1;
 	}
 	//check if need to negate

@@ -172,6 +172,33 @@ ln() exponent from initial: -9.
 ln(a): -22.3227534185273433
      : -4.47973411366907937E-18
 
+  a  : 2.02
+ln() accum scaled between 1,10: 2.02
+ln() initial accum: 7.98 (1)
+  0: num_times: 2, 1.92
+  1: num_times: 2, 2.232
+  2: num_times: 2, 2.668632
+  3: num_times: 2, 6.72971932632
+  4: num_times: 6, 7.3225796749329481
+  5: num_times: 7, 3.2288226738783197
+  6: num_times: 3, 2.2882936035502779
+  7: num_times: 2, 2.8829396120902148
+  8: num_times: 2, 8.8293965974900732
+ln() remainder: 8.8293965974900732
+8: ln() remainder: 2.882939649749327
+7: ln() remainder: 2.2882938649749879
+6: ln() remainder: 3.2288278864984903
+5: ln() remainder: 7.3228477888831799
+4: ln() remainder: 6.7319847988868179
+3: ln() remainder: 2.6721991460557481
+2: ln() remainder: 2.2572860852391913
+1: ln() remainder: 2.1319322046104163
+0: ln() remainder: 1.5994875815809322
+ln() accum after summing: 1.5994875815809322
+ln() exponent from initial: 1.
+ln(a): 0.70309751141311348
+     : 1.25160448688168578E-16
+
    a  : 1.5
 ln() accum scaled between 1,10: 1.5
 ln() initial accum: 8.5 (1)
@@ -221,6 +248,8 @@ exp() current val for 5: 81.4502960676591747
 exp() current val for 6: 81.450866221442107
 exp() current val for 7: 81.450866221442107
 exp() current val for 8: 81.450868664968118
+exp() before recip: 81.450868664968118
+exp() final val: 81.450868664968118
 exp(a): 81.450868664968118
       : 7.36640394184106472E-18
 
@@ -273,6 +302,8 @@ exp() current val for 5: 7.96841241501818339E95
 exp() current val for 6: 7.96841241501818339E95
 exp() current val for 7: 7.9684195865922255E95
 exp() current val for 8: 7.96841966627642136E95
+exp() before recip: 7.96841966627642136E95
+exp() final val: 7.96841966627642136E95
 exp(a): 7.96841966627642136E95
       : 2.23733196124838145E-14
 

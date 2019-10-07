@@ -56,7 +56,7 @@ __idata dec80 BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn()
 __idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn()
 __idata dec80 Tmp3Decn; //used by recip_decn() and ln_decn()
-__idata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
+__xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
 

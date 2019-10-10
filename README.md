@@ -8,11 +8,65 @@ Note that once you change the firmware on the calculator, there's no way to go b
 
 Here's a picture of the assembled calculator kit running the new firmware (it's impossible to keep the glossy black acrylic clean):
 
-![calculator](./calc.jpg)
+![calculator](./calc_small.jpg)
 
 And here's a picture of the GUI emulator with functions labeled:
 
 ![Qt GUI](./qt_gui.png)
+
+
+# Usage
+## Calculation
+The calculator uses RPN. Calculate (2+3)/(9^2) by pressing the following keys:
+
+- 2
+- Enter (=)
+- 3
+- `+`
+- 9
+- Enter (=)
+- `*`
+- `÷`
+
+The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2. The stack is a classic 4-level RPN stack, where the T register automatically duplicates.
+
+## Keys
+Some of the keys have slightly different functions, see the picture of the emulator Qt GUI.
+
+![Qt GUI](./qt_gui.png)
+
+The keys on the *original* calculator map as follows:
+
+- `=   `: Enter
+- `<-  `: Negate (+/-: change sign)
+	- Note: for implementation simplicity, this is a postfix operator.
+	- Pressing this key will immediately terminate digit entry and negate the number.
+	- Acts as sqrt() when shifted
+- `sqrt`: Swap `x <-> y`
+	- Acts as 1/x when shifted
+- `.   `: decimal point/(-)Exp: The `.` key works similarly to old Sinclair Scientific calculators that also have a limited number of keys, and combines entering the decimal point and starting exponent entry (both positive and negative) onto one key:
+	- The 1st press inserts a decimal point.
+	- The 2nd press begins exponent entry.
+	- The 3rd and subsequent presses negates the current exponent being entered.
+- `mode `: acts as a shift key
+- `ON/AC`: acts as a backspace key during digit entry, acts as `Clear X` when digit entry is finished (e.g. after an operator key is pressed)
+	- acts as `Clear X` when shifted
+- `7    `: acts as y^x when shifted
+- `8    `: acts as ln(x) when shifted
+- `9    `: acts as log(x) when shifted
+- `5    `: acts as e^x when shifted
+- `6    `: acts as 10^x when shifted
+
+
+## Floating Point
+
+The calculator internally calculates with an 18 digit significand for better precision, even though at most 16 digits can be displayed. The exponent display is fixed at 2 digits (when it is displayed), but the calculator doesn't prevent you from doing certain operations (e.g. basic arithmetic) which result in numbers with larger exponents.
+
+Internally, the calculator dedicates 15 bits for representing the signed exponent, so exponents up to +/- 16,383 can be represented (see the internals section below for more information). This is to ensure that intermediate parts of certain calculations (mainly taking the reciprocal of a number) do not prematurely cause overflow or underflow, even when the result is fully representable with just 2 digits. You can do calculations with greater than 2 digits in the exponent, but only 2 digits will be displayed. For larger exponents, a 10 in the ten's place of the exponent will be displayed as a '`:`'. (This just so happens to be the next character after '`9`' in the 1602 LCD's character map).
+
+## Turning off
+Hold `Shift` (the `mode` key on the physical calculator) and `0` *at the same time* to turn off. NOTE: There is no auto power off.
+
 
 # Building
 - Use the Makefile for building a new firmware for the calculator.
@@ -62,7 +116,7 @@ Here is the component layout from the diyleyuan website.
 
 ![component layout](./component.gif)
 
-The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050 (the switches included with the kit take quite a bit of force to depress). The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a positive FSTN type, although the one included is very usable with the backlight on.
+The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050 (the switches included with the kit take more force to depress). The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a positive FSTN type, although the one included is very usable with the backlight on.
 
 ## Programming with stcgal
 
@@ -109,58 +163,8 @@ Disconnected!
 
 (The name for `stcgal` is probably a play on words from the `avrdude` programming software used to program AVR microcontrollers.)
 
-# Usage
-## Calculation
-The calculator uses RPN. Calculate (2+3)/(9^2) by pressing the following keys:
-
-- 2
-- Enter (=)
-- 3
-- `+`
-- 9
-- Enter (=)
-- `*`
-- `÷`
-
-The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2. The stack is a classic 4-level RPN stack, where the T register automatically duplicates.
-
-## Keys
-Some of the keys have slightly different functions, see the picture of the emulator Qt GUI.
-
-![Qt GUI](./qt_gui.png)
-
-The keys on the *original* calculator map as follows:
-
-- `=   `: Enter
-- `<-  `: Negate (+/-: change sign)
-	- Note: for implementation simplicity, this is a postfix operator.
-	- Pressing this key will immediately terminate digit entry and negate the number.
-	- Acts as sqrt() when shifted
-- `sqrt`: Swap `x <-> y`
-	- Acts as 1/x when shifted
-- `.   `: decimal point/(-)Exp: The `.` key works similarly to old Sinclair Scientific calculators that also have a limited number of keys, and combines entering the decimal point and starting exponent entry (both positive and negative) onto one key:
-	- The 1st press inserts a decimal point.
-	- The 2nd press begins exponent entry.
-	- The 3rd and subsequent presses negates the current exponent being entered.
-- `mode `: acts as a shift key
-- `ON/AC`: acts as a backspace key during digit entry, acts as `Clear X` when digit entry is finished (e.g. after an operator key is pressed)
-	- acts as `Clear X` when shifted
-- `7    `: acts as y^x when shifted
-- `8    `: acts as ln(x) when shifted
-- `9    `: acts as log(x) when shifted
-- `5    `: acts as e^x when shifted
-- `6    `: acts as 10^x when shifted
-
-
-## Floating Point
-The exponent display is fixed at 2 digits, although the calculator doesn't prevent you from doing certain operations (e.g. basic arithmetic) which results in numbers with larger exponents. (A 10 in the ten's place of the exponent will then be displayed as a '`:`'. This just so happens to be the next character after '`9`' in the 1602 LCD's character map). The calculator can internally represent larger exponents than +/-99, although calculations with larger exponents aren't guaranteed to be correct.
-
-## Turning off
-Hold `Shift` (the `mode` key on the physical calculator) and `0` *at the same time* to turn off. NOTE: There is no auto power off.
-
 # Bugs
-1. The calculator does not properly check for underflow or overflow sometimes.
-1. After division by 0, ln(-), over/underflow, or other operations which give an `Error`, it's possible to still do certain operations on `Error`. Many functions do check, and will not operate on `Error`, but not all of them yet. This is somewhat similar to old soviet Elektronika calculators where `Error` is just a number, and there wasn't enough ROM space to check for errors. There are people who explore the inner-workings of these calculators by manipulating the `Error` number.
+1. After division by 0, ln(-), over/underflow, or other operations which give an `Error`, it's possible to still do certain operations on `Error`. Many functions do check, and will not operate on `Error`, but not all of them yet. This is somewhat similar to old soviet Elektronika calculators where `Error` is just a number, and there wasn't enough ROM space to check for errors. (There are people who explore the inner-workings of these calculators by manipulating the `Error` "number".)
 1. There are probably more bugs waiting to be discovered.
 
 # Internals
@@ -211,11 +215,6 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 - Square roots are calculated using the identity sqrt(x) = e^(0.5*ln(x))
 
 ## TODO
-- Rounding: currently, to save code space, there is no rounding being done (even for intermediate steps), and numbers are instead truncated.
-- Square roots could be more-accurately implemented using digit-by-digit methods similar to those described in the HP Journal article "Personal Calculator Algorithms I: Square Roots" by William Egbert.
-	- calculating using Newton-Raphson iterations for the reciprocal square root 1/sqrt(x), and then multiplying by the original value would probably also be more accurate, and definitely much faster
-		- the iteration for the reciprocal square root is new_estimate = 0.5 * estimate * (3 - x * estimate * estimate)
-- Reciprocal/division could also be more-accurately implemented using digit-by-digit methods (the Newton-Raphson iterations currently used are quite fast though).
 - Trigonometric functions could be implemented with algorithms similar to those described in the HP Journal articles "Personal Calculator Algorithms II: Trigonometric Functions" and "Personal Calculator Algorithms III: Inverse Trigonometric Functions", both by William Egbert.
 	- will probably assign to the shifted `1`, `2`, and `3` keys, and `0` for calculating inverse trig functions.
 - The stack rotate function is currently unimplemented
@@ -226,6 +225,11 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 - The display blanking for trailing 0s assumes that 16 digits will actually be displayed, but this might not be the case if the negative sign, decimal point, or exponents are displayed
 - Would be nice to have the `hex <=> dec` converter from the original firmware if there is more flash space
 - Would be nice to have the resistor color band decoder if there is more flash space
+- Rounding: currently, to save code space, there is no rounding being done (even for intermediate steps), and numbers are instead truncated. Still, with 18 digits of precision (two guard digits, even if all 16 digits are actually displayed), the results are fairly accurate.
+- Square roots could be more-accurately implemented using digit-by-digit methods similar to those described in the HP Journal article "Personal Calculator Algorithms I: Square Roots" by William Egbert.
+	- calculating using Newton-Raphson iterations for the reciprocal square root 1/sqrt(x), and then multiplying by the original value would probably also be more accurate, and definitely much faster
+		- the iteration for the reciprocal square root is new_estimate = 0.5 * estimate * (3 - x * estimate * estimate)
+- Reciprocal/division could also be more-accurately implemented using digit-by-digit methods (the Newton-Raphson iterations currently used are quite fast though).
 
 # Key Debouncing
 The keyboard matrix is scanned once every 5ms. The keyboard debouncing is based on the quick draw/integrator hybrid algorithm described [here](https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/). This algorithm combines the advantages of both methods:

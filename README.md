@@ -86,6 +86,7 @@ Note that once you change the firmware on the calculator, it isn't possible to g
 
 1. Buy a USB to logic-level serial dongle that supports 5V operation (these dongles may have a jumper you need to set to switch between 3.3V and 5V). This is the best option.
 	- Here is one that works: https://www.amazon.com/gp/product/B00N4MCS1A/
+        - Here is one that should also work: https://www.amazon.com/DSD-TECH-SH-U09F-Adapter-Featuring/dp/B07K76Q2DX
 1. If you have an adjustable power supply, power the diyleyuan calculator at 3.3-3.5V for programming, instead of 5V, and use a 3.3V USB-to-logic-level-serial dongle.
 	- You won't be able to see the LCD screen at 3.3V well, though.
 	- After programming, remove the USB dongle, and set the voltage back up to 5V to make the LCD readable.
@@ -100,7 +101,11 @@ Note that once you change the firmware on the calculator, it isn't possible to g
 Connect to Tx of the USB dongle.
 - Pin 16 is Tx from the microcontroller (purple wire in the picture). Connect to Rx of the USB dongle.
 
-I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit, so that the connections are more permanent. (In the picture, I just soldered the wire directly to the microcontroller pins, but this isn't as reliable as if they were soldered into a through hole.) Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle (i.e. Rx on the microcontroller goes to Tx on the USB dongle, and Tx on the microcontroller goes to Rx on the USB dongle). You must also connect ground to the dongle. A good point to use is either pin 1 of U1, or the header P1.
+I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit, so that the connections are more permanent. (In the picture, I just soldered the wire directly to the microcontroller pins, but this isn't as reliable as if they were soldered into a through hole.) Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle (i.e. Rx on the microcontroller goes to Tx on the USB dongle, and Tx on the microcontroller goes to Rx on the USB dongle). 
+
+You must also connect ground to the dongle. A good point to use is header P1. (You may optionally power the calculator with +5V from the USB dongle instead of using button-cell batteries. Header P1 is again a good location to use.) To program the calculator see the "Programming with stcgal" section below.
+
+### Other miscellaneous hardware details
 
 Be careful when working on the calculator. The 7550 voltage regulator used has no short circuit protection. It does have a low quiescent current and extremely low dropout voltage though, and you must match the low dropout voltage if replacing the regulator. If you do end up damaging the regulator (like I did), a good replacement is the Microchip MCP1700-5002E/TO. (In the picture though, I just removed the 7550 voltage regulator, shorted pins 2 and 3, and added a capacitor between pin 1 and pins 2/3. I am powering the calculator externally, instead of with batteries.)
 
@@ -120,7 +125,7 @@ The switches used are a knockoff of the Omron B3F series. A good replacement is 
 
 ## Programming with stcgal
 
-See below for the stcgal output. Replace `stc_rpncalc/main.hex` with the actual path to the main.hex you built. There are also prebuilt binaries in the `binaries` directory. In this example, I'm programming at a relatively high line rate of 230,400 bits/s. You may want to try at a slower speed first to get things working (omit the `-b 230400` option).
+Run `stcgal` as shown below, replacing `stc_rpncalc/main.hex` with the actual path to the main.hex you built. There are also prebuilt binaries in the `binaries` directory. In this example, I'm programming at a relatively high line rate of 230,400 bits/s. This works very reliably, but you may want to try at a slower speed to start (omit the `-b 230400` option).
 
 ~~~~
 $ ./stcgal.py -P stc15 -b 230400 stc_rpncalc/main.hex

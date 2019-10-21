@@ -4,8 +4,8 @@ import QtQuick.Controls 1.0
 ApplicationWindow
 {
 	visible: true
-	width:  1000
-	height: 1000
+	width:  4 * (100 + 5)
+	height: 5 * (100 + 5) + 200 + 30
 	title: qsTr("RPN Calculator")
 	
 	//calculator

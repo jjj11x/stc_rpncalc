@@ -125,7 +125,7 @@ static void latch_on(void)
 
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
-__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.05";
+__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.06";
 
 
 enum {
@@ -165,10 +165,18 @@ static inline void finish_process_entry(void){
 		push_decn(EntryBuf, exponent);
 		//reset to done
 		entering_done();
+		//track entry for RCL and lastX
+		if (NoLift){
+#ifdef DESKTOP
+			printf("no lift==2\n");
+#endif
+			NoLift++;
+		}
 	}
 	//process cmd
 	process_cmd(KEY_MAP[I_Key]);
 	EnteringExp = ENTERING_DONE;
+	NoLift = 0;
 }
 
 #ifdef DESKTOP
@@ -221,6 +229,9 @@ int main()
 	{
 		//turn off?
 		if (Keys[0] == 8 && Keys[4] == 8){
+			//check if both shift (mode) and 0 key are held to turn off
+			//(should work even if rest of calculator is in inifite loop,
+			// since this is checked within ISR)
 			TURN_OFF();
 		}
 #ifdef DESKTOP
@@ -279,25 +290,30 @@ int main()
 			switch(KEY_MAP[I_Key]){
 				//////////
 				case '0': {
-					if ( EnteringExp >= ENTERING_EXP){
-						if ( Exp_i == 0){
-							ExpBuf[0] = 0;
-							Exp_i = 1;
-						} else {
-							ExpBuf[1] = ExpBuf[0];
-							ExpBuf[0] = 0;
-							Exp_i++;
-							if ( Exp_i > 2){
+					if (IsShifted){
+						//off
+						TURN_OFF();
+					} else {
+						if ( EnteringExp >= ENTERING_EXP){
+							if ( Exp_i == 0){
+								ExpBuf[0] = 0;
 								Exp_i = 1;
+							} else {
+								ExpBuf[1] = ExpBuf[0];
+								ExpBuf[0] = 0;
+								Exp_i++;
+								if ( Exp_i > 2){
+									Exp_i = 1;
+								}
 							}
+						} else if (is_entering_done()){
+							EnteringExp = ENTERING_SIGNIF;
+							EntryBuf[Entry_i] = KEY_MAP[I_Key];
+							//do not increment entry_i from 0, until first non-0 entry
+						} else if ( Entry_i != 0 && Entry_i < MAX_CHARS_PER_LINE - 1 + 1){
+							EntryBuf[Entry_i] = KEY_MAP[I_Key];
+							Entry_i++;
 						}
-					} else if (is_entering_done()){
-						EnteringExp = ENTERING_SIGNIF;
-						EntryBuf[Entry_i] = KEY_MAP[I_Key];
-						//do not increment entry_i from 0, until first non-0 entry
-					} else if ( Entry_i != 0 && Entry_i < MAX_CHARS_PER_LINE - 1 + 1){
-						EntryBuf[Entry_i] = KEY_MAP[I_Key];
-						Entry_i++;
 					}
 				} break;
 				//////////
@@ -312,7 +328,6 @@ int main()
 				case '9': {
 					if (IsShifted){
 						finish_process_entry();
-						NoLift = 0;
 					} else if ( EnteringExp >= ENTERING_EXP){
 						if ( Exp_i == 0){
 							ExpBuf[0] = KEY_MAP[I_Key] - '0';
@@ -336,27 +351,36 @@ int main()
 				} break;
 				//////////
 				case '.': {
-					if (is_entering_done()){
-						EntryBuf[Entry_i++] = '0';
-						EntryBuf[Entry_i++] = '.';
-						EnteringExp = ENTERING_FRAC;
-					} else if ( EnteringExp == ENTERING_SIGNIF){
-						if ( Entry_i == 0){
+					if (IsShifted){
+						//STO
+						finish_process_entry();
+					} else {
+						if (is_entering_done()){
 							EntryBuf[Entry_i++] = '0';
+							EntryBuf[Entry_i++] = '.';
+							EnteringExp = ENTERING_FRAC;
+						} else if ( EnteringExp == ENTERING_SIGNIF){
+							if ( Entry_i == 0){
+								EntryBuf[Entry_i++] = '0';
+							}
+							EntryBuf[Entry_i++] = '.';
+							EnteringExp = ENTERING_FRAC;
+						} else if ( EnteringExp <= ENTERING_EXP) {
+							EnteringExp++;
+						} else { //entering_exp == ENTERING_EXP_NEG
+							EnteringExp = ENTERING_EXP;
 						}
-						EntryBuf[Entry_i++] = '.';
-						EnteringExp = ENTERING_FRAC;
-					} else if ( EnteringExp <= ENTERING_EXP) {
-						EnteringExp++;
-					} else { //entering_exp == ENTERING_EXP_NEG
-						EnteringExp = ENTERING_EXP;
 					}
 				} break;
 				//////////
 				case '=': {
-					//track stack lift
-					finish_process_entry();
-					NoLift = 1;
+					if (IsShifted){ //RCL
+						finish_process_entry();
+					} else { //Enter
+						//track stack lift
+						finish_process_entry();
+						NoLift = 1;
+					}
 				} break;
 				//////////
 				case 'c': {
@@ -389,7 +413,6 @@ int main()
 				case '<': //fallthrough //use as +/-
 				case 'r': { //use as swap
 					finish_process_entry();
-					NoLift = 0;
 				} break;
 				//////////
 				default: process_cmd(KEY_MAP[I_Key]);

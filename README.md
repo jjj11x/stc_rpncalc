@@ -6,7 +6,7 @@ The replacement firmware supports floating-point calculations (using 18 decimal 
 
 Note that once you change the firmware on the calculator, there's no way to go back to the original firmware (the original firmware isn't posted for download anywhere). STC's bootloader on the microcontroller deliberately prevents readback of the microcontroller's content, and STC considers this to be a "feature".
 
-Here's a picture of the assembled calculator kit running the new firmware (it's impossible to keep the glossy black acrylic clean):
+Here's a picture of the assembled calculator kit running the new firmware:
 
 ![calculator](./calc_small.jpg)
 
@@ -38,6 +38,7 @@ Some of the keys have slightly different functions, see the picture of the emula
 The keys on the *original* calculator map as follows:
 
 - `=   `: Enter
+	- acts as RCL when shifted (there is only 1 memory register)
 - `<-  `: Negate (+/-: change sign)
 	- Note: for implementation simplicity, this is a postfix operator.
 	- Pressing this key will immediately terminate digit entry and negate the number.
@@ -48,6 +49,7 @@ The keys on the *original* calculator map as follows:
 	- The 1st press inserts a decimal point.
 	- The 2nd press begins exponent entry.
 	- The 3rd and subsequent presses negates the current exponent being entered.
+	- Acts as STO when shifted (there is only 1 memory register)
 - `mode `: acts as a shift key
 - `ON/AC`: acts as a backspace key during digit entry, acts as `Clear X` when digit entry is finished (e.g. after an operator key is pressed)
 	- acts as `Clear X` when shifted
@@ -56,6 +58,9 @@ The keys on the *original* calculator map as follows:
 - `9    `: acts as log(x) when shifted
 - `5    `: acts as e^x when shifted
 - `6    `: acts as 10^x when shifted
+- `4    `: acts as roll down when shifted
+- `+    `: acts as LastX when shifted
+- `0    `: acts as off button when shifted
 
 
 ## Floating Point
@@ -65,7 +70,7 @@ The calculator internally calculates with an 18 digit significand for better pre
 Internally, the calculator dedicates 15 bits for representing the signed exponent, so exponents up to +/- 16,383 can be represented (see the internals section below for more information). This is to ensure that intermediate parts of certain calculations (mainly taking the reciprocal of a number) do not prematurely cause overflow or underflow, even when the result is fully representable with just 2 digits. You can do calculations with greater than 2 digits in the exponent, but only 2 digits will be displayed. For larger exponents, a 10 in the ten's place of the exponent will be displayed as a '`:`'. (This just so happens to be the next character after '`9`' in the 1602 LCD's character map).
 
 ## Turning off
-Hold `Shift` (the `mode` key on the physical calculator) and `0` *at the same time* to turn off. NOTE: There is no auto power off.
+Press `Shift` (the `mode` key on the physical calculator) and then `0` to turn off. On older stc_rpncalc firmwares, or if the calculator is unresponsive, hold `Shift` (the `mode` key on the physical calculator) and `0` *at the same time* to turn off. NOTE: There is no auto power off.
 
 
 # Building
@@ -221,11 +226,7 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 
 ## TODO
 - Trigonometric functions could be implemented with algorithms similar to those described in the HP Journal articles "Personal Calculator Algorithms II: Trigonometric Functions" and "Personal Calculator Algorithms III: Inverse Trigonometric Functions", both by William Egbert.
-	- will probably assign to the shifted `1`, `2`, and `3` keys, and `0` for calculating inverse trig functions.
-- The stack rotate function is currently unimplemented
-	- will probably assign to the shifted `4` key
-- STO and RCL are currently unimplemented
-	- will probably assign to the shifted `.` and `Enter` (`=`) keys
+	- will probably assign to the shifted `1`, `2`, and `3` keys, and `-` for calculating inverse trig functions.
 - Special cases, such as taking the logarithms of numbers near 1, negative number raised to integer powers, etc. could be implemented separately, similar to what is described in the HP Journal note "The New Accuracy: Making 2^3 = 8" by Dennis Harms.
 - The display blanking for trailing 0s assumes that 16 digits will actually be displayed, but this might not be the case if the negative sign, decimal point, or exponents are displayed
 - Would be nice to have the `hex <=> dec` converter from the original firmware if there is more flash space

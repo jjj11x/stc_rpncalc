@@ -9,6 +9,9 @@
 
 #include "calc.h"
 
+__xdata dec80 StoredDecn;
+__xdata dec80 LastX;
+
 #define STACK_SIZE 4 //must be a power of 2
 
 #define STACK_X 0
@@ -53,6 +56,7 @@ static void do_binary_op(void (*f_ptr)(void)){
 	if (decn_is_nan(&stack(STACK_Y)) || decn_is_nan(&stack(STACK_X))){
 		set_dec80_NaN(&stack(STACK_Y));
 	} else {
+		copy_decn(&LastX, &stack(STACK_X)); //save LastX
 		copy_decn(&AccDecn, &stack(STACK_Y));
 		copy_decn(&BDecn, &stack(STACK_X));
 		f_ptr();
@@ -63,6 +67,7 @@ static void do_binary_op(void (*f_ptr)(void)){
 
 static void do_unary_op(void (*f_ptr)(void)){
 	if (!decn_is_nan(&stack(STACK_X))){
+		copy_decn(&LastX, &stack(STACK_X)); //save LastX
 		copy_decn(&AccDecn, &stack(STACK_X));
 		f_ptr();
 		copy_decn(&stack(STACK_X), &AccDecn);
@@ -80,7 +85,15 @@ void process_cmd(char cmd){
 	switch(cmd){
 		//////////
 		case '+':{
-			do_binary_op(add_decn);
+			if (IsShifted){ // LastX
+				if (NoLift == 2){
+					StackPtr--;
+				}
+				copy_decn(&stack(STACK_X), &LastX);
+				IsShifted = 0;
+			} else { // +
+				do_binary_op(add_decn);
+			}
 		} break;
 		//////////
 		case '*':{
@@ -90,6 +103,7 @@ void process_cmd(char cmd){
 		case '-':{
 			negate_decn(&stack(STACK_X));
 			do_binary_op(add_decn);
+			negate_decn(&LastX); //stored LastX was after negation of X
 		} break;
 		//////////
 		case '/':{
@@ -97,9 +111,24 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case '=':{
-			if (!decn_is_nan(&stack(STACK_X))){
-				StackPtr--;
-				copy_decn(&stack(STACK_X), &stack(STACK_Y));
+			if (IsShifted){ //RCL
+				if (NoLift == 2){
+					StackPtr--;
+				}
+				copy_decn(&stack(STACK_X), &StoredDecn);
+				IsShifted = 0;
+			} else { //Enter
+				if (!decn_is_nan(&stack(STACK_X))){
+					StackPtr--;
+					copy_decn(&stack(STACK_X), &stack(STACK_Y));
+				}
+			}
+		} break;
+		//////////
+		case '.':{
+			if (IsShifted){ //STO
+				copy_decn(&StoredDecn, &stack(STACK_X));
+				IsShifted = 0;
 			}
 		} break;
 		//////////
@@ -111,6 +140,7 @@ void process_cmd(char cmd){
 			if (IsShifted){ //take sqrt
 				IsShifted = 0;
 				if (!decn_is_nan(&stack(STACK_X))){
+					copy_decn(&LastX, &stack(STACK_X)); //save LastX
 					copy_decn(&AccDecn, &stack(STACK_X));
 					if (AccDecn.exponent < 0){ //negative
 						set_dec80_NaN(&stack(STACK_X));
@@ -146,6 +176,13 @@ void process_cmd(char cmd){
 			toggle_shifted();
 		} break;
 		//////////
+		case '4':{
+			if (IsShifted){ //roll down
+				StackPtr++;
+				IsShifted = 0;
+			}
+		} break;
+		//////////
 		case '5':{
 			if (IsShifted){ //e^x
 				do_unary_op(exp_decn);
@@ -174,10 +211,11 @@ void process_cmd(char cmd){
 			}
 		} break;
 		//////////
-		case '7':{
+		case '7':{ //y^x
 			if (decn_is_nan(&stack(STACK_Y)) || decn_is_nan(&stack(STACK_X))){
 				set_dec80_NaN(&stack(STACK_Y));
 			} else {
+				copy_decn(&LastX, &stack(STACK_X)); //save LastX
 				copy_decn(&AccDecn, &stack(STACK_Y));
 				copy_decn(&BDecn, &stack(STACK_X));
 				pow_decn();

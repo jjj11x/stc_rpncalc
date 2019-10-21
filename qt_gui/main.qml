@@ -99,9 +99,9 @@ ApplicationWindow
 		var shifted_keys = [
 		["Shift", "1/x", " √<span style=\"text-decoration: overline\">x</span> ",   "CL<i>x</i>"],
 		["y<sup>x</sup> ",   "ln(x)", "log(x)", ""],
-		["",      "e<sup>x</sup>",   "10<sup>x</sup>",   ""],
+		["🔃",      "e<sup>x</sup>",   "10<sup>x</sup>",   ""],
 		["",      "",      "",       ""],
-		["off",   "",      "",       ""]
+		["off",   "STO",      "RCL",       "LAST<i>x</i>"]
 		]
 		
 		return "<small>" + shifted_keys[row][col] + "</small>"

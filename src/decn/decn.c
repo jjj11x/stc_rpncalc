@@ -406,6 +406,9 @@ void negate_decn(dec80* x){
 #else
 	static const exp_t xor_val = -(0x7f) - 1;
 #endif
+	if (decn_is_nan(x)){
+		return;
+	}
 	(x->exponent) ^= xor_val;
 }
 

@@ -64,6 +64,7 @@ void build_dec80(__xdata const char* signif_str, exp_t exponent);
 
 void set_dec80_zero(dec80* dest);
 void set_dec80_NaN(dec80* dest);
+uint8_t decn_is_zero(const dec80* x);
 uint8_t decn_is_nan(const dec80* x);
 
 void negate_decn(dec80* x);

@@ -139,13 +139,16 @@ void process_cmd(char cmd){
 		case '<':{ //use as +/- and sqrt
 			if (IsShifted){ //take sqrt
 				IsShifted = 0;
-				if (!decn_is_nan(&stack(STACK_X))){
+				if (decn_is_zero(&stack(STACK_X))){
+					//sqrt(0) = 0
+				} else if (!decn_is_nan(&stack(STACK_X))){
 					copy_decn(&LastX, &stack(STACK_X)); //save LastX
 					copy_decn(&AccDecn, &stack(STACK_X));
 					if (AccDecn.exponent < 0){ //negative
 						set_dec80_NaN(&stack(STACK_X));
 						break;
 					}
+					//b = 0.5
 					set_dec80_zero(&BDecn);
 					BDecn.lsu[0] = 5;
 					pow_decn();

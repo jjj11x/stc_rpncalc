@@ -363,7 +363,7 @@ void set_dec80_zero(dec80* dest){
 	}
 }
 
-static uint8_t decn_is_zero(const dec80* x){
+uint8_t decn_is_zero(const dec80* x){
 	uint8_t i;
 	for (i = 0; i < DEC80_NUM_LSU; i++){
 		if (x->lsu[i] != 0){
@@ -1047,6 +1047,11 @@ void exp_decn(void){
 	#define SAVED Tmp2Decn
 	#define NUM_TIMES Tmp3Decn
 
+	//check not error
+	if (decn_is_nan(&AccDecn)){
+		set_dec80_NaN(&AccDecn);
+		return;
+	}
 	//check if negative
 	if (AccDecn.exponent < 0){
 		negate_decn(&AccDecn);

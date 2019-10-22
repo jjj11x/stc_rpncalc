@@ -86,7 +86,7 @@ void process_cmd(char cmd){
 		//////////
 		case '+':{
 			if (IsShifted){ // LastX
-				if (NoLift == 2){
+				if (NoLift != 1){
 					StackPtr--;
 				}
 				copy_decn(&stack(STACK_X), &LastX);
@@ -112,7 +112,7 @@ void process_cmd(char cmd){
 		//////////
 		case '=':{
 			if (IsShifted){ //RCL
-				if (NoLift == 2){
+				if (NoLift != 1){
 					StackPtr--;
 				}
 				copy_decn(&stack(STACK_X), &StoredDecn);

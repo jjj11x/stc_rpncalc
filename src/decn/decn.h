@@ -32,6 +32,9 @@ typedef int8_t exp_t;
 #define DEC80_NAN_EXP (-63 - 1) //-64
 #endif
 
+//for printing: exponent gets returned as int8_t
+#define DECN_MIN_PRINT_EXP (-128)
+#define DECN_MAX_PRINT_EXP   128
 
 //decimal80 unpacked into 80 bits
 // for computation

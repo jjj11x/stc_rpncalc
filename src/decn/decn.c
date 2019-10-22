@@ -700,7 +700,7 @@ void mult_decn(void){
 	//calculate new exponent
 	new_exponent = get_exponent(&AccDecn) + get_exponent(&BDecn);
 #ifdef DEBUG_MULT
-		printf("\n new exponent: %d:", new_exponent);
+		printf("\n new exponent: %d, is_neg: %u", new_exponent, is_neg);
 #endif
 	//do multiply
 	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){
@@ -755,6 +755,9 @@ void mult_decn(void){
 		TmpDecn.lsu[0] += carry*10;
 	}
 	//set new exponent, checking for over/underflow
+#ifdef DEBUG_MULT
+	printf("\n new exponent: %d, is_neg: %u\n", new_exponent, is_neg);
+#endif
 	if (new_exponent < DEC80_MAX_EXP && new_exponent > DEC80_MIN_EXP){
 		set_exponent(&TmpDecn, new_exponent, is_neg);
 	} else {
@@ -1359,7 +1362,7 @@ int8_t decn_to_str(const dec80* x){
 	//print exponent
 	if (use_sci){
 		//check for overflow
-		if (exponent > DEC80_MAX_EXP || exponent < DEC80_MIN_EXP){
+		if (exponent > DECN_MAX_PRINT_EXP || exponent < DECN_MIN_PRINT_EXP){
 			set_str_error();
 			return 0;
 		}

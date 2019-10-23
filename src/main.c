@@ -125,7 +125,7 @@ static void latch_on(void)
 
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
-__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.07";
+__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.08";
 
 
 enum {
@@ -391,6 +391,7 @@ int main()
 						entering_done();
 						EnteringExp = ENTERING_DONE_CLEARED;
 						//do not increment entry_i from 0, until first non-0 entry
+						process_cmd(KEY_MAP[I_Key]);
 					} else if ( EnteringExp >= ENTERING_EXP){
 						//go back to digit entry
 						EnteringExp--;

@@ -1,6 +1,6 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". You will have to solder the kit yourself (see "hardware connections" below). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built-in serial-port bootloader. This project uses SDCC to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". You will have to solder the kit yourself (see "hardware connections" below). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built-in serial-port bootloader. This project uses [SDCC](http://sdcc.sourceforge.net/) to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
 
 The replacement firmware supports floating-point calculations (using 18 decimal digits plus exponent for arithmetic) with a 4-level RPN stack. Functions include basic arithmetic as well as log(), exp(), y^x, 1/x and sqrt(), all in floating point. (The original firmware supported only fixed-point calculations in chain mode.) I have not added in the resistor value calculator or the decimal/hexadecimal converter features from the original firmware.
 
@@ -29,6 +29,30 @@ The calculator uses RPN. Calculate (2+3)/(9^2) by pressing the following keys:
 - `÷`
 
 The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2. The stack is a classic 4-level RPN stack, where the T register automatically duplicates.
+
+The decimal key also doubles as the enter exponent key. For example the following calculates 3E8 / 1550E-9:
+
+- 3
+- .
+	- (1st press enters decimal point)
+- .
+	- (2nd press begins exponent entry)
+- 8
+- Enter (=)
+- 1
+- 5
+- 5
+- 0
+- .
+	- (1st press enters decimal point)
+- .
+	- (2nd press begins exponent entry)
+- .
+	- (3rd press begins negative exponent entry)
+- 9
+- `÷`
+
+There is currently no way to force the calculator to display in scientific mode. For extremely large numbers that are hard to read, taking the log base 10 of a number will give its exponent. Numbers larger than 18 digits will automatically be displayed in scientific notation, as will numbers smaller than 1E-3.
 
 ## Keys
 Some of the keys have slightly different functions, see the picture of the emulator Qt GUI.
@@ -74,11 +98,15 @@ Press `Shift` (the `mode` key on the physical calculator) and then `0` to turn o
 
 
 # Building
+There is a prebuilt binary for the calculator checked in at `binaries/main.hex` for the calculator. Building is fairly straigtforward though.
+
 - Use the Makefile for building a new firmware for the calculator.
 	- type `make` to build
 		- (you must already have SDCC installed and set up so it can be found in your PATH)
 		- this will create a `main.hex` output file
-	- there is also a prebuilt binary checked in at `binaries/main.hex`
+	- I currently use SDCC version 3.5. Newer versions will probably produce a binary that is too big to fit in the available flash.
+		- See https://sourceforge.net/p/sdcc/discussion/1865/thread/9589cc8d57/
+		- Luckily SDCC has few dependencies, and older versions can be installed fairly easily.
 - CMakeLists.txt is for building the Qt desktop application, and also the decimal-number-library test application.
 	- build similarly to other cmake projects:
 		- `mkdir build_qt && cd build_qt`

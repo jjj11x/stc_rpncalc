@@ -106,7 +106,7 @@ Note that once you change the firmware on the calculator, it isn't possible to g
 Connect to Tx of the USB dongle.
 - Pin 16 is Tx from the microcontroller (purple wire in the picture). Connect to Rx of the USB dongle.
 
-I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit, so that the connections are more permanent. (In the picture, I just soldered the wire directly to the microcontroller pins, but this isn't as reliable as if they were soldered into a through hole.) Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle (i.e. Rx on the microcontroller goes to Tx on the USB dongle, and Tx on the microcontroller goes to Rx on the USB dongle). 
+I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit, so that the connections are more permanent. (In the picture, I just soldered the wire directly to the microcontroller pins, but this isn't as reliable as if they were soldered into a through hole.) Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle (i.e. Rx on the microcontroller goes to Tx on the USB dongle, and Tx on the microcontroller goes to Rx on the USB dongle).
 
 You must also connect ground to the dongle. A good point to use is header P1. (You may optionally power the calculator with +5V from the USB dongle instead of using button-cell batteries. Header P1 is again a good location to use.) To program the calculator see the "Programming with stcgal" section below.
 
@@ -264,4 +264,16 @@ Thus, there are special compiler directives to tell it what address space to pla
 
 
 # Licensing
-This code is licensed under GPLv3.
+This code is licensed under GPLv3+:
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+(Full license text is in LICENSE.md)

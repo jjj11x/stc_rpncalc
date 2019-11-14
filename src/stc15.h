@@ -1,3 +1,16 @@
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #ifndef _STC15_H_
 #define _STC15_H_
 
@@ -31,8 +44,8 @@ __sbit __at (0xcf) P5_7 ;
 
 __sfr __at 0x94 P0M0;
 __sfr __at 0x93 P0M1;
-__sfr __at 0x92 P1M0; 
-__sfr __at 0x91 P1M1; 
+__sfr __at 0x92 P1M0;
+__sfr __at 0x91 P1M1;
 __sfr __at 0x96 P2M0;
 __sfr __at 0x95 P2M1;
 __sfr __at 0xB2 P3M0;
@@ -46,7 +59,7 @@ __sfr __at 0xCB P6M1;
 __sfr __at 0xE2 P7M0;
 __sfr __at 0xE1 P7M1;
 
-__sfr __at 0x8E AUXR; 
+__sfr __at 0x8E AUXR;
 __sfr __at 0xA2 AUXR1;
 __sfr __at 0xA2 P_SW1;
 __sfr __at 0x97 CLK_DIV;
@@ -89,7 +102,7 @@ __sfr __at 0xA9 SADDR;
 __sfr __at 0xB9 SADEN;
 
 //ADC
-__sfr __at 0xBC ADC_CONTR; 
+__sfr __at 0xBC ADC_CONTR;
 __sfr __at 0xBD ADC_RES;
 __sfr __at 0xBE ADC_RESL;
 
@@ -99,42 +112,42 @@ __sfr __at 0xCE SPCTL;
 __sfr __at 0xCF SPDAT;
 
 //IAP/ISP
-__sfr __at 0xC2 IAP_DATA; 
+__sfr __at 0xC2 IAP_DATA;
 __sfr __at 0xC3 IAP_ADDRH;
 __sfr __at 0xC4 IAP_ADDRL;
 __sfr __at 0xC5 IAP_CMD;
 __sfr __at 0xC6 IAP_TRIG;
-__sfr __at 0xC7 IAP_CONTR; 
+__sfr __at 0xC7 IAP_CONTR;
 
-//PCA/PWM 
-__sfr __at 0xD8 CCON; 
+//PCA/PWM
+__sfr __at 0xD8 CCON;
 __sbit __at 0xDF CF;
 __sbit __at 0xDE CR;
 __sbit __at 0xDA CCF2;
 __sbit __at 0xD9 CCF1;
 __sbit __at 0xD8 CCF0;
 
-__sfr __at 0xD9 CMOD; 
-__sfr __at 0xE9 CL; 
-__sfr __at 0xF9 CH; 
-__sfr __at 0xDA CCAPM0; 
+__sfr __at 0xD9 CMOD;
+__sfr __at 0xE9 CL;
+__sfr __at 0xF9 CH;
+__sfr __at 0xDA CCAPM0;
 __sfr __at 0xDB CCAPM1;
-__sfr __at 0xDC CCAPM2; 
-__sfr __at 0xEA CCAP0L; 
-__sfr __at 0xEB CCAP1L; 
-__sfr __at 0xEC CCAP2L; 
-__sfr __at 0xF2 PCA_PWM0; 
-__sfr __at 0xF3 PCA_PWM1; 
-__sfr __at 0xF4 PCA_PWM2; 
-__sfr __at 0xFA CCAP0H; 
+__sfr __at 0xDC CCAPM2;
+__sfr __at 0xEA CCAP0L;
+__sfr __at 0xEB CCAP1L;
+__sfr __at 0xEC CCAP2L;
+__sfr __at 0xF2 PCA_PWM0;
+__sfr __at 0xF3 PCA_PWM1;
+__sfr __at 0xF4 PCA_PWM2;
+__sfr __at 0xFA CCAP0H;
 __sfr __at 0xFB CCAP1H;
-__sfr __at 0xFC CCAP2H; 
+__sfr __at 0xFC CCAP2H;
 
 __sfr __at 0xE6 CMPCR1;
 __sfr __at 0xE7 CMPCR2;
 
 //PWM
-__sfr __at 0xf1 PWMCFG; 
+__sfr __at 0xf1 PWMCFG;
 __sfr __at 0xf5 PWMCR;
 __sfr __at 0xf6 PWMIF;
 __sfr __at 0xf7 PWMFDCR;
@@ -178,8 +191,8 @@ __sfr __at 0xf7 PWMFDCR;
 #define PWM6T2H     (*(unsigned char volatile xdata *)0xff42)
 #define PWM6T2L     (*(unsigned char volatile xdata *)0xff43)
 #define PWM6CR      (*(unsigned char volatile xdata *)0xff44)
-#define PWM7T1      (*(unsigned int  volatile xdata *)0xff50)        
-#define PWM7T1H     (*(unsigned char volatile xdata *)0xff50)        
+#define PWM7T1      (*(unsigned int  volatile xdata *)0xff50)
+#define PWM7T1H     (*(unsigned char volatile xdata *)0xff50)
 #define PWM7T1L     (*(unsigned char volatile xdata *)0xff51)
 #define PWM7T2      (*(unsigned int  volatile xdata *)0xff52)
 #define PWM7T2H     (*(unsigned char volatile xdata *)0xff52)

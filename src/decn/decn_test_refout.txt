@@ -226,6 +226,33 @@ ln() exponent from initial: 1.
 log(a): 0.176091259055681285
      : 2.44191564252505631E-16
 
+  a  : 9.E99
+ln() accum scaled between 1,10: 9.
+ln() initial accum: 1. (100)
+  0: num_times: 0, 1.
+  1: num_times: 1, 1.
+  2: num_times: 1, 0.1
+  3: num_times: 0, 1.
+  4: num_times: 1, 0.001
+  5: num_times: 0, 0.01
+  6: num_times: 0, 0.1
+  7: num_times: 0, 1.
+  8: num_times: 1, 1.E-7
+ln() remainder: 1.E-7
+8: ln() remainder: 1.0000000050001598
+7: ln() remainder: 0.1000000005000159
+6: ln() remainder: 0.0100000000500015
+5: ln() remainder: 0.0010000000050001
+4: ln() remainder: 1.0000500033335833
+3: ln() remainder: 0.1000050003333583
+2: ln() remainder: 1.0050335853501441
+1: ln() remainder: 1.053605156578263
+0: ln() remainder: 0.1053605156578263
+ln() accum after summing: 0.1053605156578263
+ln() exponent from initial: 100.
+ln(a): 230.153148783746742
+     : 0
+
   a  : 4.4
 exp() num_times for 10*ln(10): 4.4 (0)
 exp() num_times for 255: 2.09741490700595432 (1)

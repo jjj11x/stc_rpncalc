@@ -274,6 +274,12 @@ int main(void){
 		"0.176091259055681242", 0
 	);
 
+	//new acc for log test
+	log_test(
+		"9", 99,
+		"230.153148783746742", 0
+	);
+
 	//new acc for exp test
 	exp_test(
 		"4.4", 0,

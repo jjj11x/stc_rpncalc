@@ -1005,13 +1005,13 @@ void ln_decn(void){
 		NUM_TIMES.exponent    = NUM_TIMES.exponent % 10000;
 		AccDecn.lsu[1] = NUM_TIMES.exponent / 100;
 		AccDecn.lsu[2] = NUM_TIMES.exponent % 100;
-		AccDecn.exponent = 4;
+		AccDecn.exponent = 5;
 	} else
 #endif
 	if (NUM_TIMES.exponent >= 100){
 		AccDecn.lsu[0] = NUM_TIMES.exponent / 100;
 		AccDecn.lsu[1] = NUM_TIMES.exponent % 100;
-		AccDecn.exponent = 2;
+		AccDecn.exponent = 3;
 	} else {
 		AccDecn.lsu[0] = NUM_TIMES.exponent;
 		AccDecn.exponent = 1;

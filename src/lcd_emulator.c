@@ -88,6 +88,8 @@ static int is_valid_character(char letter){
 		return 1;
 	} else if(letter == '^'){
 		return 1;
+	} else if(letter == 'E' || letter == 'r' || letter == 'o'){
+		return 1;
 	}
 
 	return 0;

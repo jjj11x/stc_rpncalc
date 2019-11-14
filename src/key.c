@@ -138,7 +138,9 @@ void raw_scan(void) __using(1){
 
 //based on quick draw/integrator hybrid debounce algorithm from
 //https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/
+#ifndef DESKTOP
 #pragma nooverlay
+#endif
 void debounce(void) __using(1){
 	uint8_t i, j;
 	NewKeyPressed = -1; //initially

@@ -467,6 +467,7 @@ static int8_t compare_magn(void){ //returns a<b: -1, a==b: 0, a>b: 1
 	return a_signif_b;
 }
 
+#ifdef USE_COMPARE_DECN
 static int8_t compare_decn(void){ //returns a<b: -1, a==b: 0, a>b: 1
 	int8_t is_neg;
 
@@ -497,6 +498,7 @@ static int8_t compare_decn(void){ //returns a<b: -1, a==b: 0, a>b: 1
 
 	return is_neg * compare_magn();
 }
+#endif //USE_COMPARE_DECN
 
 //WARNING: for add_decn() and sub_mag() functions only
 //acc and the number from which exponent was taken MUST be stripped of leading 0s first

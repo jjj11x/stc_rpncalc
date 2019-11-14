@@ -7,11 +7,13 @@
 #ifdef DESKTOP
 void _delay_ms(uint8_t ms){
 	//TODO:
+	(void) ms;
 }
 #ifdef ACCURATE_DELAY_US
 void _delay_us(uint8_t us)
 {
 	//TODO:
+	(void) us;
 }
 #endif
 void backlight_off(void){ }

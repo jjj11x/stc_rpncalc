@@ -1,6 +1,6 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". You will have to solder the kit yourself (see "hardware connections" below). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built-in serial-port bootloader. This project uses [SDCC](http://sdcc.sourceforge.net/) to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". You will have to solder the kit yourself (see "hardware connections" below). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built-in serial-port bootloader. See the series [summary](http://www.stcmicro.com/datasheet/STC15W408AS_Features.pdf) and full english [datasheet](https://www.stcmicro.com/datasheet/STC15F2K60S2-en.pdf). This project uses [SDCC](http://sdcc.sourceforge.net/) to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
 
 The replacement firmware supports floating-point calculations (using 18 decimal digits plus exponent for arithmetic) with a 4-level RPN stack. Functions include basic arithmetic as well as log(), exp(), y^x, 1/x and sqrt(), all in floating point. (The original firmware supported only fixed-point calculations in chain mode.) I have not added in the resistor value calculator or the decimal/hexadecimal converter features from the original firmware.
 
@@ -134,27 +134,64 @@ Note that once you change the firmware on the calculator, it isn't possible to g
 Connect to Tx of the USB dongle.
 - Pin 16 is Tx from the microcontroller (purple wire in the picture). Connect to Rx of the USB dongle.
 
-I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit, so that the connections are more permanent. (In the picture, I just soldered the wire directly to the microcontroller pins, but this isn't as reliable as if they were soldered into a through hole.) Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle (i.e. Rx on the microcontroller goes to Tx on the USB dongle, and Tx on the microcontroller goes to Rx on the USB dongle).
+I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit, so that the connections are more permanent. I soldered the wires from the back side (leave space for the screw hole). Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle (i.e. Rx on the microcontroller goes to Tx on the USB dongle, and Tx on the microcontroller goes to Rx on the USB dongle).
+
+![connections_back](./connections_back.jpg)
 
 You must also connect ground to the dongle. A good point to use is header P1. (You may optionally power the calculator with +5V from the USB dongle instead of using button-cell batteries. Header P1 is again a good location to use.) To program the calculator see the "Programming with stcgal" section below.
 
+Pin on calculator | Color used | Pin on usb-to-serial dongle
+------------------|------------|-----------------------------
+U2 pin 15 (Rx)    | Green      | (Tx)
+U2 pin 16 (Tx)    | Purple     | (Rx)
+P1 pin 1 (+5V)    | Red        | (+5V if powering from dongle instead of battery)
+P1 pin 2 (Gnd)    | Black      | (Gnd)
+
 ### Other miscellaneous hardware details
+
+#### Voltage regulator
 
 Be careful when working on the calculator. The 7550 voltage regulator used has no short circuit protection. It does have a low quiescent current and extremely low dropout voltage though, and you must match the low dropout voltage if replacing the regulator. If you do end up damaging the regulator (like I did), a good replacement is the Microchip MCP1700-5002E/TO. (In the picture though, I just removed the 7550 voltage regulator, shorted pins 2 and 3, and added a capacitor between pin 1 and pins 2/3. I am powering the calculator externally, instead of with batteries.)
 
+#### Parasitic powering through the usb-to-serial adapter
+
+If you have the usb-to-serial adapter connected, the calculator may draw power parasitically through pin 15 (Rx) of the microcontroller. This may prevent the calculator and microcontroller from fully turning off. This may prevent the bootloader from running (which would prevent you from reprogramming the calculator), since the bootloader only runs on power on. To prevent this, use a diode on pin 15 (see image above, or consult the microcontroller datasheet). You may also optionally add a 330 ohm resistor on pin 16 (Tx) of the microcontroller to provide isolation on that pin. (I don't think it's necessary to prevent parasitic power though.)
+
+#### Adding programming connections after the fact
+
+If you have already soldered the kit together without adding the Tx/Rx serial wires, you can still solder wires directly to the microcontroller fairly easily.
+
 ![connections](./connections.jpg)
+
+#### Schematic
 
 Here is the schematic from the diyleyuan website. Note that the schematic symbol for the microcontroller mistakenly labels P5.4 as P0.0, and mistakenly labels P5.5 as P0.1. The net name labels are correct.
 
 ![schematic](./schematic.gif)
 
+#### Soft-latching power switch
+
 The soft-latching power switch works as follows: Initially the calculator is off. Both Q1 and Q2 are off. Pressing the On key (S4) turns on Q1 through R1 and D2. Q1 then supplies 5V to the system. Once the microcontroller has power and starts running, it turns on Q2, which keeps Q1 on through R1. To turn off, the microcontroller turns off Q2, which in turn will turn off Q1.
+
+#### Component layout
 
 Here is the component layout from the diyleyuan website.
 
 ![component layout](./component.gif)
 
-The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050 (the switches included with the kit take more force to depress). The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a positive FSTN type, although the one included is very usable with the backlight on.
+#### Keyswitches, LCD, and other recommended replacement components
+
+The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050 which requires only 130 grams force to depress. The switches included with the kit take more force to depress. (This is somewhat a matter of personal preference though.) I recommend using four 11mm M2 standoffs along with eight M2 screws instead of using the four long screws and nuts provided to hold the top and bottom together. The problem with using the long screws is that in order to tighten them tight enough that they don't become loose easily, the top plate deforms slightly and might interfere with the keys.
+
+User toml_12953 has made a new keyboard template here (todo: can check into git directly?): https://www.dropbox.com/s/7xkg98ywonp4p1l/New%20DIY%20Template.jpg?dl=1
+
+The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a positive transflective or reflective FSTN type, although the one included (transmissive) is very usable with the backlight on. Here is a picture of a positive FSTN display with the backlight off (shown under strong office lighting):
+
+![backlight off](./no_backlight.jpg)
+
+The included LCD is a transmissive type, and requires the backlight on to be readable.
+
+I sometimes use an STC15F2K60S2 for development work. This microcontroller is available in a pin-compatible DIP-28 package for less than $2 a piece in single-digit quantities, and has almost 5 times the flash (a downside is that when programming, the flash takes longer to erase). To program a blank microcontroller, you will have to add the following additional options to `stcgal`: `-l 1200 -t 12000`
 
 ## Programming with stcgal
 

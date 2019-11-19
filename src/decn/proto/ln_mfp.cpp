@@ -25,7 +25,7 @@ using namespace boost::multiprecision;
 using std::cout;
 using std::endl;
 
-static const int NUM_A_ARR = 9;
+static const int NUM_A_ARR = 10;
 mpfr_float a_arr[NUM_A_ARR];
 mpfr_float ln_a_arr[NUM_A_ARR];
 
@@ -97,7 +97,7 @@ int main(void){
 		calc = accum;
 		diff = abs((actual - calc)/actual);
 
-		if (diff > 5e-17){
+		if (diff > 1e-17){
 			cout << x << ": ";
 			cout << std::setprecision(18) << accum << ", ";
 			cout << diff << endl;

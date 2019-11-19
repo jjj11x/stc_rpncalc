@@ -105,7 +105,6 @@ TEST_CASE("multiply"){
 	CHECK_THAT(Buf, Equals("-8527724.41172991849")); //acc*b
 }
 
-
 static void div_test(
 	//input
 	const char* a_str, int a_exp,
@@ -176,5 +175,134 @@ TEST_CASE("division"){
 		"0.02", 0,
 		"0.03", 0
 	);
+}
 
+static void log_test(
+	//input
+	const char* x_str, int x_exp,
+	bool base10=false
+)
+{
+	CAPTURE(x_str); CAPTURE(x_exp);
+	CAPTURE(base10);
+	build_dec80(x_str, x_exp);
+	// 	decn_to_str_complete(&AccDecn);
+	// 	printf(" acc: %s\n", Buf);
+	if (base10){
+		log10_decn();
+	} else {
+		ln_decn();
+	}
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  // log(x)
+
+	//calculate actual result
+	bmp::mpfr_float::default_precision(50);
+	bmp::mpfr_float calculated(Buf);
+	std::string x_full_str(x_str);
+	   x_full_str += "e" + std::to_string(x_exp);
+	// 	CAPTURE(x_full_str);
+	bmp::mpfr_float x_actual(x_full_str);
+	if (base10){
+		x_actual = log10(x_actual);
+	} else {
+		x_actual = log(x_actual);
+	}
+	CAPTURE(x_actual);
+	bmp::mpfr_float rel_diff = abs((x_actual - calculated) / x_actual);
+	CHECK(rel_diff < 3e-16); //TODO
+}
+
+TEST_CASE("log"){
+	log_test("0.155", 0);
+	log_test("10", 0);
+	log_test("1.1", 10);
+	log_test("2.02", -10);
+	log_test("2.02", 0);
+	log_test("1.5", 0, true);
+	log_test("9", 99);
+}
+
+static void exp_test(
+	//input
+	const char* x_str, int x_exp,
+	double epsilon=6e-16
+)
+{
+	CAPTURE(x_str); CAPTURE(x_exp);
+	build_dec80(x_str, x_exp);
+	exp_decn();
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  // exp(x)
+
+	//calculate actual result
+	bmp::mpfr_float::default_precision(50);
+	bmp::mpfr_float calculated(Buf);
+	std::string x_full_str(x_str);
+	x_full_str += "e" + std::to_string(x_exp);
+	bmp::mpfr_float x_actual(x_full_str);
+	x_actual = exp(x_actual);
+	CAPTURE(x_actual);
+	bmp::mpfr_float rel_diff = abs((x_actual - calculated) / x_actual);
+	CHECK(rel_diff < epsilon);
+}
+
+TEST_CASE("exp"){
+	exp_test("4.4", 0);
+	exp_test("0.155", 0);
+	exp_test("9.999", 0);
+	exp_test("10", 0);
+	exp_test("10.001", 0);
+	exp_test("2.3", 2, 6e-15);
+	exp_test("2.02", -10);
+	exp_test("2.02", 0);
+	exp_test("1.5", 0);
+}
+
+static void pow_test(
+	//input
+	const char* a_str, int a_exp,
+	const char* b_str, int b_exp
+)
+{
+	CAPTURE(a_str); CAPTURE(a_exp);
+	CAPTURE(b_str); CAPTURE(b_exp);
+
+	//compute power
+	log_test(a_str, a_exp);
+	build_decn_at(&BDecn,   b_str, b_exp);
+	mult_decn();
+	int8_t exp_test_exp = decn_to_str(&AccDecn);
+	std::string copied(Buf);
+	exp_test(copied.c_str(), exp_test_exp, 6e-15);
+
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  // a^b
+
+	//calculate actual result
+	bmp::mpfr_float::default_precision(50);
+	bmp::mpfr_float calculated(Buf);
+	std::string a_full_str(a_str);
+	a_full_str += "e" + std::to_string(a_exp);
+	std::string b_full_str(b_str);
+	b_full_str += "e" + std::to_string(b_exp);;
+	// 	CAPTURE(a_full_str);
+	// 	CAPTURE(b_full_str);
+	bmp::mpfr_float a_actual(a_full_str);
+	bmp::mpfr_float b_actual(b_full_str);
+	a_actual = exp(log(a_actual) * b_actual);
+	bmp::mpfr_float rel_diff = abs((a_actual - calculated) / a_actual);
+	CHECK(rel_diff < 3e-14);
+}
+
+TEST_CASE("power"){
+	pow_test(
+		"3.14", 60,
+		"-1.5", -2
+	);
+
+	pow_test(
+		"3", 0,
+		"201", 0
+	);
 }

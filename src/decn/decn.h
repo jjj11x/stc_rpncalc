@@ -107,7 +107,13 @@ void exp10_decn(void);
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28
 extern __xdata char Buf[DECN_BUF_SIZE];
-int8_t decn_to_str(const dec80* x);
+
+#ifdef DESKTOP
+int
+#else
+int8_t
+#endif
+decn_to_str(const dec80* x);
 
 #ifdef DESKTOP
 //complete string including exponent

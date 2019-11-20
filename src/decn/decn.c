@@ -30,9 +30,9 @@
 // #define DEBUG_MULT
 // #define DEBUG_MULT_ALL //even more verbose
 // #define DEBUG_DIV
-#define DEBUG_LOG
+// #define DEBUG_LOG
 // #define DEBUG_LOG_ALL //even more verbose
-#define DEBUG_EXP
+// #define DEBUG_EXP
 // #define DEBUG_EXP_ALL //even more verbose
 
 #ifndef DESKTOP
@@ -211,6 +211,7 @@ void build_dec80(__xdata const char* signif_str, exp_t exponent){
 		return;
 	} else if (signif_str[0] == '-'){
 		curr_sign = SIGN_NEG_ZERO;
+		i++;
 	}
 
 	//go through digits
@@ -293,7 +294,7 @@ void build_dec80(__xdata const char* signif_str, exp_t exponent){
 				return;
 			} else {
 				//not zero
-				int8_t new_exponent;
+				exp_t new_exponent = exponent;
 				//write out saved nibble, if it exists
 				// (saved while nibble_i even, nibble_i then incremented to odd)
 				if (nibble_i & 1){ //odd
@@ -307,37 +308,28 @@ void build_dec80(__xdata const char* signif_str, exp_t exponent){
 				if (num_lr_points > 0){ //left count exists
 					assert(DEC80_NUM_LSU*2 > num_lr_points);
 					new_exponent = exponent + (num_lr_points - 1); //1 digit left of implicit point
-					//check for overflow
-#ifdef EXTRA_CHECKS
-					if (new_exponent < exponent || exponent > DEC80_MAX_EXP){
-	#ifdef DEBUG
-						printf("   overflow (new_exp, exp)=(%d,%d)\n",
-						         new_exponent, exponent);
-	#endif
-						set_dec80_NaN(&AccDecn);
-						return;
-					}
-#endif
+					//overflow is checked later, should be impossible to overflow int16_t:
+					assert(new_exponent >= exponent);
 				} else if (num_lr_points < 0) { //right count exists
 					// (num_lr_points represents exponent shift)
 					// (this ends up being a subtraction)
 					new_exponent = exponent + num_lr_points;
-					//check for underflow
-#ifdef EXTRA_CHECKS
-					if (new_exponent > exponent || exponent < DEC80_MIN_EXP){
-	#ifdef DEBUG
-						printf("   underflow (new_exp, exp)=(%d,%d)\n",
-						         new_exponent, exponent);
-	#endif
-						set_dec80_NaN(&AccDecn);
-						return;
-					}
-#endif
-				} else {
-					//no change
-					new_exponent = exponent;
+					//underflow is checked later, should be impossible to overflow int16_t:
+					assert(new_exponent <= exponent);
 				}
+
+				//check for over/underflow of exponent
 				exponent = new_exponent;
+#ifdef EXTRA_CHECKS
+				if (exponent > DEC80_MAX_EXP || exponent < DEC80_MIN_EXP){
+	#ifdef DEBUG
+					printf("   over/underflow (new_exp, exp)=(%d,%d)\n",
+						   new_exponent, exponent);
+	#endif
+					set_dec80_NaN(&AccDecn);
+					return;
+				}
+#endif
 				//set negative bit
 				set_exponent(&AccDecn, exponent, IS_NEG(curr_sign));
 				//normalize
@@ -354,6 +346,12 @@ void build_dec80(__xdata const char* signif_str, exp_t exponent){
 
 				return;
 			}
+		} else { //invalid character
+#ifdef DEBUG
+			printf(" invalid character %c at i=%d\n", signif_str[i], i);
+#endif
+			set_dec80_NaN(&AccDecn);
+			return;
 		}
 		i++;
 		assert(i < DECN_BUF_SIZE);
@@ -439,7 +437,7 @@ static int8_t compare_magn(void){ //returns a<b: -1, a==b: 0, a>b: 1
 	//compare signifcands while tracking magnitude
 	for (
 		a_i = 0, b_i = 0;
-		a_i < DEC80_NUM_LSU && b_i < DEC80_NUM_LSU;
+		a_i < DEC80_NUM_LSU;
 		a_i++, b_i++, a_exp+=2, b_exp+=2
 		)
 	{
@@ -662,26 +660,17 @@ void add_decn(void){
 		uint8_t digit100 = AccDecn.lsu[i] + BDecn.lsu[i] + carry;
 		AccDecn.lsu[i] = digit100 % 100;
 		carry = digit100 / 100;
-		assert(carry < 100);
+		assert(carry <= 1);
 	}
 	//may need to rescale number
 	if (carry > 0){
+		assert(carry == 1);
 		exp_t curr_exp = get_exponent(&AccDecn);
 		rel = (AccDecn.exponent < 0); //is_neg?
-#ifdef DEBUG_ADD
-		printf("        carry out: %d", carry);
-#endif
 		//shift right
-		if (carry < 10){
-			shift_right(&AccDecn);
-			AccDecn.lsu[0] += carry*10; //carry gets shifted into most significant digit
-			curr_exp++;
-		} else {
-			shift_right(&AccDecn);
-			shift_right(&AccDecn);
-			AccDecn.lsu[0] = carry;
-			curr_exp+=2;
-		}
+		shift_right(&AccDecn);
+		AccDecn.lsu[0] += 10; //carry gets shifted into most significant digit
+		curr_exp++;
 		//track sign
 		set_exponent(&AccDecn, curr_exp, rel); //rel==is_neg?
 	}
@@ -715,7 +704,8 @@ void mult_decn(void){
 	//calculate new exponent
 	new_exponent = get_exponent(&AccDecn) + get_exponent(&BDecn);
 #ifdef DEBUG_MULT
-		printf("\n new exponent: %d, is_neg: %u", new_exponent, is_neg);
+	printf("\n a_exp: %d, b_exp: %d", get_exponent(&AccDecn), get_exponent(&BDecn));
+	printf("\n new exponent: %d, is_neg: %u", new_exponent, is_neg);
 #endif
 	//do multiply
 	for (i = DEC80_NUM_LSU - 1; i >= 0; i--){
@@ -1079,13 +1069,11 @@ void exp_decn(void){
 	//check if in range
 	copy_decn(&SAVED, &AccDecn); //save = accum
 	set_dec80_zero(&BDecn);
-	BDecn.lsu[0] = 23;
-	BDecn.lsu[1] = 02;
-	BDecn.lsu[2] = 58;
-	BDecn.lsu[2] = 51;
-	BDecn.exponent = 2; //b = 230.25851
+	BDecn.lsu[0] = 29;
+	BDecn.lsu[1] = 47;
+	BDecn.exponent = 2; //b = 294.7
 	negate_decn(&BDecn);
-	add_decn(); //accum = x - 230.25851 (should be negative if in range)
+	add_decn(); //accum = x - 294.7 (should be negative if in range)
 	if (!(AccDecn.exponent < 0)){ //if not negative
 		set_dec80_NaN(&AccDecn);
 		return;
@@ -1249,7 +1237,12 @@ static void set_str_error(void){
 	Buf[5] = '\0';
 }
 
-int8_t decn_to_str(const dec80* x){
+#ifdef DESKTOP
+int
+#else
+int8_t
+#endif
+decn_to_str(const dec80* x){
 #define INSERT_DOT() Buf[i++]='.'
 	uint8_t i = 0;
 	uint8_t digit100;
@@ -1377,7 +1370,11 @@ int8_t decn_to_str(const dec80* x){
 	//print exponent
 	if (use_sci){
 		//check for overflow
+#ifdef DESKTOP
+		if (exponent > DEC80_MAX_EXP || exponent < DEC80_MIN_EXP){
+#else
 		if (exponent > DECN_MAX_PRINT_EXP || exponent < DECN_MIN_PRINT_EXP){
+#endif
 			set_str_error();
 			return 0;
 		}
@@ -1398,7 +1395,7 @@ int8_t decn_to_str(const dec80* x){
 #ifdef DESKTOP
 //complete string including exponent
 void decn_to_str_complete(const dec80* x){
-	int8_t exponent = decn_to_str(x);
+	int exponent = decn_to_str(x);
 	int i;
 	//find end of string
 	for (i = 0; Buf[i] != '\0'; i++);

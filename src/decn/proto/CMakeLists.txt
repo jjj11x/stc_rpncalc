@@ -7,3 +7,6 @@ target_link_libraries(ln mpfr)
 
 add_executable(exp exp.cpp)
 target_link_libraries(exp mpfr)
+
+add_executable(sqrt recip_sqrt.cpp)
+target_link_libraries(sqrt mpfr)

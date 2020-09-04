@@ -227,6 +227,13 @@ void LCD_OutString(__xdata const char *string, uint8_t max_chars) {
 	}
 }
 
+void LCD_OutString_Initial(__code const char *string) {
+	const char *s;
+	for (s = string; *s; s++) {
+		TERMIO_PutChar(*s);
+	}
+}
+
 short TERMIO_PutChar(unsigned char letter) {
 	if (letter == CR || letter == '\n') {
 		LCD_Clear();

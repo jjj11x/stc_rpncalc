@@ -46,7 +46,7 @@ static void pop(){
 	StackPtr++; //adjust pointer
 }
 
-void push_decn(__xdata const char* signif_str, exp_t exponent){
+void push_decn(__xdata const char* signif_str, __xdata exp_t exponent){
 	if (!NoLift){
 		StackPtr--;
 	}

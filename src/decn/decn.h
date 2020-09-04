@@ -76,7 +76,7 @@ extern dec80 AccDecn;
 extern __idata dec80 BDecn;
 extern __xdata dec80 Tmp4Decn;
 
-void build_dec80(__xdata const char* signif_str, exp_t exponent);
+void build_dec80(__xdata const char* signif_str, __xdata exp_t exponent);
 
 void set_dec80_zero(dec80* dest);
 void set_dec80_NaN(dec80* dest);

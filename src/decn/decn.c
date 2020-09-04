@@ -181,7 +181,7 @@ static void remove_leading_zeros(dec80* x){
 	set_exponent(x, exponent, is_negative);
 }
 
-void build_dec80(__xdata const char* signif_str, exp_t exponent){
+void build_dec80(__xdata const char* signif_str, __xdata exp_t exponent){
 	enum {
 		SIGN_ZERO,
 		SIGN_ZERO_SEEN_POINT,
@@ -664,8 +664,8 @@ void add_decn(void){
 	}
 	//may need to rescale number
 	if (carry > 0){
-		assert(carry == 1);
 		exp_t curr_exp = get_exponent(&AccDecn);
+		assert(carry == 1);
 		rel = (AccDecn.exponent < 0); //is_neg?
 		//shift right
 		shift_right(&AccDecn);

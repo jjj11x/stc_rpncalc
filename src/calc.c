@@ -33,7 +33,7 @@ __xdata dec80 LastX;
 #define STACK_T 3
 
 uint8_t NoLift = 0;
-uint8_t IsShifted = 0;
+__bit IsShifted = 0;
 
 //stack "grows" towards 0
 __xdata dec80 Stack[STACK_SIZE]; //0->x, 1->y, 2->z, 3->t initially

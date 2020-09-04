@@ -49,7 +49,7 @@ QSemaphore LcdAvailable(1);
 int8_t NewKeyBuf[4];
 volatile uint8_t new_key_write_i;
 volatile uint8_t new_key_read_i;
-volatile uint8_t NewKeyEmpty;
+volatile __bit NewKeyEmpty;
 
 #define INCR_NEW_KEY_I(i) i = (i + 1) & 3
 

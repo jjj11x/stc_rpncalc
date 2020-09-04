@@ -32,7 +32,7 @@ using Catch::Matchers::Equals;
 
 
 
-char Buf[DECN_BUF_SIZE];
+extern char Buf[DECN_BUF_SIZE];
 
 
 TEST_CASE("build decn"){

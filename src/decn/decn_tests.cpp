@@ -466,12 +466,10 @@ static void pow_test(
 	CAPTURE(b_str); CAPTURE(b_exp);
 
 	//compute power
-	log_test(a_str, a_exp);
 	build_decn_at(&BDecn,   b_str, b_exp);
-	mult_decn();
-	int8_t exp_test_exp = decn_to_str(&AccDecn);
-	std::string copied(Buf);
-	exp_test(copied.c_str(), exp_test_exp, 6e-15);
+	build_dec80(a_str, a_exp);
+
+	pow_decn();
 
 	decn_to_str_complete(&AccDecn);
 	CAPTURE(Buf);  // a^b
@@ -487,9 +485,14 @@ static void pow_test(
 	// 	CAPTURE(b_full_str);
 	bmp::mpfr_float a_actual(a_full_str);
 	bmp::mpfr_float b_actual(b_full_str);
-	a_actual = exp(log(a_actual) * b_actual);
-	bmp::mpfr_float rel_diff = abs((a_actual - calculated) / a_actual);
-	CHECK(rel_diff < 3e-14);
+	a_actual = pow(a_actual, b_actual);
+	if (decn_is_zero(&AccDecn)) {
+		bmp::mpfr_float diff = abs(a_actual - calculated);
+		CHECK(diff < 3e-14);
+	} else {
+		bmp::mpfr_float rel_diff = abs((a_actual - calculated)/a_actual);
+		CHECK(rel_diff < 3e-14);
+	}
 }
 
 TEST_CASE("power"){
@@ -501,6 +504,26 @@ TEST_CASE("power"){
 	pow_test(
 		"3", 0,
 		"201", 0
+	);
+
+	pow_test(
+		"5", 0,
+		"0", 0
+	);
+
+	pow_test(
+		"5", 0,
+		"0", 2
+	);
+
+	pow_test(
+		"0", 0,
+		"5", 0
+	);
+
+	pow_test(
+		"0", 0,
+		"0", 0
 	);
 }
 

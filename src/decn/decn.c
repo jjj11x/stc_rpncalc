@@ -1219,6 +1219,14 @@ inline void exp10_decn(void){
 }
 
 inline void pow_decn(void) {
+	if (decn_is_zero(&BDecn)) {
+		copy_decn(&AccDecn, &DECN_1);
+		return;
+	}
+	if (decn_is_zero(&AccDecn)) {
+		set_dec80_zero(&AccDecn);
+		return;
+	}
 	//calculate AccDecn = AccDecn ^ BDecn
 	copy_decn(&Tmp4Decn, &BDecn); //save b
 	ln_decn();

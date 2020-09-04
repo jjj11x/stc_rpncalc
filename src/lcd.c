@@ -43,7 +43,7 @@
 
 
 
-static int row, col;
+static uint8_t row, col;
 
 #define CLEAR_BIT(port, bit) (port &= ~(_BV(bit)))
 #define CLEAR_BITS(port, bits) (port &= ~(bits))

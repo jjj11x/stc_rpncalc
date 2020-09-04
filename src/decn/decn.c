@@ -74,7 +74,7 @@ __xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
 __xdata char Buf[DECN_BUF_SIZE];
 
 
-void copy_decn(dec80* dest, const dec80* src){
+void copy_decn(dec80* const dest, const dec80* const src){
 	uint8_t i;
 	dest->exponent = src->exponent;
 
@@ -84,7 +84,7 @@ void copy_decn(dec80* dest, const dec80* src){
 	}
 }
 
-exp_t get_exponent(const dec80* x){
+exp_t get_exponent(const dec80* const x){
 	exp_t exponent = x->exponent;
 #ifdef EXP16
 	if (exponent & 0x4000){ //negative
@@ -1218,14 +1218,14 @@ inline void exp10_decn(void){
 	exp_decn();
 }
 
-//inline void pow_decn(void)
-//{
-//	copy_decn(&Tmp4Decn, &BDecn); //save b
-//	ln_decn();
-//	copy_decn(&BDecn, &Tmp4Decn); //restore b
-//	mult_decn(); //accum = b*ln(accum)
-//	exp_decn();
-//}
+inline void pow_decn(void) {
+	//calculate AccDecn = AccDecn ^ BDecn
+	copy_decn(&Tmp4Decn, &BDecn); //save b
+	ln_decn();
+	copy_decn(&BDecn, &Tmp4Decn); //restore b
+	mult_decn(); //accum = b*ln(accum)
+	exp_decn();
+}
 
 
 static void set_str_error(void){

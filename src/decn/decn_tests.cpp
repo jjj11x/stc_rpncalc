@@ -243,6 +243,19 @@ TEST_CASE("multiply"){
 	decn_to_str_complete(&AccDecn);
 	CHECK_THAT(Buf, Equals("Error")); //acc*b
 
+	//NaN
+	build_dec80("9.99", DEC80_MAX_EXP/2);
+	set_dec80_NaN(&BDecn);
+	mult_decn();
+	decn_to_str_complete(&AccDecn);
+	CHECK_THAT(Buf, Equals("Error")); //acc*b
+
+	//NaN
+	set_dec80_NaN(&AccDecn);
+	build_decn_at(&BDecn, "9.99", DEC80_MAX_EXP/2);
+	mult_decn();
+	decn_to_str_complete(&AccDecn);
+	CHECK_THAT(Buf, Equals("Error")); //acc*b
 }
 
 static void div_test(

@@ -696,6 +696,12 @@ void mult_decn(void){
 	uint8_t carry = 0;
 	uint8_t is_neg;
 	exp_t new_exponent;
+#ifdef EXTRA_CHECKS
+	if (decn_is_nan(&AccDecn) || decn_is_nan(&BDecn)) {
+		set_dec80_NaN(&AccDecn);
+		return;
+	}
+#endif
 	//initialize values
 	set_dec80_zero(&TmpDecn);
 	//normalize

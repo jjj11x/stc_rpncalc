@@ -73,6 +73,16 @@ __xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
 
+//1 constant
+const dec80 DECN_1 = {
+	0, {10, 0}
+};
+
+//ln(10) constant
+const dec80 DECN_LN_10 = {
+	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
+};
+
 
 void copy_decn(dec80* const dest, const dec80* const src){
 	uint8_t i;

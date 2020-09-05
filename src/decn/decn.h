@@ -57,16 +57,6 @@ typedef struct {
 	//implicit decimal point between (lsu[0]/10) and (lsu[0]%10)
 } dec80;
 
-//1 constant
-static const dec80 DECN_1 = {
-	0, {10, 0}
-};
-
-//ln(10) constant
-static const dec80 DECN_LN_10 = {
-	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
-};
-
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits
 exp_t get_exponent(const dec80* const x);
 

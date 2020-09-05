@@ -3,6 +3,8 @@ project(stc_rpncalc C CXX)
 # 3rd party tools
 find_package(Qt5 COMPONENTS Widgets Qml Quick REQUIRED)
 
+set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (for tests debug make sense)")
+
 # Compiler warnings
 if(MSVC)
   add_compile_options(/W4 /WX)

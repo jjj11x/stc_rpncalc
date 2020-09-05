@@ -316,7 +316,6 @@ void build_dec80(__xdata const char* signif_str, __xdata exp_t exponent){
 				// adjust exponent for left-aligned significand input
 				// or for number of digits past decimal point
 				if (num_lr_points > 0){ //left count exists
-					assert(DEC80_NUM_LSU*2 > num_lr_points);
 					new_exponent = exponent + (num_lr_points - 1); //1 digit left of implicit point
 					//overflow is checked later, should be impossible to overflow int16_t:
 					assert(new_exponent >= exponent);

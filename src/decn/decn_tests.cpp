@@ -110,6 +110,10 @@ TEST_CASE("build decn"){
 	decn_to_str_complete(&AccDecn);
 	CHECK_THAT(Buf, Equals("123456789012345678."));
 
+	build_dec80("12345678901234567890", +2);
+	decn_to_str_complete(&AccDecn);
+	CHECK_THAT(Buf, Equals("1.23456789012345678E21"));
+
 	//overflow
 	build_dec80("100", DEC80_MAX_EXP-1);
 	decn_to_str_complete(&AccDecn);

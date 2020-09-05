@@ -227,10 +227,10 @@ void LCD_OutString(__xdata const char *string, uint8_t max_chars) {
 	}
 }
 
-void LCD_OutString_Initial(__code const char *string) {
-	const char *s;
-	for (s = string; *s; s++) {
+void LCD_OutString_Initial(__code const char *s) {
+	while (*s) {
 		TERMIO_PutChar(*s);
+		s++;
 	}
 }
 

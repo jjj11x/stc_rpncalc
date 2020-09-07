@@ -341,6 +341,51 @@ TEST_CASE("division"){
 	);
 }
 
+static void sqrt_test(const char* x_str, int x_exp)
+{
+	CAPTURE(x_str); CAPTURE(x_exp);
+	build_dec80(x_str, x_exp);
+	// 	decn_to_str_complete(&AccDecn);
+	// 	printf(" acc: %s\n", Buf);
+	sqrt_decn();
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  // sqrt(x)
+
+	//calculate actual result
+	bmp::mpfr_float::default_precision(50);
+	std::string x_full_str(x_str);
+	x_full_str += "e" + std::to_string(x_exp);
+	CAPTURE(x_full_str);
+	bmp::mpfr_float x_actual(x_full_str);
+	CAPTURE(x_actual);
+	if (decn_is_nan(&AccDecn)){
+		//check that NaN is from result of sqrt(-)
+		CHECK(x_actual <= 0);
+	} else if (decn_is_zero(&AccDecn)){
+		//check actual is also 0
+		CHECK(x_actual == 0);
+	} else {
+		x_actual = sqrt(x_actual);
+		bmp::mpfr_float calculated(Buf);
+		bmp::mpfr_float rel_diff = abs((x_actual - calculated) / x_actual);
+		CHECK(rel_diff < 3e-16); //TODO
+	}
+}
+
+TEST_CASE("sqrt"){
+	sqrt_test("0", 0);
+	sqrt_test("2", 0);
+	sqrt_test("-1", 0);
+	sqrt_test("0.155", 0);
+	sqrt_test("10", 0);
+	sqrt_test("1.1", 10);
+	sqrt_test("2.02", -10);
+	sqrt_test("2.02", 0);
+	sqrt_test("1.5", 0);
+	sqrt_test("9", 99);
+	sqrt_test("123", 12345);
+}
+
 static void log_test(
 	//input
 	const char* x_str, int x_exp,

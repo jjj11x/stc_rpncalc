@@ -206,7 +206,7 @@ I sometimes use an STC15F2K60S2 for development work. This microcontroller is av
 
 ## Programming with stcgal
 
-Run `stcgal` as shown below, replacing `stc_rpncalc/main.hex` with the actual path to the main.hex you built. There are also prebuilt binaries in the `binaries` directory. In this example, I'm programming at a relatively high line rate of 230,400 bits/s. This works very reliably, but you may want to try at a slower speed to start (omit the `-b 230400` option).
+Run `stcgal` as shown below, replacing `stc_rpncalc/main.hex` with the actual path to the main.hex you built. There are also prebuilt binaries in the `binaries` directory. In this example, I'm programming at a relatively high line rate of 230,400 bits/s. This works very reliably, but you may want to try at a slower speed to start (omit the `-b 230400` option), especially when using an inline resistor and diode.
 
 ~~~~
 $ ./stcgal.py -P stc15 -b 230400 stc_rpncalc/main.hex
@@ -251,7 +251,7 @@ Disconnected!
 
 # Bugs
 1. After division by 0, ln(-), over/underflow, or other operations which give an `Error`, it's possible to still do certain operations on `Error`. Many functions do check, and will not operate on `Error`, but not all of them yet. This is somewhat similar to old soviet Elektronika calculators where `Error` is just a number, and there wasn't enough ROM space to check for errors. (There are people who explore the inner-workings of these calculators by manipulating the `Error` "number".)
-1. When shifted down, keys which do not have a shifted-down function will instead be interpreted as if there were no shift.
+1. When shifted, keys which do not have a shifted function will instead be interpreted as if there were no shift.
 1. Trigonometric functions are extremely slow and inaccurate.
 1. There are probably more bugs waiting to be discovered.
 
@@ -300,7 +300,9 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 - Exponentials are calculated similar to the HP 35 algorithm, as described [here](http://www.jacques-laporte.org/expx.htm) using the same constants as the logarithm algorithm.
 	- see `src/decn/proto/exp.cpp` for initial prototyping development work
 - Powers are calculated using the identity y^x = e^(x*ln(y))
-- Square roots are calculated using the identity sqrt(x) = e^(0.5*ln(x))
+- Square roots are calculated using a fixed number of Newton-Raphson iterations to calculatie 1/sqrt(x) and then multiplying by x.
+	- the iteration for 1/sqrt(x) is new_estimate = 0.5*estimate * (3 - x * estimate * estimate)
+	- see `src/decn/proto/recip_sqrt.cpp for initial prototyping development work
 - Trigonometric functions are calculated using algorithms similar to the [sinclair scientific](http://files.righto.com/calculator/sinclair_scientific_simulator.html), and are fairly slow and inaccurate.
 
 ## TODO

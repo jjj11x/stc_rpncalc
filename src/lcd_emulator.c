@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <string.h>
+#include <assert.h>
 #include "lcd.h"
 
 #define CR 13 // \r
@@ -86,9 +88,10 @@ void LCD_OutString(const char *string, uint8_t max_chars) {
 	}
 }
 
-void LCD_OutString_Initial(const char *string, uint8_t max_chars) {
+void LCD_OutString_Initial(const char *string) {
 	enable_checks = 0;
-	LCD_OutString(string, max_chars);
+	assert(strlen(string) <= 32);
+	LCD_OutString(string, 32);
 	enable_checks = 1;
 }
 

@@ -48,7 +48,10 @@ void backlight_off(void);
 #endif
 
 #if defined(DESKTOP) || defined(IS_ECLIPSE)
+#include <stdbool.h>
 char* u32str(uint32_t x, char* buf, uint8_t base);
+#define __bit bool
+#define __code
 #define __xdata
 #define __idata
 #define __sfr

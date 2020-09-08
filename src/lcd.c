@@ -43,7 +43,7 @@
 
 
 
-static int row, col;
+static uint8_t row, col;
 
 #define CLEAR_BIT(port, bit) (port &= ~(_BV(bit)))
 #define CLEAR_BITS(port, bits) (port &= ~(bits))
@@ -224,6 +224,13 @@ void LCD_OutString(__xdata const char *string, uint8_t max_chars) {
 	const char *s;
 	for (s = string; *s && max_chars > 0; s++, max_chars--) {
 		TERMIO_PutChar(*s);
+	}
+}
+
+void LCD_OutString_Initial(__code const char *s) {
+	while (*s) {
+		TERMIO_PutChar(*s);
+		s++;
 	}
 }
 

@@ -57,26 +57,16 @@ typedef struct {
 	//implicit decimal point between (lsu[0]/10) and (lsu[0]%10)
 } dec80;
 
-//1 constant
-static const dec80 DECN_1 = {
-	0, {10, 0}
-};
-
-//ln(10) constant
-static const dec80 DECN_LN_10 = {
-	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
-};
-
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits
-exp_t get_exponent(const dec80* x);
+exp_t get_exponent(const dec80* const x);
 
-void copy_decn(dec80* dest, const dec80* src);
+void copy_decn(dec80* const dest, const dec80* const src);
 
 extern dec80 AccDecn;
 extern __idata dec80 BDecn;
 extern __xdata dec80 Tmp4Decn;
 
-void build_dec80(__xdata const char* signif_str, exp_t exponent);
+void build_dec80(__xdata const char* signif_str, __xdata exp_t exponent);
 
 void set_dec80_zero(dec80* dest);
 void set_dec80_NaN(dec80* dest);
@@ -94,15 +84,7 @@ void log10_decn(void);
 
 void exp_decn(void);
 void exp10_decn(void);
-
-//calculate AccDecn = AccDecn ^ BDecn
-#define pow_decn() do {\
-	copy_decn(&Tmp4Decn, &BDecn); \
-	ln_decn(); \
-	copy_decn(&BDecn, &Tmp4Decn); \
-	mult_decn(); \
-	exp_decn(); \
-} while (0);
+void pow_decn(void);
 
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

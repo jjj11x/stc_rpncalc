@@ -49,7 +49,7 @@ QSemaphore LcdAvailable(1);
 int8_t NewKeyBuf[4];
 volatile uint8_t new_key_write_i;
 volatile uint8_t new_key_read_i;
-volatile uint8_t NewKeyEmpty;
+volatile __bit NewKeyEmpty;
 
 #define INCR_NEW_KEY_I(i) i = (i + 1) & 3
 
@@ -139,7 +139,7 @@ static void latch_on(void)
 
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
-__xdata const char VER_STR[32+1] = "STC RPN         Calculator v1.09";
+__code const char VER_STR[32+1] = "STC RPN         Calculator v1.10";
 
 
 enum {
@@ -230,7 +230,7 @@ int main()
 	ExpBuf[0] = 0;
 	ExpBuf[1] = 0;
 
-	LCD_OutString_Initial(VER_STR, 32);
+	LCD_OutString_Initial(VER_STR);
 #ifdef DESKTOP
 	LcdAvailable.release();
 #endif

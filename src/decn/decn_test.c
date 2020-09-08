@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include "decn.h"
 
-char Buf[DECN_BUF_SIZE];
+extern char Buf[DECN_BUF_SIZE];
 
 
 static dec80 diff;

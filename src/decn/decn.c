@@ -73,8 +73,18 @@ __xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
 
+//1 constant
+const dec80 DECN_1 = {
+	0, {10, 0}
+};
 
-void copy_decn(dec80* dest, const dec80* src){
+//ln(10) constant
+const dec80 DECN_LN_10 = {
+	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
+};
+
+
+void copy_decn(dec80* const dest, const dec80* const src){
 	uint8_t i;
 	dest->exponent = src->exponent;
 
@@ -84,7 +94,7 @@ void copy_decn(dec80* dest, const dec80* src){
 	}
 }
 
-exp_t get_exponent(const dec80* x){
+exp_t get_exponent(const dec80* const x){
 	exp_t exponent = x->exponent;
 #ifdef EXP16
 	if (exponent & 0x4000){ //negative
@@ -181,7 +191,7 @@ static void remove_leading_zeros(dec80* x){
 	set_exponent(x, exponent, is_negative);
 }
 
-void build_dec80(__xdata const char* signif_str, exp_t exponent){
+void build_dec80(__xdata const char* signif_str, __xdata exp_t exponent){
 	enum {
 		SIGN_ZERO,
 		SIGN_ZERO_SEEN_POINT,
@@ -306,7 +316,6 @@ void build_dec80(__xdata const char* signif_str, exp_t exponent){
 				// adjust exponent for left-aligned significand input
 				// or for number of digits past decimal point
 				if (num_lr_points > 0){ //left count exists
-					assert(DEC80_NUM_LSU*2 > num_lr_points);
 					new_exponent = exponent + (num_lr_points - 1); //1 digit left of implicit point
 					//overflow is checked later, should be impossible to overflow int16_t:
 					assert(new_exponent >= exponent);
@@ -664,8 +673,8 @@ void add_decn(void){
 	}
 	//may need to rescale number
 	if (carry > 0){
-		assert(carry == 1);
 		exp_t curr_exp = get_exponent(&AccDecn);
+		assert(carry == 1);
 		rel = (AccDecn.exponent < 0); //is_neg?
 		//shift right
 		shift_right(&AccDecn);
@@ -686,6 +695,12 @@ void mult_decn(void){
 	uint8_t carry = 0;
 	uint8_t is_neg;
 	exp_t new_exponent;
+#ifdef EXTRA_CHECKS
+	if (decn_is_nan(&AccDecn) || decn_is_nan(&BDecn)) {
+		set_dec80_NaN(&AccDecn);
+		return;
+	}
+#endif
 	//initialize values
 	set_dec80_zero(&TmpDecn);
 	//normalize
@@ -1218,14 +1233,22 @@ inline void exp10_decn(void){
 	exp_decn();
 }
 
-//inline void pow_decn(void)
-//{
-//	copy_decn(&Tmp4Decn, &BDecn); //save b
-//	ln_decn();
-//	copy_decn(&BDecn, &Tmp4Decn); //restore b
-//	mult_decn(); //accum = b*ln(accum)
-//	exp_decn();
-//}
+inline void pow_decn(void) {
+	if (decn_is_zero(&BDecn)) {
+		copy_decn(&AccDecn, &DECN_1);
+		return;
+	}
+	if (decn_is_zero(&AccDecn)) {
+		set_dec80_zero(&AccDecn);
+		return;
+	}
+	//calculate AccDecn = AccDecn ^ BDecn
+	copy_decn(&Tmp4Decn, &BDecn); //save b
+	ln_decn();
+	copy_decn(&BDecn, &Tmp4Decn); //restore b
+	mult_decn(); //accum = b*ln(accum)
+	exp_decn();
+}
 
 
 static void set_str_error(void){

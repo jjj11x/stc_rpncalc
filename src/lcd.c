@@ -155,9 +155,15 @@ void LCD_Open(void) {
 	//P2 entire port
 	P2M1 = 0;
 	P2M0 = 0xff;
+#ifdef STACK_DEBUG
+	// P3_4 is special
+	P3M1 &= ~(0xe0);
+	P3M0 |= (0xe0);
+#else
 	//P3 pins 7:4
 	P3M1 &= ~(0xf0);
 	P3M0 |= (0xf0);
+#endif
 
 	_delay_ms(30); // to allow LCD powerup
 	outCsrBlindNibble(0x03); // (DL=1 8-bit mode)

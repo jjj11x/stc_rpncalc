@@ -28,6 +28,7 @@
 #else
 #include "stc15.h"
 #endif
+#include "stack_debug.h"
 
 #define FOSC 11583000
 
@@ -225,7 +226,9 @@ int main()
 	LCD_Open();
 	KeyInit();
 	Timer0Init(); //for reading keyboard
-	BACKLIGHT_ON(); //turn on led backlight
+	backlight_on(); //turn on led backlight
+	stack_debug_init();
+	stack_debug(0xfe);
 
 	ExpBuf[0] = 0;
 	ExpBuf[1] = 0;
@@ -529,7 +532,7 @@ int main()
 		LcdAvailable.release();
 #endif
 		//turn backlight back on
-		BACKLIGHT_ON();
+		backlight_on();
 	} //while (1)
 }
 /* ------------------------------------------------------------------------- */

@@ -19,6 +19,7 @@
  */
 
 #include "../utils.h"
+#include "../stack_debug.h"
 
 #include "decn.h"
 
@@ -86,6 +87,8 @@ const dec80 DECN_LN_10 = {
 
 void copy_decn(dec80* const dest, const dec80* const src){
 	uint8_t i;
+
+	stack_debug(0x01);
 	dest->exponent = src->exponent;
 
 	//copy nibbles
@@ -163,6 +166,7 @@ static void remove_leading_zeros(dec80* x){
 	uint8_t is_negative = (x->exponent < 0);
 	exp_t exponent = get_exponent(x);
 
+	stack_debug(0x02);
 	//find first non-zero digit100
 	for (digit100 = 0; digit100 < DEC80_NUM_LSU; digit100++){
 		if (x->lsu[digit100] != 0){

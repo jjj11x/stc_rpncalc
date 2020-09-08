@@ -12,7 +12,7 @@ target_compile_options(coverage_config INTERFACE -O0 -g --coverage)
 target_link_libraries(coverage_config INTERFACE --coverage)
 
 # decn library
-add_library(decn decn.c)
+add_library(decn decn.c ../utils.c)
 
 # decn library with coverage
 add_library(decn_cover decn.c)

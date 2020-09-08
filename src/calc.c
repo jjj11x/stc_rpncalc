@@ -21,6 +21,7 @@
 #include "utils.h"
 
 #include "calc.h"
+#include "stack_debug.h"
 
 __xdata dec80 StoredDecn;
 __xdata dec80 LastX;

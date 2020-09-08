@@ -10,61 +10,45 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-/*
- * utils.h
- *
- *  Created on: Mar 10, 2019
- */
-
-#ifndef SRC_UTILS_H_
-#define SRC_UTILS_H_
+#ifndef SRC_STACK_DEBUG_H_
+#define SRC_STACK_DEBUG_H_
 
 #include <stdint.h>
+
+#if !defined(DESKTOP)
+#include "stc15.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void _delay_ms(uint8_t ms);
+// P3_4 is connected to the cathode and the only pin that is not toggled normally
+// unfortunately, the hardware uart cannot be mapped to TX = P3_4
 
-#define ACCURATE_DELAY_US
-#ifdef ACCURATE_DELAY_US
-void _delay_us(uint8_t us);
+#if defined(STACK_DEBUG)
+void stack_debug_init(void);
+void stack_debug(uint8_t marker);
+void stack_debug_write(uint8_t value) __naked;
 #else
-#define _delay_us(x) _delay_ms(1)
+#define stack_debug_init()
+#define stack_debug(marker)
 #endif
 
-
-#ifdef __linux__
-#define DESKTOP
-#elif _WIN32
-#define DESKTOP
-#elif __APPLE__
-#define DESKTOP
-#endif
-
-#if defined(DESKTOP) || defined(IS_ECLIPSE)
-#include <stdbool.h>
-char* u32str(uint32_t x, char* buf, uint8_t base);
-#define __bit bool
-#define __code
-#define __xdata
-#define __idata
-#define __sfr
-#define __at uint8_t*
-#define SDCC_ISR(isr, reg)
-#define __using(x)
-#define TURN_OFF()
+#if defined(DESKTOP) || defined(STACK_DEBUG)
+#define backlight_on()
+#define backlight_off()
 #else
-#define SDCC_ISR(isr, reg) __interrupt (isr) __using (reg)
-#define TURN_OFF() P3_2 = 0
+inline void backlight_on(void) {
+	P3_4 = 0;
+}
+inline void backlight_off(void) {
+	P3_4 = 1;
+}
 #endif
-
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SRC_UTILS_H_ */
-
+#endif

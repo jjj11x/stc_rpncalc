@@ -29,7 +29,6 @@ void _delay_us(uint8_t us)
 	(void) us;
 }
 #endif
-void backlight_off(void){ }
 #else //!DESKTOP
 void _delay_ms(uint8_t ms)
 {
@@ -68,10 +67,6 @@ void _delay_us(uint8_t us)
 	__endasm;
 }
 #endif
-
-void backlight_off(void){
-	P3_4 = 1;
-}
 
 #endif //ifdef desktop
 

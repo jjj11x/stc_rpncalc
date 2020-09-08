@@ -68,7 +68,7 @@ dec80 AccDecn;
 __idata dec80 BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn()
 __idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn()
-__idata dec80 Tmp3Decn; //used by recip_decn() and ln_decn()
+__xdata dec80 Tmp3Decn; //used by recip_decn() and ln_decn()
 __xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
@@ -874,7 +874,7 @@ void recip_decn(void){
 #undef X_COPY
 }
 
-inline void div_decn(void){
+void div_decn(void){
 #define ACC_COPY   Tmp4Decn //holds copy of original acc
 	//store copy of acc for final multiply by 1/x
 	copy_decn(&ACC_COPY, &AccDecn);
@@ -1056,7 +1056,7 @@ void ln_decn(void){
 #undef NUM_TIMES
 }
 
-inline void log10_decn(void){
+void log10_decn(void){
 	ln_decn();
 	copy_decn(&BDecn, &DECN_LN_10);
 	div_decn();
@@ -1226,14 +1226,14 @@ void exp_decn(void){
 #undef NUM_TIMES
 }
 
-inline void exp10_decn(void){
+void exp10_decn(void){
 	//exp10_decn() = exp_decn(AccDecn * ln(10))
 	copy_decn(&BDecn, &DECN_LN_10);
 	mult_decn();
 	exp_decn();
 }
 
-inline void pow_decn(void) {
+void pow_decn(void) {
 	if (decn_is_zero(&BDecn)) {
 		copy_decn(&AccDecn, &DECN_1);
 		return;

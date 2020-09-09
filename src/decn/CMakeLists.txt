@@ -21,7 +21,7 @@ target_link_libraries(decn_cover PUBLIC coverage_config)
 add_executable(decn_test decn_test.c ../utils.c)
 target_link_libraries(decn_test decn_cover coverage_config Catch)
 
-add_executable(decn_tests catch_main.cpp decn_tests.cpp ../utils.c)
+add_executable(decn_tests catch_main.cpp decn_tests.cpp decn_tests_trig.cpp ../utils.c)
 target_link_libraries(decn_tests decn_cover coverage_config mpfr Catch)
 
 # decn prototyping

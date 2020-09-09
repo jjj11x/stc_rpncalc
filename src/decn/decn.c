@@ -84,6 +84,15 @@ const dec80 DECN_LN_10 = {
 	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
 };
 
+const dec80 DECN_2PI = {
+	0, {62, 83, 18, 53, 7, 17, 95, 86, 48}
+};
+
+// 180/pi = 1rad in degree
+const dec80 DECN_1RAD = {
+	1, {57, 29, 57, 79, 51, 30, 82, 32,  9}
+};
+
 
 void copy_decn(dec80* const dest, const dec80* const src){
 	uint8_t i;
@@ -1253,6 +1262,82 @@ void pow_decn(void) {
 	mult_decn(); //accum = b*ln(accum)
 	exp_decn();
 }
+
+void sincos_decn(void) {
+	#define SIN Tmp2Decn
+	#define COS Tmp3Decn
+	#define STP Tmp4Decn
+
+	remove_leading_zeros(&AccDecn);
+
+	// TODO: implement scaling to 0..2pi
+	copy_decn(&BDecn, &DECN_2PI);
+	if (compare_magn() == 1) {
+		set_dec80_NaN(&AccDecn);
+		set_dec80_NaN(&BDecn);
+		return;
+	}
+	set_dec80_zero(&BDecn);
+	if (compare_magn() == -1) {
+		set_dec80_NaN(&AccDecn);
+		set_dec80_NaN(&BDecn);
+		return;
+	}
+
+	copy_decn(&STP, &AccDecn);
+	copy_decn(&COS, &DECN_1);
+	set_dec80_zero(&SIN);
+	// 0.0 00 05
+	SIN.lsu[2] = 5;
+	negate_decn(&SIN);
+	while (STP.exponent >= 0) {
+		// COS = COS - SIN / 10000
+		copy_decn(&AccDecn, &COS);
+		copy_decn(&BDecn, &SIN);
+		shift_right(&BDecn);
+		shift_right(&BDecn);
+		shift_right(&BDecn);
+		shift_right(&BDecn);
+		negate_decn(&BDecn);
+		add_decn();
+		copy_decn(&COS, &AccDecn);
+		// SIN = SIN + COS / 10000
+		copy_decn(&AccDecn, &SIN);
+		copy_decn(&BDecn, &COS);
+		shift_right(&BDecn);
+		shift_right(&BDecn);
+		shift_right(&BDecn);
+		shift_right(&BDecn);
+		add_decn();
+		copy_decn(&SIN, &AccDecn);
+		// STP = STP - 0.0 00 1
+		copy_decn(&AccDecn, &STP);
+		set_dec80_zero(&BDecn);
+		BDecn.lsu[2] = 10;
+		negate_decn(&BDecn);
+		add_decn();
+		copy_decn(&STP, &AccDecn);
+	}
+}
+
+void sin_decn(void) {
+	sincos_decn();
+	copy_decn(&AccDecn, &SIN);
+}
+
+void cos_decn(void) {
+	sincos_decn();
+	copy_decn(&AccDecn, &COS);
+}
+
+void tan_decn(void) {
+	sincos_decn();
+	copy_decn(&AccDecn, &SIN);
+	copy_decn(&BDecn, &COS);
+	div_decn();
+}
+#undef SIN
+#undef COS
 
 
 static void set_str_error(void){

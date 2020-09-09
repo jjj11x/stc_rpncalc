@@ -86,6 +86,10 @@ void exp_decn(void);
 void exp10_decn(void);
 void pow_decn(void);
 
+void sin_decn(void);
+void cos_decn(void);
+void tan_decn(void);
+
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28
 extern __xdata char Buf[DECN_BUF_SIZE];

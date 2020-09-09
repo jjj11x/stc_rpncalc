@@ -15,7 +15,6 @@
 #include "stack_debug.h"
 
 #if defined(STACK_DEBUG)
-extern uint16_t _SP;
 
 inline static void HIGH() {
 	P3_4 = 1;

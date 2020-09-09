@@ -13,7 +13,7 @@ static void sin_test(
 	build_dec80(a_str, a_exp);
 	sin_decn();
 	decn_to_str_complete(&AccDecn);
-	CAPTURE(Buf);  // acc / b
+	CAPTURE(Buf);
 
 	bmp::mpfr_float::default_precision(50);
 	std::string a_full_str(a_str);
@@ -21,7 +21,7 @@ static void sin_test(
 
 	bmp::mpfr_float a_actual(a_full_str);
 	a_actual = sin(a_actual);
-	CAPTURE(a_actual);  // acc / b
+	CAPTURE(a_actual);
 
 	bmp::mpfr_float calculated(Buf);
 	if (rtol >= 0) {
@@ -40,7 +40,7 @@ static void cos_test(
 	build_dec80(a_str, a_exp);
 	cos_decn();
 	decn_to_str_complete(&AccDecn);
-	CAPTURE(Buf);  // acc / b
+	CAPTURE(Buf);
 
 	bmp::mpfr_float::default_precision(50);
 	std::string a_full_str(a_str);
@@ -48,7 +48,7 @@ static void cos_test(
 
 	bmp::mpfr_float a_actual(a_full_str);
 	a_actual = cos(a_actual);
-	CAPTURE(a_actual);  // acc / b
+	CAPTURE(a_actual);
 
 	bmp::mpfr_float calculated(Buf);
 	bmp::mpfr_float rel_diff = abs((a_actual - calculated) / a_actual);
@@ -57,13 +57,13 @@ static void cos_test(
 }
 
 static void tan_test(
-	const char* a_str, int a_exp, double rtol=1e-2)
+	const char* a_str, int a_exp, double rtol=1e-2, double atol=1e-3)
 {
 	CAPTURE(a_str); CAPTURE(a_exp);
 	build_dec80(a_str, a_exp);
 	tan_decn();
 	decn_to_str_complete(&AccDecn);
-	CAPTURE(Buf);  // acc / b
+	CAPTURE(Buf);
 
 	bmp::mpfr_float::default_precision(50);
 	std::string a_full_str(a_str);
@@ -71,12 +71,16 @@ static void tan_test(
 
 	bmp::mpfr_float a_actual(a_full_str);
 	a_actual = tan(a_actual);
-	CAPTURE(a_actual);  // acc / b
+	CAPTURE(a_actual);
 
 	bmp::mpfr_float calculated(Buf);
-	bmp::mpfr_float rel_diff = abs((a_actual - calculated) / a_actual);
-
-	CHECK(rel_diff < rtol);
+	if (rtol >= 0) {
+		bmp::mpfr_float rel_diff = abs((a_actual - calculated) / a_actual);
+		CHECK(rel_diff < rtol);
+	} else {
+		bmp::mpfr_float diff = abs(a_actual - calculated);
+		CHECK(diff < atol);
+	}
 }
 
 TEST_CASE("sin") {

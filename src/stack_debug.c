@@ -84,8 +84,15 @@ stack_debug_3$:
 __endasm;
 }
 
+#if defined(STACK_DEBUG) && defined(SHOW_STACK)
+__xdata uint8_t stack_max = 0x00;
+#endif
+
 void stack_debug(uint8_t marker) {
+#ifdef SHOW_STACK
+	if (SP > stack_max) stack_max = SP;
+#endif
 	stack_debug_write(marker);
 	stack_debug_write(SP);
 }
-#endif // !defined(DESKTOP)
+#endif // defined(STACK_DEBUG)

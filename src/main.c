@@ -523,6 +523,10 @@ int main()
 		//print shifted status
 		if (IsShifted){
 			TERMIO_PutChar('^');
+#if defined(STACK_DEBUG) && defined(SHOW_STACK)
+			TERMIO_PutChar(' ');
+			TERMIO_PrintU8(stack_max);
+#endif
 		}
 
 #ifdef DESKTOP

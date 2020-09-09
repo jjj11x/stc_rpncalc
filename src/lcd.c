@@ -285,3 +285,15 @@ void LCD_Clear() {
 	col = 0;
 }
 
+void TERMIO_PrintU8(uint8_t x) {
+	uint8_t i;
+	for (i = 2; i; i--) {
+		const uint8_t upper_nibble = (x & 0xf0) >> 4;
+		if (upper_nibble <= 9) {
+			TERMIO_PutChar(upper_nibble + '0');
+		} else {
+			TERMIO_PutChar((upper_nibble - 0x0a) + 'A');
+		}
+		x <<= 4;
+	}
+}

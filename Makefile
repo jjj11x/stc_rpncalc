@@ -4,7 +4,7 @@ SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 256 --idata-loc 0x80
 #SDCCOPTS ?= --code-size $(STCCODESIZE) --xram-size 256 --stack-auto --model-large
 FLASHFILE ?= main.hex
 LARGE_LDFLAGS += -L/usr/share/sdcc/lib/large/
-# CFLAGS += -DSTACK_DEBUG # write the stack pointer to P3_4
+# CFLAGS += -DSTACK_DEBUG -DSHOW_STACK # write the stack pointer to P3_4
 
 SRC = src/lcd.c src/key.c src/utils.c src/decn/decn.c src/calc.c src/stack_debug.c
 

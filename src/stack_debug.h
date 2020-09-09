@@ -35,6 +35,10 @@ void stack_debug_write(uint8_t value) __naked;
 #define stack_debug(marker)
 #endif
 
+#if defined(STACK_DEBUG) && defined(SHOW_STACK)
+extern __xdata uint8_t stack_max;
+#endif
+
 #if defined(DESKTOP) || defined(STACK_DEBUG)
 #define backlight_on()
 #define backlight_off()

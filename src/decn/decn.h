@@ -86,10 +86,10 @@ void exp_decn(void);
 void exp10_decn(void);
 void pow_decn(void);
 
-void project_decn_into_0_2pi(void);
 void sin_decn(void);
 void cos_decn(void);
 void tan_decn(void);
+void arctan_decn(void);
 void to_degree_decn(void);
 void to_radian_decn(void);
 
@@ -109,6 +109,13 @@ decn_to_str(const dec80* x);
 void decn_to_str_complete(const dec80* x);
 void build_decn_at(dec80* dest, const char* signif_str, exp_t exponent);
 #endif
+
+#define PRINT_DEC80(n, v) \
+	printf(n " %d %5d: ", v.exponent < 0, get_exponent(&v)); \
+	for (int i = 0; i < DEC80_NUM_LSU; i++) { \
+		printf("%02d ", v.lsu[i]); \
+	} \
+	fputc('\n', stdout);
 
 #ifdef __cplusplus
 }

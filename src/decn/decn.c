@@ -1297,19 +1297,39 @@ void project_decn_into_0_2pi(void) {
 	}
 }
 
+// K. Shirriff, "Reversing Sinclair's amazing 1974 calculator hack - half the ROM of the HP-35"
+// http://files.righto.com/calculator/sinclair_scientific_simulator.html
 #define SIN Tmp2Decn
 #define COS Tmp3Decn
 #define THETA Tmp4Decn
-void sincos_decn(void) {
-	project_decn_into_0_2pi();
-
-	copy_decn(&THETA, &AccDecn);
-	copy_decn(&COS, &DECN_1);
-	set_dec80_zero(&SIN);
-	// 0.0 00 05
-	SIN.lsu[2] = 5;
-	negate_decn(&SIN);
-	while (THETA.exponent >= 0) {
+void sincos_decn(const uint8_t sincos_arctan) {
+	const uint8_t is_negative = AccDecn.exponent < 0;
+	if (sincos_arctan) {
+		set_dec80_zero(&THETA);
+		if (is_negative) negate_decn(&AccDecn);
+		copy_decn(&COS, &AccDecn);
+		copy_decn(&SIN, &DECN_1);
+	} else {
+		project_decn_into_0_2pi();
+		copy_decn(&THETA, &AccDecn);
+		copy_decn(&COS, &DECN_1);
+		set_dec80_zero(&SIN);
+		// 0.0 00 05
+		SIN.lsu[2] = 5;
+		negate_decn(&SIN);
+	}
+	do {
+		if (sincos_arctan) {
+			// THETA is in AccDecn from previous iteration
+			if (COS.exponent < 0) {
+				if (is_negative) negate_decn(&AccDecn);
+				break;
+			}
+		} else {
+			if (THETA.exponent < 0) {
+				break;
+			}
+		}
 		// COS = COS - SIN / 10000
 		copy_decn(&AccDecn, &COS);
 		copy_decn(&BDecn, &SIN);
@@ -1329,31 +1349,35 @@ void sincos_decn(void) {
 		shift_right(&BDecn);
 		add_decn();
 		copy_decn(&SIN, &AccDecn);
-		// THETA = THETA - 0.0 00 1
+		// THETA = THETA -/+ 0.0 00 1
 		copy_decn(&AccDecn, &THETA);
 		set_dec80_zero(&BDecn);
 		BDecn.lsu[2] = 10;
-		negate_decn(&BDecn);
+		if (!sincos_arctan) negate_decn(&BDecn);
 		add_decn();
 		copy_decn(&THETA, &AccDecn);
-	}
+	} while (1);
 }
 
 void sin_decn(void) {
-	sincos_decn();
+	sincos_decn(0);
 	copy_decn(&AccDecn, &SIN);
 }
 
 void cos_decn(void) {
-	sincos_decn();
+	sincos_decn(0);
 	copy_decn(&AccDecn, &COS);
 }
 
 void tan_decn(void) {
-	sincos_decn();
+	sincos_decn(0);
 	copy_decn(&AccDecn, &SIN);
 	copy_decn(&BDecn, &COS);
 	div_decn();
+}
+
+void arctan_decn(void) {
+	sincos_decn(1);
 }
 #undef SIN
 #undef COS

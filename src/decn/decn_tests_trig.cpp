@@ -53,6 +53,12 @@ static void tan_test(
 	trig_test(tan_decn, [](bmp::mpfr_float x) -> bmp::mpfr_float {return tan(x);}, a_str, a_exp, rtol, atol);
 }
 
+static void atan_test(
+	const char* a_str, int a_exp, double rtol=5e-3, double atol=1e-3)
+{
+	trig_test(arctan_decn, [](bmp::mpfr_float x) -> bmp::mpfr_float {return atan(x);}, a_str, a_exp, rtol, atol);
+}
+
 
 const char * const pi = "3.141592653589793239";
 const char * const pi_threequarters = "2.356194490192344929";
@@ -144,4 +150,20 @@ TEST_CASE("tan") {
 	tan_test("2.0", 0);
 	tan_test("2.5", 0);
 	tan_test("3.0", 0);
+}
+
+TEST_CASE("arctan") {
+	atan_test("0.001", 0);
+	atan_test("-0.001", 0);
+	atan_test("0.7", 0);
+	atan_test("-0.7", 0);
+	atan_test("0.1", 0);
+	atan_test("-0.1", 0);
+	atan_test("1.0", 0);
+	atan_test("-1.0", 0);
+	atan_test("2.0", 0);
+	atan_test("-2.0", 0);
+	atan_test("3.0", 0);
+	atan_test("-3.0", 0);
+	atan_test("0", 0, -1);
 }

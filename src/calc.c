@@ -238,6 +238,8 @@ void process_cmd(char cmd){
 		case '4':{
 			if (IsShiftedUp){ //roll down
 				StackPtr++;
+			} else if (IsShiftedDown){ //roll up
+				StackPtr--;
 			}
 		} break;
 		//////////

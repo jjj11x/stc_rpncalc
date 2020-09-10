@@ -64,7 +64,7 @@ void copy_decn(dec80* const dest, const dec80* const src);
 
 extern dec80 AccDecn;
 extern __idata dec80 BDecn;
-extern __xdata dec80 Tmp4Decn;
+extern __idata uint8_t TmpStackPtr;
 
 void build_dec80(__xdata const char* signif_str, __xdata exp_t exponent);
 
@@ -85,11 +85,14 @@ void log10_decn(void);
 void exp_decn(void);
 void exp10_decn(void);
 void pow_decn(void);
+void sqrt_decn(void);
 
 void sin_decn(void);
 void cos_decn(void);
 void tan_decn(void);
 void arctan_decn(void);
+void arcsin_decn(void);
+void arccos_decn(void);
 void to_degree_decn(void);
 void to_radian_decn(void);
 void pi_decn(void);
@@ -111,12 +114,16 @@ void decn_to_str_complete(const dec80* x);
 void build_decn_at(dec80* dest, const char* signif_str, exp_t exponent);
 #endif
 
+#ifdef DESKTOP
 #define PRINT_DEC80(n, v) \
 	printf(n " %d %5d: ", v.exponent < 0, get_exponent(&v)); \
 	for (int i = 0; i < DEC80_NUM_LSU; i++) { \
 		printf("%02d ", v.lsu[i]); \
 	} \
 	fputc('\n', stdout);
+#else
+#define PRINT_DEC80(n, v)
+#endif
 
 #ifdef __cplusplus
 }

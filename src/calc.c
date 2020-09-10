@@ -23,6 +23,10 @@
 #include "calc.h"
 #include "stack_debug.h"
 
+#ifdef DESKTOP
+#include <assert.h>
+#endif
+
 __xdata dec80 StoredDecn;
 __xdata dec80 LastX;
 
@@ -163,21 +167,7 @@ void process_cmd(char cmd){
 		case '<':{ //use as +/- and sqrt
 			if (IsShiftedUp){ //take sqrt
 				IsShiftedUp = 0;
-				if (decn_is_zero(&stack(STACK_X))){
-					//sqrt(0) = 0
-				} else if (!decn_is_nan(&stack(STACK_X))){
-					copy_decn(&LastX, &stack(STACK_X)); //save LastX
-					copy_decn(&AccDecn, &stack(STACK_X));
-					if (AccDecn.exponent < 0){ //negative
-						set_dec80_NaN(&stack(STACK_X));
-						break;
-					}
-					//b = 0.5
-					set_dec80_zero(&BDecn);
-					BDecn.lsu[0] = 5;
-					pow_decn();
-					copy_decn(&stack(STACK_X), &AccDecn);
-				}
+				do_unary_op(sqrt_decn);
 			} else { // +/-
 				if (!decn_is_nan(&stack(STACK_X))){
 					negate_decn(&stack(STACK_X));
@@ -215,7 +205,7 @@ void process_cmd(char cmd){
 			if (IsShiftedUp){
 				do_unary_op(sin_decn);
 			} else if (IsShiftedDown){
-				// do_unary_op(arcsin_decn);
+				do_unary_op(arcsin_decn);
 			}
 		} break;
 		//////////
@@ -223,7 +213,7 @@ void process_cmd(char cmd){
 			if (IsShiftedUp){
 				do_unary_op(cos_decn);
 			} else if (IsShiftedDown){
-				// do_unary_op(arccos_decn);
+				do_unary_op(arccos_decn);
 			}
 		} break;
 		//////////
@@ -283,6 +273,9 @@ void process_cmd(char cmd){
 	} //switch(cmd)
 	IsShiftedUp = 0;
 	IsShiftedDown = 0;
+#ifdef DESKTOP
+	assert(TmpStackPtr == 0); // there should be no items on the temporaries stack after one global operation
+#endif
 }
 
 

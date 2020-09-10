@@ -67,10 +67,14 @@ static const uint8_t num_digits_display = 16;
 
 dec80 AccDecn;
 __idata dec80 BDecn;
-__idata dec80 TmpDecn; //used by add_decn() and mult_decn()
-__idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn() and sincos_decn()
-__xdata dec80 Tmp3Decn; //used by recip_decn() and ln_decn() and sincos_decn()
-__xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn() and sincos_decn()
+__idata dec80 TmpDecn; //used by add_decn() and mult_decn() and sqrt_decn()
+__idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn() and sincos_decn() and sqrt_decn()
+__xdata dec80 Tmp3Decn; //used by recip_decn() and ln_decn() and sincos_decn() and sqrt_decn()
+__xdata dec80 Tmp4Decn; //used by sincos_decn()
+
+__xdata dec80 TmpStackDecn[4];
+#define TMP_STACK_SIZE  (sizeof TmpStackDecn / sizeof TmpStackDecn[0])
+__idata uint8_t TmpStackPtr;
 
 __xdata char Buf[DECN_BUF_SIZE];
 
@@ -89,10 +93,35 @@ const dec80 DECN_2PI = {
 	0, {62, 83, 18, 53, 7, 17, 95, 86, 48}
 };
 
+// pi/2
+const dec80 DECN_PI2 = {
+	0, {15, 70, 79, 63, 26, 79, 48, 96, 62}
+};
+
 // 180/pi = 1rad in degree
 const dec80 DECN_1RAD = {
 	1, {57, 29, 57, 79, 51, 30, 82, 32,  9}
 };
+
+void st_push_decn(const dec80 * const src)
+{
+	copy_decn(&TmpStackDecn[TmpStackPtr], src);
+	TmpStackPtr++;
+	assert(TmpStackPtr < TMP_STACK_SIZE);
+}
+
+void st_pop_decn(dec80 * const dst)
+{
+	assert(TmpStackPtr >= 1);
+	TmpStackPtr--;
+	if (dst) copy_decn(dst, &TmpStackDecn[TmpStackPtr]);
+}
+
+void st_load_decn(dec80 * const dst)
+{
+	assert(TmpStackPtr >= 1);
+	copy_decn(dst, &TmpStackDecn[TmpStackPtr - 1]);
+}
 
 void copy_decn(dec80* const dest, const dec80* const src){
 	uint8_t i;
@@ -599,6 +628,7 @@ void add_decn(void){
 		return;
 	}
 	//save b for restoring later
+	//n.b. don't use TmpStackDecn here, it is called quite often. So you'd need to increase TMP_STACK_SIZE
 	copy_decn(&TmpDecn, &BDecn);
 	//handle cases where signs differ
 	if (AccDecn.exponent < 0 && BDecn.exponent >= 0){
@@ -805,7 +835,6 @@ void mult_decn(void){
 
 void recip_decn(void){
 #define CURR_RECIP Tmp2Decn //copy of x, holds current 1/x estimate
-#define X_COPY     Tmp3Decn //holds copy of original x
 	uint8_t i;
 	exp_t initial_exp;
 	//check divide by zero
@@ -821,7 +850,7 @@ void recip_decn(void){
 	//normalize
 	remove_leading_zeros(&AccDecn);
 	//store copy of x
-	copy_decn(&X_COPY, &AccDecn);
+	st_push_decn(&AccDecn);
 	//get initial exponent of estimate for 1/x
 	initial_exp = get_exponent(&AccDecn);
 #ifdef DEBUG_DIV
@@ -854,7 +883,7 @@ void recip_decn(void){
 		printf("%2d: %s\n", i, Buf);
 #endif
 		//Accum *= x_copy
-		copy_decn(&BDecn, &X_COPY);
+		st_load_decn(&BDecn);
 		mult_decn();
 #ifdef DEBUG_DIV
 		decn_to_str_complete(&AccDecn);
@@ -881,24 +910,20 @@ void recip_decn(void){
 		//new_est(Accum) = recip + (1 - recip*x)*recip, where recip is current recip estimate
 		copy_decn(&CURR_RECIP, &AccDecn);
 	}
+	st_pop_decn(0);
 
 //try not to pollute namespace
 #undef CURR_RECIP
-#undef X_COPY
 }
 
 void div_decn(void){
-#define ACC_COPY   Tmp4Decn //holds copy of original acc
 	//store copy of acc for final multiply by 1/x
-	copy_decn(&ACC_COPY, &AccDecn);
+	st_push_decn(&AccDecn);
 	copy_decn(&AccDecn, &BDecn);
 	recip_decn();
 	//Accum now holds 1/x, multiply by original acc to complete division
-	copy_decn(&BDecn, &ACC_COPY);
+	st_pop_decn(&BDecn);
 	mult_decn();
-
-//try not to pollute namespace
-#undef ACC_COPY
 }
 
 
@@ -1256,9 +1281,9 @@ void pow_decn(void) {
 		return;
 	}
 	//calculate AccDecn = AccDecn ^ BDecn
-	copy_decn(&Tmp4Decn, &BDecn); //save b
+	st_push_decn(&BDecn);
 	ln_decn();
-	copy_decn(&BDecn, &Tmp4Decn); //restore b
+	st_pop_decn(&BDecn);
 	mult_decn(); //accum = b*ln(accum)
 	exp_decn();
 }
@@ -1379,6 +1404,29 @@ void tan_decn(void) {
 void arctan_decn(void) {
 	sincos_decn(1);
 }
+
+// see W.E. Egbert, "Personal Calculator Algorithms III: Inverse Trigonometric Functions"
+void arcsin_decn(void) {
+	st_push_decn(&AccDecn);
+	copy_decn(&BDecn, &AccDecn);
+	mult_decn();
+	negate_decn(&AccDecn);
+	copy_decn(&BDecn, &DECN_1);
+	add_decn();
+	sqrt_decn();
+	recip_decn();
+	st_pop_decn(&BDecn);
+	mult_decn();
+
+	sincos_decn(1);
+}
+
+void arccos_decn(void) {
+	arcsin_decn();
+	negate_decn(&AccDecn);
+	copy_decn(&BDecn, &DECN_PI2);
+	add_decn();
+}
 #undef SIN
 #undef COS
 #undef THETA
@@ -1400,6 +1448,24 @@ void pi_decn(void) {
 	mult_decn();
 }
 
+void sqrt_decn(void) {
+	if (decn_is_zero(&AccDecn)) {
+		return;
+	}
+	if (decn_is_nan(&AccDecn)) {
+		return;
+	}
+	if (AccDecn.exponent < 0){ //negative
+		set_dec80_NaN(&AccDecn);
+		return;
+	}
+	st_push_decn(&BDecn); // sqrt should behave like an unary operation
+	//b = 0.5
+	set_dec80_zero(&BDecn);
+	BDecn.lsu[0] = 5;
+	pow_decn();
+	st_pop_decn(&BDecn);
+}
 
 static void set_str_error(void){
 	Buf[0] = 'E';

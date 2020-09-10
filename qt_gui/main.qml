@@ -180,7 +180,7 @@ ApplicationWindow
 		["", "", "",   ""],
 		["",   "", "", ""],
 		["R▲",      "",   "",   ""],
-		["",      "",   "tan<sup>−1</sup>",       "►deg"],
+		["sin<sup>−1</sup>",      "cos<sup>−1</sup>",   "tan<sup>−1</sup>",       "►deg"],
 		["",   "",      "",       ""]
 		]
 

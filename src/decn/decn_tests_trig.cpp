@@ -59,6 +59,18 @@ static void atan_test(
 	trig_test(arctan_decn, [](bmp::mpfr_float x) -> bmp::mpfr_float {return atan(x);}, a_str, a_exp, rtol, atol);
 }
 
+static void asin_test(
+	const char* a_str, int a_exp, double rtol=5e-3, double atol=1e-3)
+{
+	trig_test(arcsin_decn, [](bmp::mpfr_float x) -> bmp::mpfr_float {return asin(x);}, a_str, a_exp, rtol, atol);
+}
+
+static void acos_test(
+	const char* a_str, int a_exp, double rtol=5e-3, double atol=1e-3)
+{
+	trig_test(arccos_decn, [](bmp::mpfr_float x) -> bmp::mpfr_float {return acos(x);}, a_str, a_exp, rtol, atol);
+}
+
 
 const char * const pi = "3.141592653589793239";
 const char * const pi_threequarters = "2.356194490192344929";
@@ -166,4 +178,26 @@ TEST_CASE("arctan") {
 	atan_test("3.0", 0);
 	atan_test("-3.0", 0);
 	atan_test("0", 0, -1);
+}
+
+TEST_CASE("arcsin") {
+	asin_test("0.001", 0, -1);
+	asin_test("-0.001", 0, -1);
+	asin_test("0.7", 0);
+	asin_test("-0.7", 0);
+	asin_test("0.1", 0);
+	asin_test("-0.1", 0);
+	asin_test("0.9", 0);
+	asin_test("-0.9", 0);
+}
+
+TEST_CASE("arccos") {
+	acos_test("0.001", 0);
+	acos_test("-0.001", 0);
+	acos_test("0.7", 0);
+	acos_test("-0.7", 0);
+	acos_test("0.1", 0);
+	acos_test("-0.1", 0);
+	acos_test("0.9", 0);
+	acos_test("-0.9", 0);
 }

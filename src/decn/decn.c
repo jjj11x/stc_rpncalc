@@ -68,9 +68,9 @@ static const uint8_t num_digits_display = 16;
 dec80 AccDecn;
 __idata dec80 BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn()
-__idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn()
-__xdata dec80 Tmp3Decn; //used by recip_decn() and ln_decn()
-__xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn()
+__idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn() and sincos_decn()
+__xdata dec80 Tmp3Decn; //used by recip_decn() and ln_decn() and sincos_decn()
+__xdata dec80 Tmp4Decn; //used by div_decn() and pow_decn() and sincos_decn()
 
 __xdata char Buf[DECN_BUF_SIZE];
 
@@ -84,6 +84,7 @@ const dec80 DECN_LN_10 = {
 	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
 };
 
+// 2 pi
 const dec80 DECN_2PI = {
 	0, {62, 83, 18, 53, 7, 17, 95, 86, 48}
 };
@@ -92,7 +93,6 @@ const dec80 DECN_2PI = {
 const dec80 DECN_1RAD = {
 	1, {57, 29, 57, 79, 51, 30, 82, 32,  9}
 };
-
 
 void copy_decn(dec80* const dest, const dec80* const src){
 	uint8_t i;
@@ -1263,34 +1263,53 @@ void pow_decn(void) {
 	exp_decn();
 }
 
-void sincos_decn(void) {
-	#define SIN Tmp2Decn
-	#define COS Tmp3Decn
-	#define STP Tmp4Decn
+// see W.E. Egbert, "Personal Calculator Algorithms II: Trigonometric functions"
+void project_decn_into_0_2pi(void) {
+	const uint8_t is_negative = (AccDecn.exponent < 0);
+	exp_t exponent;
 
 	remove_leading_zeros(&AccDecn);
-
-	// TODO: implement scaling to 0..2pi
+	if (is_negative) {
+		negate_decn(&AccDecn);
+	}
+	exponent = get_exponent(&AccDecn);
 	copy_decn(&BDecn, &DECN_2PI);
-	if (compare_magn() == 1) {
-		set_dec80_NaN(&AccDecn);
-		set_dec80_NaN(&BDecn);
-		return;
-	}
-	set_dec80_zero(&BDecn);
-	if (compare_magn() == -1) {
-		set_dec80_NaN(&AccDecn);
-		set_dec80_NaN(&BDecn);
-		return;
+	if (compare_magn() > 0) {
+		do {
+			do {
+				copy_decn(&BDecn, &DECN_2PI);
+				BDecn.exponent = exponent;
+				if (compare_magn() >= 0) {
+					negate_decn(&BDecn);
+					add_decn();
+				} else {
+					break;
+				}
+			} while (1);
+			exponent--;
+		} while (exponent >= 0);
 	}
 
-	copy_decn(&STP, &AccDecn);
+	if (is_negative) {
+		negate_decn(&AccDecn);
+		copy_decn(&BDecn, &DECN_2PI);
+		add_decn();
+	}
+}
+
+#define SIN Tmp2Decn
+#define COS Tmp3Decn
+#define THETA Tmp4Decn
+void sincos_decn(void) {
+	project_decn_into_0_2pi();
+
+	copy_decn(&THETA, &AccDecn);
 	copy_decn(&COS, &DECN_1);
 	set_dec80_zero(&SIN);
 	// 0.0 00 05
 	SIN.lsu[2] = 5;
 	negate_decn(&SIN);
-	while (STP.exponent >= 0) {
+	while (THETA.exponent >= 0) {
 		// COS = COS - SIN / 10000
 		copy_decn(&AccDecn, &COS);
 		copy_decn(&BDecn, &SIN);
@@ -1310,13 +1329,13 @@ void sincos_decn(void) {
 		shift_right(&BDecn);
 		add_decn();
 		copy_decn(&SIN, &AccDecn);
-		// STP = STP - 0.0 00 1
-		copy_decn(&AccDecn, &STP);
+		// THETA = THETA - 0.0 00 1
+		copy_decn(&AccDecn, &THETA);
 		set_dec80_zero(&BDecn);
 		BDecn.lsu[2] = 10;
 		negate_decn(&BDecn);
 		add_decn();
-		copy_decn(&STP, &AccDecn);
+		copy_decn(&THETA, &AccDecn);
 	}
 }
 
@@ -1338,6 +1357,17 @@ void tan_decn(void) {
 }
 #undef SIN
 #undef COS
+#undef THETA
+
+void to_degree_decn(void) {
+	copy_decn(&BDecn, &DECN_1RAD);
+	mult_decn();
+}
+
+void to_radian_decn(void) {
+	copy_decn(&BDecn, &DECN_1RAD);
+	div_decn();
+}
 
 
 static void set_str_error(void){

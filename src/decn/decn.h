@@ -86,9 +86,12 @@ void exp_decn(void);
 void exp10_decn(void);
 void pow_decn(void);
 
+void project_decn_into_0_2pi(void);
 void sin_decn(void);
 void cos_decn(void);
 void tan_decn(void);
+void to_degree_decn(void);
+void to_radian_decn(void);
 
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

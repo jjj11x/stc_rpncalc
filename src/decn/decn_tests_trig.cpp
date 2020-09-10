@@ -81,6 +81,16 @@ TEST_CASE("sin") {
 	sin_test(pi_quarted, 0);
 	sin_test(pi_halfed, 0);
 	sin_test(pi_threequarters, 0);
+	sin_test("1000.0", 0);
+	sin_test("-0.5", 0);
+	sin_test("-1.5", 0);
+	sin_test("-2.0", 0);
+	sin_test("-2.5", 0);
+	sin_test("-3.0", 0);
+	sin_test("-9.0", 0);
+	sin_test("-18.0", 0);
+	sin_test("-27.0", 0);
+	sin_test("-1000.0", 0);
 }
 
 TEST_CASE("cos") {
@@ -104,6 +114,16 @@ TEST_CASE("cos") {
 	cos_test(pi_quarted, 0);
 	cos_test(pi_halfed, 0, -1);
 	cos_test(pi_threequarters, 0);
+	cos_test("1000.0", 0);
+	cos_test("-0.5", 0);
+	cos_test("-1.5", 0);
+	cos_test("-2.0", 0);
+	cos_test("-2.5", 0);
+	cos_test("-3.0", 0);
+	cos_test("-9.0", 0);
+	cos_test("-18.0", 0);
+	cos_test("-27.0", 0);
+	cos_test("-1000.0", 0);
 }
 
 

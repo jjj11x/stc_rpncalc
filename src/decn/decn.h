@@ -92,6 +92,7 @@ void tan_decn(void);
 void arctan_decn(void);
 void to_degree_decn(void);
 void to_radian_decn(void);
+void pi_decn(void);
 
 //Buf should hold at least 18 + 4 + 5 + 1 = 28
 #define DECN_BUF_SIZE 28

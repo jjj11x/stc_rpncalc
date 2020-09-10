@@ -1393,6 +1393,13 @@ void to_radian_decn(void) {
 	div_decn();
 }
 
+void pi_decn(void) {
+	set_dec80_zero(&BDecn);
+	BDecn.lsu[0] = 5; // 0.5 00 ..
+	copy_decn(&AccDecn, &DECN_2PI);
+	mult_decn();
+}
+
 
 static void set_str_error(void){
 	Buf[0] = 'E';

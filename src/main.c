@@ -307,7 +307,7 @@ int main()
 			switch(KEY_MAP[I_Key]){
 				//////////
 				case '0': {
-					if (IsShifted){
+					if (IsShiftedUp){
 						//off
 						TURN_OFF();
 					} else {
@@ -343,7 +343,7 @@ int main()
 				case '7': //fallthrough
 				case '8': //fallthrough
 				case '9': {
-					if (IsShifted){
+					if (IsShiftedUp || IsShiftedDown){
 						finish_process_entry();
 					} else if ( EnteringExp >= ENTERING_EXP){
 						if ( Exp_i == 0){
@@ -368,7 +368,7 @@ int main()
 				} break;
 				//////////
 				case '.': {
-					if (IsShifted){
+					if (IsShiftedUp || IsShiftedDown){
 						//STO
 						finish_process_entry();
 					} else {
@@ -391,7 +391,7 @@ int main()
 				} break;
 				//////////
 				case '=': {
-					if (IsShifted){ //RCL
+					if (IsShiftedUp || IsShiftedDown){ //RCL
 						finish_process_entry();
 					} else { //Enter
 						//track stack lift
@@ -401,9 +401,10 @@ int main()
 				} break;
 				//////////
 				case 'c': {
-					if (IsShifted || is_entering_done()){
+					if (IsShiftedUp || IsShiftedDown || is_entering_done()){
 						//clear
-						IsShifted = 0;
+						IsShiftedUp = 0;
+						IsShiftedDown = 0;
 						NoLift = 1;
 						entering_done();
 						EnteringExp = ENTERING_DONE_CLEARED;
@@ -521,12 +522,15 @@ int main()
 		LCD_ClearToEnd(1);
 
 		//print shifted status
-		if (IsShifted){
+		if (IsShiftedUp){
 			TERMIO_PutChar('^');
 #if defined(STACK_DEBUG) && defined(SHOW_STACK)
 			TERMIO_PutChar(' ');
 			TERMIO_PrintU8(stack_max);
+			TERMIO_PutChar(' ');
 #endif
+		} else if (IsShiftedDown){
+			TERMIO_PutChar('v');
 		}
 
 #ifdef DESKTOP

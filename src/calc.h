@@ -32,7 +32,8 @@ void process_cmd(char cmd);
 //push_decn is equivalent to "set_x()" if no_lift is true
 void push_decn(__xdata const char* signif_str, __xdata exp_t exponent);
 extern uint8_t NoLift;
-extern __bit IsShifted;
+extern __bit IsShiftedUp;
+extern __bit IsShiftedDown;
 
 void clear_x(void);
 __xdata dec80* get_x(void);

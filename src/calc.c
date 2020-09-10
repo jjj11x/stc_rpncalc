@@ -34,7 +34,8 @@ __xdata dec80 LastX;
 #define STACK_T 3
 
 uint8_t NoLift = 0;
-__bit IsShifted = 0;
+__bit IsShiftedUp = 0;
+__bit IsShiftedDown = 0;
 
 //stack "grows" towards 0
 __xdata dec80 Stack[STACK_SIZE]; //0->x, 1->y, 2->z, 3->t initially
@@ -88,10 +89,6 @@ static void do_unary_op(void (*f_ptr)(void)){
 	}
 }
 
-static void toggle_shifted(void){
-	IsShifted ^= 1;
-}
-
 void process_cmd(char cmd){
 	//turn off backlight before start of processing
 	backlight_off();
@@ -99,12 +96,12 @@ void process_cmd(char cmd){
 	switch(cmd){
 		//////////
 		case '+':{
-			if (IsShifted){ // LastX
+			if (IsShiftedUp){ // LastX
 				if (NoLift != 1){
 					StackPtr--;
 				}
 				copy_decn(&stack(STACK_X), &LastX);
-				IsShifted = 0;
+				IsShiftedUp = 0;
 			} else { // +
 				do_binary_op(add_decn);
 			}
@@ -115,22 +112,36 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case '-':{
-			negate_decn(&stack(STACK_X));
-			do_binary_op(add_decn);
-			negate_decn(&LastX); //stored LastX was after negation of X
+			if (IsShiftedUp) {
+				do_unary_op(to_radian_decn);
+				IsShiftedUp = 0;
+			} else if (IsShiftedDown) {
+				do_unary_op(to_degree_decn);
+				IsShiftedDown = 0;
+			} else {
+				negate_decn(&stack(STACK_X));
+				do_binary_op(add_decn);
+				negate_decn(&LastX); //stored LastX was after negation of X
+			}
 		} break;
 		//////////
 		case '/':{
-			do_binary_op(div_decn);
+			if (IsShiftedUp){
+				StackPtr--;
+				pi_decn();
+				copy_decn(&stack(STACK_X), &AccDecn);
+			} else if (IsShiftedDown) {
+			} else {
+				do_binary_op(div_decn);
+			}
 		} break;
 		//////////
 		case '=':{
-			if (IsShifted){ //RCL
+			if (IsShiftedUp){ //RCL
 				if (NoLift != 1){
 					StackPtr--;
 				}
 				copy_decn(&stack(STACK_X), &StoredDecn);
-				IsShifted = 0;
 			} else { //Enter
 				if (!decn_is_nan(&stack(STACK_X))){
 					StackPtr--;
@@ -140,9 +151,8 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case '.':{
-			if (IsShifted){ //STO
+			if (IsShiftedUp){ //STO
 				copy_decn(&StoredDecn, &stack(STACK_X));
-				IsShifted = 0;
 			}
 		} break;
 		//////////
@@ -151,8 +161,8 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case '<':{ //use as +/- and sqrt
-			if (IsShifted){ //take sqrt
-				IsShifted = 0;
+			if (IsShiftedUp){ //take sqrt
+				IsShiftedUp = 0;
 				if (decn_is_zero(&stack(STACK_X))){
 					//sqrt(0) = 0
 				} else if (!decn_is_nan(&stack(STACK_X))){
@@ -176,8 +186,7 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case 'r':{ //use as swap and 1/x
-			if (IsShifted){ //take 1/x
-				IsShifted = 0;
+			if (IsShiftedUp){ //take 1/x
 				do_unary_op(recip_decn);
 			} else { // swap
 				if (!decn_is_nan(&stack(STACK_X))){
@@ -190,41 +199,70 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case 'm':{ //use as shift
-			toggle_shifted();
+			if (IsShiftedUp) {
+				IsShiftedUp = 0;
+				IsShiftedDown = 1;
+			} else if (IsShiftedDown) {
+				IsShiftedUp = 0;
+				IsShiftedDown = 0;
+			} else {
+				IsShiftedUp = 1;
+				IsShiftedDown = 0;
+			}
+			return;
+		} break;
+		//////////
+		case '1':{
+			if (IsShiftedUp){
+				do_unary_op(sin_decn);
+			} else if (IsShiftedDown){
+				// do_unary_op(arcsin_decn);
+			}
+		} break;
+		//////////
+		case '2':{
+			if (IsShiftedUp){
+				do_unary_op(cos_decn);
+			} else if (IsShiftedDown){
+				// do_unary_op(arccos_decn);
+			}
+		} break;
+		//////////
+		case '3':{
+			if (IsShiftedUp){
+				do_unary_op(tan_decn);
+			} else if (IsShiftedDown){
+				do_unary_op(arctan_decn);
+			}
 		} break;
 		//////////
 		case '4':{
-			if (IsShifted){ //roll down
+			if (IsShiftedUp){ //roll down
 				StackPtr++;
-				IsShifted = 0;
 			}
 		} break;
 		//////////
 		case '5':{
-			if (IsShifted){ //e^x
+			if (IsShiftedUp){ //e^x
 				do_unary_op(exp_decn);
-				IsShifted = 0;
 			}
 		} break;
 		//////////
 		case '6':{
-			if (IsShifted){ //10^x
+			if (IsShiftedUp){ //10^x
 				do_unary_op(exp10_decn);
-				IsShifted = 0;
 			}
 		} break;
 		//////////
 		case '9':{
-			if (IsShifted){ //log10(x)
+			if (IsShiftedUp){ //log10(x)
 				do_unary_op(log10_decn);
-				IsShifted = 0;
 			}
 		} break;
 		//////////
 		case '8':{
-			if (IsShifted){ //ln(x)
+			if (IsShiftedUp){ //ln(x)
 				do_unary_op(ln_decn);
-				IsShifted = 0;
 			}
 		} break;
 		//////////
@@ -239,10 +277,11 @@ void process_cmd(char cmd){
 				copy_decn(&stack(STACK_Y), &AccDecn);
 			}
 			pop();
-			IsShifted = 0;
 		} break;
 		//////////
 	} //switch(cmd)
+	IsShiftedUp = 0;
+	IsShiftedDown = 0;
 }
 
 

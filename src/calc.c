@@ -190,10 +190,9 @@ void process_cmd(char cmd){
 				do_unary_op(recip_decn);
 			} else { // swap
 				if (!decn_is_nan(&stack(STACK_X))){
-					dec80 tmp;
-					copy_decn(&tmp, &stack(STACK_X));
+					copy_decn(&AccDecn, &stack(STACK_X));
 					copy_decn(&stack(STACK_X), &stack(STACK_Y));
-					copy_decn(&stack(STACK_Y), &tmp);
+					copy_decn(&stack(STACK_Y), &AccDecn);
 				}
 			}
 		} break;

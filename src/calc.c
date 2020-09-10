@@ -134,7 +134,6 @@ void process_cmd(char cmd){
 				StackPtr--;
 				pi_decn();
 				copy_decn(&stack(STACK_X), &AccDecn);
-			} else if (IsShiftedDown) {
 			} else {
 				do_binary_op(div_decn);
 			}

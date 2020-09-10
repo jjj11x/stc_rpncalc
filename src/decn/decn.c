@@ -1660,4 +1660,3 @@ void build_decn_at(dec80* dest, const char* signif_str, exp_t exponent){
 
 #endif //DESKTOP
 
-

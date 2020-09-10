@@ -1339,8 +1339,8 @@ void sincos_decn(const uint8_t sincos_arctan) {
 		copy_decn(&THETA, &AccDecn);
 		copy_decn(&COS, &DECN_1);
 		set_dec80_zero(&SIN);
-		// 0.0 00 05
-		SIN.lsu[2] = 5;
+		// 0.0 00 5
+		SIN.lsu[2] = 50;
 		negate_decn(&SIN);
 	}
 	do {
@@ -1355,29 +1355,27 @@ void sincos_decn(const uint8_t sincos_arctan) {
 				break;
 			}
 		}
-		// COS = COS - SIN / 10000
+		// COS = COS - SIN / 1000
 		copy_decn(&AccDecn, &COS);
 		copy_decn(&BDecn, &SIN);
-		shift_right(&BDecn);
 		shift_right(&BDecn);
 		shift_right(&BDecn);
 		shift_right(&BDecn);
 		negate_decn(&BDecn);
 		add_decn();
 		copy_decn(&COS, &AccDecn);
-		// SIN = SIN + COS / 10000
+		// SIN = SIN + COS / 1000
 		copy_decn(&AccDecn, &SIN);
 		copy_decn(&BDecn, &COS);
 		shift_right(&BDecn);
 		shift_right(&BDecn);
 		shift_right(&BDecn);
-		shift_right(&BDecn);
 		add_decn();
 		copy_decn(&SIN, &AccDecn);
-		// THETA = THETA -/+ 0.0 00 1
+		// THETA = THETA -/+ 0.0 01
 		copy_decn(&AccDecn, &THETA);
 		set_dec80_zero(&BDecn);
-		BDecn.lsu[2] = 10;
+		BDecn.lsu[1] = 1;
 		if (!sincos_arctan) negate_decn(&BDecn);
 		add_decn();
 		copy_decn(&THETA, &AccDecn);

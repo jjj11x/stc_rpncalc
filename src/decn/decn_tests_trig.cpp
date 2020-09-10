@@ -80,7 +80,7 @@ const char * const pi_quarted = ".7853981633974483096";
 
 TEST_CASE("sin") {
 	sin_test("0.1", 0);
-	sin_test("0.05", 0);
+	sin_test("0.05", 0, 1e-2);
 	sin_test("0.01", 0, -1);
 	sin_test("0.001", 0, -1);
 	sin_test("0.0001", 0, -1);
@@ -147,8 +147,8 @@ TEST_CASE("cos") {
 
 TEST_CASE("tan") {
 	tan_test("0.1", 0);
-	tan_test("0.05", 0);
-	tan_test("0.01", 0);
+	tan_test("0.05", 0, 1e-2);
+	tan_test("0.01", 0, 5e-2);
 	tan_test("0.001", 0, -1);
 	tan_test("0.0001", 0, -1);
 	tan_test("0.00001", 0, -1);
@@ -165,8 +165,8 @@ TEST_CASE("tan") {
 }
 
 TEST_CASE("arctan") {
-	atan_test("0.001", 0);
-	atan_test("-0.001", 0);
+	atan_test("0.001", 0, -1, 2e-3);
+	atan_test("-0.001", 0, -1, 2e-3);
 	atan_test("0.7", 0);
 	atan_test("-0.7", 0);
 	atan_test("0.1", 0);
@@ -185,8 +185,8 @@ TEST_CASE("arcsin") {
 	asin_test("-0.001", 0, -1);
 	asin_test("0.7", 0);
 	asin_test("-0.7", 0);
-	asin_test("0.1", 0);
-	asin_test("-0.1", 0);
+	asin_test("0.1", 0, 1e-2);
+	asin_test("-0.1", 0, 1e-2);
 	asin_test("0.9", 0);
 	asin_test("-0.9", 0);
 }

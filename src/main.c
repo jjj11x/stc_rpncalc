@@ -307,7 +307,7 @@ int main()
 			switch(KEY_MAP[I_Key]){
 				//////////
 				case '0': {
-					if (IsShiftedUp){
+					if (IsShiftedUp || IsShiftedDown){
 						//off
 						TURN_OFF();
 					} else {

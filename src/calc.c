@@ -105,7 +105,6 @@ void process_cmd(char cmd){
 					StackPtr--;
 				}
 				copy_decn(&stack(STACK_X), &LastX);
-				IsShiftedUp = 0;
 			} else { // +
 				do_binary_op(add_decn);
 			}
@@ -118,10 +117,8 @@ void process_cmd(char cmd){
 		case '-':{
 			if (IsShiftedUp) {
 				do_unary_op(to_radian_decn);
-				IsShiftedUp = 0;
 			} else if (IsShiftedDown) {
 				do_unary_op(to_degree_decn);
-				IsShiftedDown = 0;
 			} else {
 				negate_decn(&stack(STACK_X));
 				do_binary_op(add_decn);
@@ -165,7 +162,6 @@ void process_cmd(char cmd){
 		//////////
 		case '<':{ //use as +/- and sqrt
 			if (IsShiftedUp){ //take sqrt
-				IsShiftedUp = 0;
 				do_unary_op(sqrt_decn);
 			} else { // +/-
 				if (!decn_is_nan(&stack(STACK_X))){

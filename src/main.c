@@ -28,6 +28,7 @@
 #else
 #include "stc15.h"
 #endif
+#include "stack_debug.h"
 
 #define FOSC 11583000
 
@@ -139,7 +140,7 @@ static void latch_on(void)
 
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
-__code const char VER_STR[32+1] = "STC RPN         Calculator v1.10";
+__code const char VER_STR[32+1] = "STC RPN         Calculator v1.11";
 
 
 enum {
@@ -225,7 +226,9 @@ int main()
 	LCD_Open();
 	KeyInit();
 	Timer0Init(); //for reading keyboard
-	BACKLIGHT_ON(); //turn on led backlight
+	backlight_on(); //turn on led backlight
+	stack_debug_init();
+	stack_debug(0xfe);
 
 	ExpBuf[0] = 0;
 	ExpBuf[1] = 0;
@@ -304,7 +307,7 @@ int main()
 			switch(KEY_MAP[I_Key]){
 				//////////
 				case '0': {
-					if (IsShifted){
+					if (IsShiftedUp || IsShiftedDown){
 						//off
 						TURN_OFF();
 					} else {
@@ -340,7 +343,7 @@ int main()
 				case '7': //fallthrough
 				case '8': //fallthrough
 				case '9': {
-					if (IsShifted){
+					if (IsShiftedUp || IsShiftedDown){
 						finish_process_entry();
 					} else if ( EnteringExp >= ENTERING_EXP){
 						if ( Exp_i == 0){
@@ -365,7 +368,7 @@ int main()
 				} break;
 				//////////
 				case '.': {
-					if (IsShifted){
+					if (IsShiftedUp || IsShiftedDown){
 						//STO
 						finish_process_entry();
 					} else {
@@ -388,7 +391,7 @@ int main()
 				} break;
 				//////////
 				case '=': {
-					if (IsShifted){ //RCL
+					if (IsShiftedUp || IsShiftedDown){ //RCL
 						finish_process_entry();
 					} else { //Enter
 						//track stack lift
@@ -398,9 +401,10 @@ int main()
 				} break;
 				//////////
 				case 'c': {
-					if (IsShifted || is_entering_done()){
+					if (IsShiftedUp || IsShiftedDown || is_entering_done()){
 						//clear
-						IsShifted = 0;
+						IsShiftedUp = 0;
+						IsShiftedDown = 0;
 						NoLift = 1;
 						entering_done();
 						EnteringExp = ENTERING_DONE_CLEARED;
@@ -518,8 +522,15 @@ int main()
 		LCD_ClearToEnd(1);
 
 		//print shifted status
-		if (IsShifted){
+		if (IsShiftedUp){
 			TERMIO_PutChar('^');
+#if defined(STACK_DEBUG) && defined(SHOW_STACK)
+			TERMIO_PutChar(' ');
+			TERMIO_PrintU8(stack_max);
+			TERMIO_PutChar(' ');
+#endif
+		} else if (IsShiftedDown){
+			TERMIO_PutChar(CGRAM_DOWN);
 		}
 
 #ifdef DESKTOP
@@ -529,7 +540,7 @@ int main()
 		LcdAvailable.release();
 #endif
 		//turn backlight back on
-		BACKLIGHT_ON();
+		backlight_on();
 	} //while (1)
 }
 /* ------------------------------------------------------------------------- */

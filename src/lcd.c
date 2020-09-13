@@ -155,9 +155,15 @@ void LCD_Open(void) {
 	//P2 entire port
 	P2M1 = 0;
 	P2M0 = 0xff;
+#ifdef STACK_DEBUG
+	// P3_4 is special
+	P3M1 &= ~(0xe0);
+	P3M0 |= (0xe0);
+#else
 	//P3 pins 7:4
 	P3M1 &= ~(0xf0);
 	P3M0 |= (0xf0);
+#endif
 
 	_delay_ms(30); // to allow LCD powerup
 	outCsrBlindNibble(0x03); // (DL=1 8-bit mode)
@@ -195,6 +201,13 @@ void LCD_Open(void) {
 		LCD_OutChar(0x10);
 		LCD_OutChar(0x1c);
 	}
+	//program shift down sign
+	for (i = 0; i < 5; i++){
+		LCD_OutChar(0x0);
+	}
+	LCD_OutChar(0x1F);
+	LCD_OutChar(0x0E);
+	LCD_OutChar(0x04);
 
 	//clear display
 	LCD_Clear();
@@ -279,3 +292,15 @@ void LCD_Clear() {
 	col = 0;
 }
 
+void TERMIO_PrintU8(uint8_t x) {
+	uint8_t i;
+	for (i = 2; i; i--) {
+		const uint8_t upper_nibble = (x & 0xf0) >> 4;
+		if (upper_nibble <= 9) {
+			TERMIO_PutChar(upper_nibble + '0');
+		} else {
+			TERMIO_PutChar((upper_nibble - 0x0a) + 'A');
+		}
+		x <<= 4;
+	}
+}

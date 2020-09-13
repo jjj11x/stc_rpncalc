@@ -31,12 +31,14 @@ void LCD_GoTo(uint8_t row, uint8_t col);
 void LCD_OutString(__xdata const char* string, uint8_t max_chars);
 void LCD_OutString_Initial(__code const char* string);
 short TERMIO_PutChar(unsigned char letter);
+void TERMIO_PrintU8(uint8_t x);
 void LCD_OutNibble(uint8_t x);
 void LCD_ClearToEnd(uint8_t curr_row);
 
 //CGRAM character address
 #define CGRAM_EXP 0
 #define CGRAM_EXP_NEG 1
+#define CGRAM_DOWN 2
 
 #include "utils.h"
 #ifdef DESKTOP

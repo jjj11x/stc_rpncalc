@@ -20,9 +20,6 @@
 #include <stdio.h>
 #include "decn.h"
 
-extern char Buf[DECN_BUF_SIZE];
-
-
 static dec80 diff;
 
 //diff = (acc - diff) / diff

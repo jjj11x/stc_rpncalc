@@ -121,7 +121,7 @@ ApplicationWindow
 							horizontalAlignment: Text.AlignHCenter
 							font.pointSize: 16
 							color: "gray"
-							text: {getShiftedText(parent.parent.objectName, index) + "<br><br>"}
+							text: {getShiftedUpText(parent.parent.objectName, index) + "<br><br>"}
 								textFormat: Text.RichText
 								anchors.centerIn: parent
 						}
@@ -131,6 +131,14 @@ ApplicationWindow
 							text: {"<br>" + getText(parent.parent.objectName, index) + "<br>"}
 							textFormat: Text.RichText
 							anchors.centerIn: parent
+						}
+						Text {
+							horizontalAlignment: Text.AlignHCenter
+							font.pointSize: 16
+							color: "gray"
+							text: {"<br><br>" + getShiftedDownText(parent.parent.objectName, index)}
+								textFormat: Text.RichText
+								anchors.centerIn: parent
 						}
 						MouseArea {
 							//get row/column
@@ -155,13 +163,25 @@ ApplicationWindow
 		return "<b>" + keys[row][col] + "</b>"
 	}
 
-	function getShiftedText(row, col) {
+	function getShiftedUpText(row, col) {
 		var shifted_keys = [
 		["Shift", "1/x", " √<span style=\"text-decoration: overline\">x</span> ",   "CL<i>x</i>"],
-		["y<sup>x</sup> ",   "ln(x)", "log(x)", ""],
-		["🔃",      "e<sup>x</sup>",   "10<sup>x</sup>",   ""],
-		["",      "",      "",       ""],
+		["y<sup>x</sup> ",   "ln(x)", "log(x)", "π"],
+		["R▼",      "e<sup>x</sup>",   "10<sup>x</sup>",   ""],
+		["sin(x)",      "cos(x)",      "tan(x)",       "►rad"],
 		["off",   "STO",      "RCL",       "LAST<i>x</i>"]
+		]
+
+		return "<small>" + shifted_keys[row][col] + "</small>"
+	}
+
+	function getShiftedDownText(row, col) {
+		var shifted_keys = [
+		["", "", "",   ""],
+		["",   "", "", ""],
+		["R▲",      "",   "",   ""],
+		["asin(x)",      "acos(x)",   "atan(x)",       "►deg"],
+		["",   "",      "",       ""]
 		]
 
 		return "<small>" + shifted_keys[row][col] + "</small>"

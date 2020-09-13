@@ -31,10 +31,6 @@ namespace bmp = boost::multiprecision;
 using Catch::Matchers::Equals;
 
 
-
-extern char Buf[DECN_BUF_SIZE];
-
-
 TEST_CASE("build decn"){
 	build_dec80("0.0009234567890123456", 7);
 	decn_to_str_complete(&AccDecn);

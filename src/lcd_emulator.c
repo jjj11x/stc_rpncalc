@@ -131,6 +131,8 @@ short TERMIO_PutChar(unsigned char letter) {
 		lcd_buf[lcd_row][lcd_col] = 'E';
 	} else if (letter == CGRAM_EXP_NEG) {
 		lcd_buf[lcd_row][lcd_col] = '-';
+	} else if (letter == CGRAM_DOWN) {
+		lcd_buf[lcd_row][lcd_col] = 'V';
 	} else {
 		lcd_buf[lcd_row][lcd_col] = letter;
 	}

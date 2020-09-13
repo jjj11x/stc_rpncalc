@@ -38,6 +38,7 @@ void LCD_ClearToEnd(uint8_t curr_row);
 //CGRAM character address
 #define CGRAM_EXP 0
 #define CGRAM_EXP_NEG 1
+#define CGRAM_DOWN 2
 
 #include "utils.h"
 #ifdef DESKTOP

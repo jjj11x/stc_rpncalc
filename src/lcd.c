@@ -201,6 +201,13 @@ void LCD_Open(void) {
 		LCD_OutChar(0x10);
 		LCD_OutChar(0x1c);
 	}
+	//program shift down sign
+	for (i = 0; i < 5; i++){
+		LCD_OutChar(0x0);
+	}
+	LCD_OutChar(0x1F);
+	LCD_OutChar(0x0E);
+	LCD_OutChar(0x04);
 
 	//clear display
 	LCD_Clear();

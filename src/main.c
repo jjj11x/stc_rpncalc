@@ -140,7 +140,7 @@ static void latch_on(void)
 
 __xdata char EntryBuf[MAX_CHARS_PER_LINE + 1];
 __xdata uint8_t ExpBuf[2];
-__code const char VER_STR[32+1] = "STC RPN         Calculator v1.10";
+__code const char VER_STR[32+1] = "STC RPN         Calculator v1.11";
 
 
 enum {
@@ -530,7 +530,7 @@ int main()
 			TERMIO_PutChar(' ');
 #endif
 		} else if (IsShiftedDown){
-			TERMIO_PutChar('v');
+			TERMIO_PutChar(CGRAM_DOWN);
 		}
 
 #ifdef DESKTOP

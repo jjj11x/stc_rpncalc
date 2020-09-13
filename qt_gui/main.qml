@@ -136,7 +136,7 @@ ApplicationWindow
 							horizontalAlignment: Text.AlignHCenter
 							font.pointSize: 16
 							color: "gray"
-							text: {"<br><br><br>" + getShiftedDownText(parent.parent.objectName, index)}
+							text: {"<br><br>" + getShiftedDownText(parent.parent.objectName, index)}
 								textFormat: Text.RichText
 								anchors.centerIn: parent
 						}
@@ -168,7 +168,7 @@ ApplicationWindow
 		["Shift", "1/x", " √<span style=\"text-decoration: overline\">x</span> ",   "CL<i>x</i>"],
 		["y<sup>x</sup> ",   "ln(x)", "log(x)", "π"],
 		["R▼",      "e<sup>x</sup>",   "10<sup>x</sup>",   ""],
-		["sin",      "cos",      "tan",       "►rad"],
+		["sin(x)",      "cos(x)",      "tan(x)",       "►rad"],
 		["off",   "STO",      "RCL",       "LAST<i>x</i>"]
 		]
 
@@ -180,7 +180,7 @@ ApplicationWindow
 		["", "", "",   ""],
 		["",   "", "", ""],
 		["R▲",      "",   "",   ""],
-		["sin<sup>−1</sup>",      "cos<sup>−1</sup>",   "tan<sup>−1</sup>",       "►deg"],
+		["asin(x)",      "acos(x)",   "atan(x)",       "►deg"],
 		["",   "",      "",       ""]
 		]
 

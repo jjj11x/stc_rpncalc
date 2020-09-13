@@ -1,6 +1,6 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit". You will have to solder the kit yourself (see "hardware connections" below). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built-in serial-port bootloader. See the series [summary](http://www.stcmicro.com/datasheet/STC15W408AS_Features.pdf) and full english [datasheet](https://www.stcmicro.com/datasheet/STC15F2K60S2-en.pdf). This project uses [SDCC](http://sdcc.sourceforge.net/) to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit" (price has increased recently, currently closer to $18 shipped). You will have to solder the kit yourself (see "hardware connections" below). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built-in serial-port bootloader. See the series [summary](http://www.stcmicro.com/datasheet/STC15W408AS_Features.pdf) and full english [datasheet](https://www.stcmicro.com/datasheet/STC15F2K60S2-en.pdf). This project uses [SDCC](http://sdcc.sourceforge.net/) to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
 
 The replacement firmware supports floating-point calculations (using 18 decimal digits plus exponent for arithmetic) with a 4-level RPN stack. Functions include basic arithmetic as well as log(), exp(), y^x, 1/x and sqrt(), all in floating point. (The original firmware supported only fixed-point calculations in chain mode.) I have not added in the resistor value calculator or the decimal/hexadecimal converter features from the original firmware.
 
@@ -74,15 +74,26 @@ The keys on the *original* calculator map as follows:
 	- The 2nd press begins exponent entry.
 	- The 3rd and subsequent presses negates the current exponent being entered.
 	- Acts as STO when shifted (there is only 1 memory register)
-- `mode `: acts as a shift key
+- `mode `: acts as a shift key (press multiple times to toggle between shift up, shift down, and no shift)
 - `ON/AC`: acts as a backspace key during digit entry, acts as `Clear X` when digit entry is finished (e.g. after an operator key is pressed)
 	- acts as `Clear X` when shifted
 - `7    `: acts as y^x when shifted
 - `8    `: acts as ln(x) when shifted
 - `9    `: acts as log(x) when shifted
+- `÷    `: acts as pi when shifted
+- `4    `: acts as roll down when shifted
+	- acts as roll up when shifted down
 - `5    `: acts as e^x when shifted
 - `6    `: acts as 10^x when shifted
-- `4    `: acts as roll down when shifted
+- `1    `: acts as sin(x) when shifted
+	- acts as asin(x) when shifted down
+- `2    `: acts as cos(x) when shifted
+	- acts as acos(x) when shifted down
+- `3    `: acts as tan(x) when shifted
+	- acts as atan(x) when shifted down
+- all trig functions are currently calculated in degrees
+- `-    `: acts as to radians when shifted
+	- acts as to degrees when shifted down
 - `+    `: acts as LastX when shifted
 - `0    `: acts as off button when shifted
 
@@ -240,6 +251,8 @@ Disconnected!
 
 # Bugs
 1. After division by 0, ln(-), over/underflow, or other operations which give an `Error`, it's possible to still do certain operations on `Error`. Many functions do check, and will not operate on `Error`, but not all of them yet. This is somewhat similar to old soviet Elektronika calculators where `Error` is just a number, and there wasn't enough ROM space to check for errors. (There are people who explore the inner-workings of these calculators by manipulating the `Error` "number".)
+1. When shifted down, keys which do not have a shifted-down function will instead be interpreted as if there were no shift.
+1. Trigonometric functions are extremely slow and inaccurate.
 1. There are probably more bugs waiting to be discovered.
 
 # Internals
@@ -288,10 +301,11 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 	- see `src/decn/proto/exp.cpp` for initial prototyping development work
 - Powers are calculated using the identity y^x = e^(x*ln(y))
 - Square roots are calculated using the identity sqrt(x) = e^(0.5*ln(x))
+- Trigonometric functions are calculated using algorithms similar to the [sinclair scientific](http://files.righto.com/calculator/sinclair_scientific_simulator.html), and are fairly slow and inaccurate.
 
 ## TODO
-- Trigonometric functions could be implemented with algorithms similar to those described in the HP Journal articles "Personal Calculator Algorithms II: Trigonometric Functions" and "Personal Calculator Algorithms III: Inverse Trigonometric Functions", both by William Egbert.
-	- will probably assign to the shifted `1`, `2`, and `3` keys, and `-` for calculating inverse trig functions.
+- Trigonometric functions could be implemented with algorithms similar to those used in Valentin Albillo's [implementation](http://www.hpcc.org/datafile/hp12/12c_TrigonometryFunctions.pdf) for the HP 12C, but would take more flash
+	- These could also use the implementation described in the HP Journal articles "Personal Calculator Algorithms II: Trigonometric Functions" and "Personal Calculator Algorithms III: Inverse Trigonometric Functions", both by William Egbert. This would likely take even more flash though.
 - Special cases, such as taking the logarithms of numbers near 1, negative number raised to integer powers, etc. could be implemented separately, similar to what is described in the HP Journal note "The New Accuracy: Making 2^3 = 8" by Dennis Harms.
 - The display blanking for trailing 0s assumes that 16 digits will actually be displayed, but this might not be the case if the negative sign, decimal point, or exponents are displayed
 - Would be nice to have the `hex <=> dec` converter from the original firmware if there is more flash space
@@ -313,7 +327,7 @@ In practice, the keyboard debouncing works much better than the original firmwar
 # Implementation on an STC 8051 Microcontroller
 This was my 1st time using an 8051 microcontroller. The architecture is a bit limiting for programming in "high-level" languages such as C compared to more modern architectures -- even compared to other 8-bit architectures such as the AVR (used in the arduino). Most significantly, there is no stack-pointer-relative addressing, which makes C functions takes up a lot of code space, since they have to emulate stack-pointer-relative addressing. Unfortunately, the microcontroller used only has 13K of code space. The compiler used (SDCC) also does not support using a 2nd data pointer, even though STC's implementation of the 8051 has one.
 
-I've avoided relying on the functions being able to be re-entrant, so that they do not depend on having a stack. SDCC is *not* set to use `--stack-auto` to reduce code size (this means functions are not re-entrant). Some "large" local variables are declared as static in functions to save on the code space needed to emulate a stack. I used a lot more globals than I what I would typically like to have used, and a lot less pointers passed to functions, since these are extremely expensive (to account for the 3 different memory types).
+I've avoided relying on the functions being able to be re-entrant, so that they do not depend on having a stack. SDCC is *not* set to use `--stack-auto` to reduce code size (this means functions are not re-entrant). Some "large" local variables are declared as static in functions to save on the code space needed to emulate a stack. I used a lot more globals than what I would typically like to have used, and a lot less pointers passed to functions, since these are extremely expensive (to account for the 3 different memory types).
 
 Another weird thing about the 8051 is that not all of the memory is addressed the same way. On this microcontroller, there are 512 bytes of ram total, of which:
 

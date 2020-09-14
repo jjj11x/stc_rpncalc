@@ -80,11 +80,6 @@ __idata uint8_t TmpStackPtr;
 
 __xdata char Buf[DECN_BUF_SIZE];
 
-//1 constant
-const dec80 DECN_1 = {
-	0, {10, 0}
-};
-
 //ln(10) constant
 const dec80 DECN_LN_10 = {
 	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
@@ -425,6 +420,11 @@ void set_dec80_zero(dec80* dest){
 	for (i = 0; i < DEC80_NUM_LSU; i++){
 		dest->lsu[i] = 0;
 	}
+}
+
+void set_decn_one(dec80* dest){
+	set_dec80_zero(dest);
+	dest->lsu[0] = 10;
 }
 
 uint8_t decn_is_zero(const dec80* x){
@@ -874,9 +874,7 @@ void recip_decn(void){
 	} else {
 		      CURR_RECIP.lsu[0] = 10; //0.1 with implicit point and exponent
 	}
-	for (i = 1; i < DEC80_NUM_LSU; i++){
-		      CURR_RECIP.lsu[i] = 0;
-	}
+	zero_remaining_dec80(&CURR_RECIP, 1);
 	copy_decn(&AccDecn, &CURR_RECIP);
 	//do newton-raphson iterations
 	for (i = 0; i < 6; i++){ //just fix number of iterations for now
@@ -894,7 +892,7 @@ void recip_decn(void){
 		//Accum *= -1
 		negate_decn(&AccDecn);
 		//Accum += 1
-		copy_decn(&BDecn, &DECN_1);
+		set_decn_one(&BDecn);
 		add_decn();
 #ifdef DEBUG_DIV
 		decn_to_str_complete(&AccDecn);
@@ -964,7 +962,7 @@ void ln_decn(void){
 	printf("ln() accum scaled between 1,10: %s\n", Buf);
 #endif
 	//get initial estimate (accum = 10 - A)
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	BDecn.exponent = 1; //BDecn = 10
 	negate_decn(&AccDecn);
 	add_decn();
@@ -1141,7 +1139,7 @@ void exp_decn(void){
 	//initial b = -10*ln(10)
 	copy_decn(&BDecn, &DECN_LN_10); //b=ln(10)
 	copy_decn(&SAVED, &AccDecn); //save = accum
-	copy_decn(&AccDecn, &DECN_1);
+	set_decn_one(&AccDecn);
 	AccDecn.exponent = 1; //accum = 10
 	mult_decn();             //accum =  10*ln(10)
 	copy_decn(&BDecn, &AccDecn); //b =  10*ln(10)
@@ -1210,10 +1208,10 @@ void exp_decn(void){
 	//build final value
 	// (currently accum = save = remainder)
 	// calculate 1+remainder
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	add_decn();
 	//get initial multiplier (10) for ln(10)
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	BDecn.exponent = 1; //BDecn = 10
 	//do multiplies
 	j = UINT8_MAX; //becomes 0 after incrementing to start (1 + 10^-j) series
@@ -1275,7 +1273,7 @@ void exp10_decn(void){
 
 void pow_decn(void) {
 	if (decn_is_zero(&BDecn)) {
-		copy_decn(&AccDecn, &DECN_1);
+		set_decn_one(&AccDecn);
 		return;
 	}
 	if (decn_is_zero(&AccDecn)) {
@@ -1473,11 +1471,11 @@ void sincos_decn(const uint8_t sincos_arctan) {
 		set_dec80_zero(&THETA);
 		if (is_negative) negate_decn(&AccDecn);
 		copy_decn(&COS, &AccDecn);
-		copy_decn(&SIN, &DECN_1);
+		set_decn_one(&SIN);
 	} else {
 		project_decn_into_0_2pi();
 		copy_decn(&THETA, &AccDecn);
-		copy_decn(&COS, &DECN_1);
+		set_decn_one(&COS);
 		set_dec80_zero(&SIN);
 		// 0.0 00 5
 		SIN.lsu[2] = 50;
@@ -1549,7 +1547,7 @@ void arcsin_decn(void) {
 	copy_decn(&BDecn, &AccDecn);
 	mult_decn();
 	negate_decn(&AccDecn);
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	add_decn();
 	sqrt_decn();
 	recip_decn();

@@ -69,6 +69,7 @@ extern __idata uint8_t TmpStackPtr;
 void build_dec80(__xdata const char* signif_str, __xdata exp_t exponent);
 
 void set_dec80_zero(dec80* dest);
+void set_decn_one(dec80* dest);
 void set_dec80_NaN(dec80* dest);
 uint8_t decn_is_zero(const dec80* x);
 uint8_t decn_is_nan(const dec80* x);

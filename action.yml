@@ -1,0 +1,7 @@
+# GitHub Actions
+
+name: 'STC RPN Calc CI build'
+description: 'run CI build in docker container'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

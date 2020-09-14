@@ -1,0 +1,29 @@
+on: [push]
+
+jobs:
+  stc_rpncalc_ci_job:
+    runs-on: ubuntu-latest
+    name: Test building
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Docker layer cache
+        uses: satackey/action-docker-layer-caching@v0.0.8
+      - name: Docker
+        run: $GITHUB_WORKSPACE/steps/compose_build.sh
+      - name: Desktop build/check
+        run: $GITHUB_WORKSPACE/steps/compose_run.sh desktop_build_check.sh --rebuild
+      - name: Calc build
+        run: $GITHUB_WORKSPACE/steps/compose_run.sh build_calc.sh
+      - name: ls
+        run: ls $GITHUB_WORKSPACE
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: stc_rpncalc_artifacts
+          path: |
+            ${{ github.workspace }}/build/
+            ${{ github.workspace }}/build_qt/lcov/
+            ${{ github.workspace }}/build_qt/decn.c.gcov
+            ${{ github.workspace }}/main.hex
+          if-no-files-found: error

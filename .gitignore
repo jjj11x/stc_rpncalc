@@ -1,3 +1,4 @@
+*.swp
 *.hex
 *.bak
 CMakeLists.txt.user

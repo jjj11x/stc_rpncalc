@@ -1,0 +1,10 @@
+version: '3.2'
+services:
+    build_tools:
+        build:
+            context: ..
+            dockerfile: Dockerfile
+        volumes:
+          - type: bind
+            source: $GITHUB_WORKSPACE
+            target: /code

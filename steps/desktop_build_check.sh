@@ -20,5 +20,8 @@ ninja
 src/decn/decn_tests
 
 # get coverage
+echo "Running lcov"
 lcov --capture --directory src/decn --output-file coverage.info
 genhtml coverage.info --output-directory lcov
+echo "Running gcov"
+gcov -b src/decn/CMakeFiles/decn_cover.dir/decn.c.gcno

@@ -15,3 +15,15 @@ jobs:
         run: $GITHUB_WORKSPACE/steps/compose_run.sh desktop_build_check.sh --rebuild
       - name: Calc build
         run: $GITHUB_WORKSPACE/steps/compose_run.sh build_calc.sh
+      - name: ls
+        run: ls $GITHUB_WORKSPACE
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: stc_rpncalc_artifacts
+          path: |
+            ${{ github.workspace }}/build/
+            ${{ github.workspace }}/build_qt/lcov/
+            ${{ github.workspace }}/build_qt/decn.c.gcov
+            ${{ github.workspace }}/main.hex
+          if-no-files-found: error

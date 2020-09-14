@@ -3,6 +3,8 @@
 """
 Created on Wed Dec 11 00:56:01 2019
 
+Calculate constants used for "0x5F3759DF" reciprocal sqrt
+
 @author: jeffrey
 """
 

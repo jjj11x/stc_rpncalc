@@ -23,7 +23,7 @@
 #include <boost/multiprecision/mpfr.hpp>
 using namespace boost::multiprecision;
 
-// #define DEBUG
+#define DEBUG
 
 using std::cout;
 using std::endl;
@@ -51,7 +51,7 @@ int main(void){
 
 	//loop through values to test
 #ifdef DEBUG
-	mpfr_float x(0.1, CALC_PRECISION);
+	mpfr_float x(2.0, CALC_PRECISION);
 	{
 #else
 	for (mpfr_float x(1e-99, CALC_PRECISION); x < 1e99; x *= 1.03){
@@ -87,7 +87,7 @@ int main(void){
 			x_exp++;
 			est_signif = -0.18 * x_signif + 2.5;
 		} else { //even
-			//keep x_exp as is and approximate estimate significand as
+			//keep x_exp as is and approximate estimated significand as
 			//                   -0.056*x_signif + 0.79
 			est_signif = -0.056 * x_signif + 0.79;
 		}

@@ -35,6 +35,7 @@
 // #define DEBUG_LOG_ALL //even more verbose
 // #define DEBUG_EXP
 // #define DEBUG_EXP_ALL //even more verbose
+// #define DEBUG_SQRT
 
 #ifndef DESKTOP
 //#undef EXTRA_CHECKS
@@ -47,6 +48,7 @@
 #undef DEBUG_LOG_ALL
 #undef DEBUG_EXP
 #undef DEBUG_EXP_ALL
+#undef DEBUG_SQRT
 #endif
 
 #ifdef DESKTOP
@@ -68,8 +70,8 @@ static const uint8_t num_digits_display = 16;
 dec80 AccDecn;
 __idata dec80 BDecn;
 __idata dec80 TmpDecn; //used by add_decn() and mult_decn() and sqrt_decn()
-__idata dec80 Tmp2Decn; //used by recip_decn() and ln_decn() and sincos_decn() and sqrt_decn()
-__xdata dec80 Tmp3Decn; //used by recip_decn() and ln_decn() and sincos_decn() and sqrt_decn()
+__idata dec80 Tmp2Decn; //used by recip_decn(), ln_decn(), exp_decn(), sqrt_decn(), and sincos_decn()
+__idata dec80 Tmp3Decn; //used by ln_decn(), exp_decn(), sqrt_decn(), and sincos_decn()
 __xdata dec80 Tmp4Decn; //used by sincos_decn()
 
 __xdata dec80 TmpStackDecn[4];
@@ -77,11 +79,6 @@ __xdata dec80 TmpStackDecn[4];
 __idata uint8_t TmpStackPtr;
 
 __xdata char Buf[DECN_BUF_SIZE];
-
-//1 constant
-const dec80 DECN_1 = {
-	0, {10, 0}
-};
 
 //ln(10) constant
 const dec80 DECN_LN_10 = {
@@ -423,6 +420,11 @@ void set_dec80_zero(dec80* dest){
 	for (i = 0; i < DEC80_NUM_LSU; i++){
 		dest->lsu[i] = 0;
 	}
+}
+
+void set_decn_one(dec80* dest){
+	set_dec80_zero(dest);
+	dest->lsu[0] = 10;
 }
 
 uint8_t decn_is_zero(const dec80* x){
@@ -872,14 +874,12 @@ void recip_decn(void){
 	} else {
 		      CURR_RECIP.lsu[0] = 10; //0.1 with implicit point and exponent
 	}
-	for (i = 1; i < DEC80_NUM_LSU; i++){
-		      CURR_RECIP.lsu[i] = 0;
-	}
+	zero_remaining_dec80(&CURR_RECIP, 1);
 	copy_decn(&AccDecn, &CURR_RECIP);
-	//do newton raphson iterations
+	//do newton-raphson iterations
 	for (i = 0; i < 6; i++){ //just fix number of iterations for now
 #ifdef DEBUG_DIV
-		decn_to_str_complete(&curr_recip);
+		decn_to_str_complete(&CURR_RECIP);
 		printf("%2d: %s\n", i, Buf);
 #endif
 		//Accum *= x_copy
@@ -892,7 +892,7 @@ void recip_decn(void){
 		//Accum *= -1
 		negate_decn(&AccDecn);
 		//Accum += 1
-		copy_decn(&BDecn, &DECN_1);
+		set_decn_one(&BDecn);
 		add_decn();
 #ifdef DEBUG_DIV
 		decn_to_str_complete(&AccDecn);
@@ -962,7 +962,7 @@ void ln_decn(void){
 	printf("ln() accum scaled between 1,10: %s\n", Buf);
 #endif
 	//get initial estimate (accum = 10 - A)
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	BDecn.exponent = 1; //BDecn = 10
 	negate_decn(&AccDecn);
 	add_decn();
@@ -1105,8 +1105,8 @@ void log10_decn(void){
 void exp_decn(void){
 	uint8_t j, k;
 	uint8_t need_recip = 0;
-	#define SAVED Tmp2Decn
-	#define NUM_TIMES Tmp3Decn
+#define SAVED Tmp2Decn
+#define NUM_TIMES Tmp3Decn
 
 	//check not error
 	if (decn_is_nan(&AccDecn)){
@@ -1139,7 +1139,7 @@ void exp_decn(void){
 	//initial b = -10*ln(10)
 	copy_decn(&BDecn, &DECN_LN_10); //b=ln(10)
 	copy_decn(&SAVED, &AccDecn); //save = accum
-	copy_decn(&AccDecn, &DECN_1);
+	set_decn_one(&AccDecn);
 	AccDecn.exponent = 1; //accum = 10
 	mult_decn();             //accum =  10*ln(10)
 	copy_decn(&BDecn, &AccDecn); //b =  10*ln(10)
@@ -1208,10 +1208,10 @@ void exp_decn(void){
 	//build final value
 	// (currently accum = save = remainder)
 	// calculate 1+remainder
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	add_decn();
 	//get initial multiplier (10) for ln(10)
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	BDecn.exponent = 1; //BDecn = 10
 	//do multiplies
 	j = UINT8_MAX; //becomes 0 after incrementing to start (1 + 10^-j) series
@@ -1273,7 +1273,7 @@ void exp10_decn(void){
 
 void pow_decn(void) {
 	if (decn_is_zero(&BDecn)) {
-		copy_decn(&AccDecn, &DECN_1);
+		set_decn_one(&AccDecn);
 		return;
 	}
 	if (decn_is_zero(&AccDecn)) {
@@ -1287,6 +1287,144 @@ void pow_decn(void) {
 	mult_decn(); //accum = b*ln(accum)
 	exp_decn();
 }
+
+#ifdef USE_POW_SQRT_IMPL
+void sqrt_decn(void) {
+	if (decn_is_zero(&AccDecn)) {
+		return;
+	}
+	if (decn_is_nan(&AccDecn)) {
+		return;
+	}
+	if (AccDecn.exponent < 0){ //negative
+		set_dec80_NaN(&AccDecn);
+		return;
+	}
+	st_push_decn(&BDecn); // sqrt should behave like an unary operation
+	//b = 0.5
+	set_dec80_zero(&BDecn);
+	BDecn.lsu[0] = 5;
+	pow_decn();
+	st_pop_decn(&BDecn);
+}
+#else
+void sqrt_decn(void){
+#define CURR_EST Tmp2Decn //holds current 1/sqrt(x) estimate
+#define X_2      Tmp3Decn //holds copy of original x / 2
+	uint8_t i;
+	exp_t initial_exp;
+	if (decn_is_nan(&AccDecn)) {
+		return;
+	}
+	if (AccDecn.exponent < 0){ //negative
+		set_dec80_NaN(&AccDecn);
+		return;
+	}
+	//normalize
+	remove_leading_zeros(&AccDecn);
+#ifdef DEBUG_SQRT
+	decn_to_str_complete(&AccDecn);
+	printf("sqrt in: %s\n", Buf);
+#endif
+	//store copy of x
+	st_push_decn(&AccDecn);
+	//calculate x_orig / 2
+	set_dec80_zero(&BDecn);
+	BDecn.lsu[0] = 5;
+	mult_decn();
+	copy_decn(&X_2, &AccDecn);
+	//restore x
+	st_load_decn(&AccDecn);
+	//get initial estimate for 1/sqrt(x) == 10^(-0.5 * log(x)):
+	// approximate significand == 10^(-0.5 * log(x_signif))
+	//  with linear approximation: -0.18 * x_signif + 2.5
+	// new exponent part is (10^(-0.5 * log(10^x_exp)))
+	//                    == 10^(-0.5 * x^exp)
+	initial_exp = get_exponent(&AccDecn);
+	set_exponent(&AccDecn, 0, 0); //clear exponent (Acc is not negative)
+#ifdef DEBUG_SQRT
+	printf("sqrt exponent %d ", initial_exp);
+#endif
+	if (initial_exp & 0x1){ //odd
+#ifdef DEBUG_SQRT
+		printf("(odd) ");
+#endif
+		//increment x_exp and
+		initial_exp++;
+		//approximate estimated significand as (-0.056*x_signif + 0.79) * 10^0.5
+		//                                  == -0.18 * x_signif + 2.5
+		//b = -0.18
+		BDecn.lsu[0] = 18;
+		BDecn.exponent = -1; //negative, and exponent = -1
+		//a = -0.18 * x_signif
+		mult_decn();
+		//b = 2.5
+		BDecn.lsu[0] = 25;
+		BDecn.exponent = 0;
+		//a = -0.18 * x_signif + 2.5
+		add_decn();
+	} else { //even
+		//keep x_exp as is and approximate estimated significand as
+		//                   -0.056*x_signif + 0.79
+		//b = -0.056
+		BDecn.lsu[0] = 56;
+		set_exponent(&BDecn, -2, 1);
+		//a = -0.056 * x_signif
+		mult_decn();
+		//b = 0.79
+		BDecn.lsu[0] = 7;
+		BDecn.lsu[1] = 90;
+		BDecn.exponent = 0;
+		//a = -0.056*x_signif + 0.79
+		add_decn();
+	}
+	//est_exp = -x_exp / 2;
+	initial_exp = -initial_exp / 2;
+	//est_exp-- if AccDecn exponent is negative
+	// (AccDecn exponent is either 0 or -1, and AccDecn is positive)
+	if (AccDecn.exponent != 0){
+		initial_exp--;
+	}
+	set_exponent(&AccDecn, initial_exp, 0); //(initial estimate is never negative)
+	copy_decn(&CURR_EST, &AccDecn);
+#ifdef DEBUG_SQRT
+	printf(" -> %d\n", initial_exp);
+#endif
+	//do newton-raphson iterations
+	for (i = 0; i < 6; i++){ //just fix number of iterations for now
+#ifdef DEBUG_SQRT
+		decn_to_str_complete(&CURR_EST);
+		printf("sqrt %2d: %s\n", i, Buf);
+#endif
+		//accum = est * est;
+		copy_decn(&BDecn, &AccDecn);
+		mult_decn();
+		//accum *= x_orig_2;     //accum = x/2 * est * est
+		copy_decn(&BDecn, &X_2);
+		mult_decn();
+		//accum = - x/2 * est * est
+		negate_decn(&AccDecn);
+		//b = 3/2
+		set_dec80_zero(&BDecn);
+		BDecn.lsu[0] = 15;
+		//accum = 3/2 - x/2 * est * est
+		add_decn();
+		//accum *= est;          //accum = 0.5 * est * (3 - x * est * est)
+		copy_decn(&BDecn, &CURR_EST);
+		mult_decn();
+		//est = accum;
+		copy_decn(&CURR_EST, &AccDecn);
+	}
+
+	//calc sqrt from recip_sqrt
+	st_pop_decn(&BDecn);
+	mult_decn();
+
+#undef CURR_EST
+#undef X_COPY
+}
+#endif //USE_POW_SQRT_IMPL
+
 
 // see W.E. Egbert, "Personal Calculator Algorithms II: Trigonometric functions"
 void project_decn_into_0_2pi(void) {
@@ -1333,11 +1471,11 @@ void sincos_decn(const uint8_t sincos_arctan) {
 		set_dec80_zero(&THETA);
 		if (is_negative) negate_decn(&AccDecn);
 		copy_decn(&COS, &AccDecn);
-		copy_decn(&SIN, &DECN_1);
+		set_decn_one(&SIN);
 	} else {
 		project_decn_into_0_2pi();
 		copy_decn(&THETA, &AccDecn);
-		copy_decn(&COS, &DECN_1);
+		set_decn_one(&COS);
 		set_dec80_zero(&SIN);
 		// 0.0 00 5
 		SIN.lsu[2] = 50;
@@ -1409,7 +1547,7 @@ void arcsin_decn(void) {
 	copy_decn(&BDecn, &AccDecn);
 	mult_decn();
 	negate_decn(&AccDecn);
-	copy_decn(&BDecn, &DECN_1);
+	set_decn_one(&BDecn);
 	add_decn();
 	sqrt_decn();
 	recip_decn();
@@ -1444,25 +1582,6 @@ void pi_decn(void) {
 	BDecn.lsu[0] = 5; // 0.5 00 ..
 	copy_decn(&AccDecn, &DECN_2PI);
 	mult_decn();
-}
-
-void sqrt_decn(void) {
-	if (decn_is_zero(&AccDecn)) {
-		return;
-	}
-	if (decn_is_nan(&AccDecn)) {
-		return;
-	}
-	if (AccDecn.exponent < 0){ //negative
-		set_dec80_NaN(&AccDecn);
-		return;
-	}
-	st_push_decn(&BDecn); // sqrt should behave like an unary operation
-	//b = 0.5
-	set_dec80_zero(&BDecn);
-	BDecn.lsu[0] = 5;
-	pow_decn();
-	st_pop_decn(&BDecn);
 }
 
 static void set_str_error(void){

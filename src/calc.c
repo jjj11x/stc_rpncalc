@@ -253,16 +253,7 @@ void process_cmd(char cmd){
 		} break;
 		//////////
 		case '7':{ //y^x
-			if (decn_is_nan(&stack(STACK_Y)) || decn_is_nan(&stack(STACK_X))){
-				set_dec80_NaN(&stack(STACK_Y));
-			} else {
-				copy_decn(&LastX, &stack(STACK_X)); //save LastX
-				copy_decn(&AccDecn, &stack(STACK_Y));
-				copy_decn(&BDecn, &stack(STACK_X));
-				pow_decn();
-				copy_decn(&stack(STACK_Y), &AccDecn);
-			}
-			pop();
+			do_binary_op(pow_decn);
 		} break;
 		//////////
 	} //switch(cmd)

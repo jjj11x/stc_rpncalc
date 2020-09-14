@@ -109,7 +109,7 @@ Press `Shift` (the `mode` key on the physical calculator) and then `0` to turn o
 
 
 # Building
-There is a prebuilt binary for the calculator checked in at `binaries/main.hex` for the calculator. Building is fairly straigtforward though.
+Github releases has prebuilt binaries for the calculator. Building is fairly straigtforward though.
 
 - Use the Makefile for building a new firmware for the calculator.
 	- type `make` to build

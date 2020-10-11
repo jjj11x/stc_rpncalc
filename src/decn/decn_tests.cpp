@@ -259,6 +259,32 @@ TEST_CASE("multiply"){
 	CHECK_THAT(Buf, Equals("Error")); //acc*b
 }
 
+static void div_test(){ //acc / b
+	bmp::mpf_float::default_precision(50);
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);
+	bmp::mpfr_float a_actual(Buf);
+	decn_to_str_complete(&BDecn);
+	CAPTURE(Buf);
+	bmp::mpfr_float b_actual(Buf);
+	//calc result
+	div_decn();
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  // acc / b
+
+	//calculate actual result
+	a_actual /= b_actual;
+	if (decn_is_nan(&AccDecn)){
+		//check that NaN result of division by 0
+		CAPTURE(a_actual);
+		CHECK(b_actual == 0);
+	} else {
+		bmp::mpfr_float calculated(Buf);
+		bmp::mpfr_float rel_diff = abs((a_actual - calculated) / a_actual);
+		CHECK(rel_diff < 2e-17);
+	}
+}
+
 static void div_test(
 	//input
 	const char* a_str, int a_exp,
@@ -270,34 +296,7 @@ static void div_test(
 	//do division
 	build_dec80(a_str, a_exp);
 	build_decn_at(&BDecn,   b_str, b_exp);
-// 	decn_to_str_complete(&AccDecn);
-// 	printf(" acc: %s\n", Buf);
-// 	decn_to_str_complete(&BDecn);
-// 	printf("   b: %s\n", Buf);
-	div_decn();
-	decn_to_str_complete(&AccDecn);
-	CAPTURE(Buf);  // acc / b
-
-	//calculate actual result
-	bmp::mpfr_float::default_precision(50);
-	std::string a_full_str(a_str);
-	a_full_str += "e" + std::to_string(a_exp);
-	std::string b_full_str(b_str);
-	b_full_str += "e" + std::to_string(b_exp);;
-// 	CAPTURE(a_full_str);
-// 	CAPTURE(b_full_str);
-	bmp::mpfr_float a_actual(a_full_str);
-	bmp::mpfr_float b_actual(b_full_str);
-	a_actual /= b_actual; //calculate actual result
-	if (decn_is_nan(&AccDecn)){
-		//check that NaN result of division by 0
-		CAPTURE(a_actual);
-		CHECK(b_actual == 0);
-	} else {
-		bmp::mpfr_float calculated(Buf);
-		bmp::mpfr_float rel_diff = abs((a_actual - calculated) / a_actual);
-		CHECK(rel_diff < 1e-17);
-	}
+	div_test();
 }
 
 TEST_CASE("division"){
@@ -340,6 +339,23 @@ TEST_CASE("division"){
 		"0.02", 0,
 		"0.03", 0
 	);
+}
+
+TEST_CASE("division random"){
+	std::default_random_engine gen;
+	std::uniform_int_distribution<int> distrib(0, 99);
+	std::uniform_int_distribution<int> sign_distrib(0,1);
+	for (int j = 0; j < 12345; j++){
+		AccDecn.lsu[0] = distrib(gen);
+		BDecn.lsu[0] = distrib(gen);
+		for (int i = 1; i < DEC80_NUM_LSU; i++){
+			AccDecn.lsu[i] = distrib(gen);
+			BDecn.lsu[i] = distrib(gen);
+		}
+		set_exponent(&AccDecn, distrib(gen), sign_distrib(gen));
+		set_exponent(&BDecn, distrib(gen), sign_distrib(gen));
+		div_test();
+	}
 }
 
 static void sqrt_test(){

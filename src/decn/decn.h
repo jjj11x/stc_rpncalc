@@ -60,6 +60,9 @@ typedef struct {
 //remove sign bit, and return 15 bit exponent sign-extended to 16 bits
 exp_t get_exponent(const dec80* const x);
 
+void set_exponent(dec80* acc, exp_t exponent, uint8_t num_is_neg);
+
+
 void copy_decn(dec80* const dest, const dec80* const src);
 
 extern dec80 AccDecn;

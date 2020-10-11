@@ -21,6 +21,7 @@
 
 
 #include <string>
+#include <random>
 #include <boost/multiprecision/mpfr.hpp>
 #include <catch.hpp>
 #include "decn.h"
@@ -341,22 +342,18 @@ TEST_CASE("division"){
 	);
 }
 
-static void sqrt_test(const char* x_str, int x_exp)
-{
-	CAPTURE(x_str); CAPTURE(x_exp);
-	build_dec80(x_str, x_exp);
-	// 	decn_to_str_complete(&AccDecn);
-	// 	printf(" acc: %s\n", Buf);
-	sqrt_decn();
+static void sqrt_test(){
 	decn_to_str_complete(&AccDecn);
-	CAPTURE(Buf);  // sqrt(x)
-
-	//calculate actual result
+	CAPTURE(Buf);
+	//calculate result
+	sqrt_decn();
+	//build mpfr float
 	bmp::mpfr_float::default_precision(50);
-	std::string x_full_str(x_str);
-	x_full_str += "e" + std::to_string(x_exp);
-	CAPTURE(x_full_str);
-	bmp::mpfr_float x_actual(x_full_str);
+	bmp::mpfr_float x_actual(Buf);
+	//print calc result
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);
+	//calculate actual result
 	CAPTURE(x_actual);
 	if (decn_is_nan(&AccDecn)){
 		//check that NaN is from result of sqrt(-)
@@ -366,10 +363,18 @@ static void sqrt_test(const char* x_str, int x_exp)
 		CHECK(x_actual == 0);
 	} else {
 		x_actual = sqrt(x_actual);
+		CAPTURE(x_actual);
 		bmp::mpfr_float calculated(Buf);
 		bmp::mpfr_float rel_diff = abs((x_actual - calculated) / x_actual);
-		CHECK(rel_diff < 3e-16); //TODO
+		CHECK(rel_diff < 2e-17);
 	}
+}
+
+static void sqrt_test(const char* x_str, int x_exp)
+{
+	CAPTURE(x_str); CAPTURE(x_exp);
+	build_dec80(x_str, x_exp);
+	sqrt_test();
 }
 
 TEST_CASE("sqrt"){
@@ -384,6 +389,21 @@ TEST_CASE("sqrt"){
 	sqrt_test("1.5", 0);
 	sqrt_test("9", 99);
 	sqrt_test("123", 12345);
+}
+
+TEST_CASE("sqrt random"){
+	std::default_random_engine generator;
+	std::uniform_int_distribution<int> distribution(0,99);
+	std::uniform_int_distribution<int> exp_distrib(-99,99);
+	std::uniform_int_distribution<int> sign_distrib(0,1);
+	for (int j = 0; j < 12345; j++){
+		for (int i = 0; i < DEC80_NUM_LSU; i++){
+			AccDecn.lsu[i] = distribution(generator);
+		}
+		int sign = sign_distrib(generator);
+		set_exponent(&AccDecn, exp_distrib(generator), sign);
+		sqrt_test();
+	}
 }
 
 static void log_test(

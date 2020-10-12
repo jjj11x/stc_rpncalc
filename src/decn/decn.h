@@ -62,6 +62,8 @@ exp_t get_exponent(const dec80* const x);
 
 void set_exponent(dec80* acc, exp_t exponent, uint8_t num_is_neg);
 
+void remove_leading_zeros(dec80* x);
+
 
 void copy_decn(dec80* const dest, const dec80* const src);
 

@@ -196,7 +196,7 @@ static void shift_left(dec80* x){
 	}
 }
 
-static void remove_leading_zeros(dec80* x){
+void remove_leading_zeros(dec80* x){
 	uint8_t digit100;
 	uint8_t is_negative = (x->exponent < 0);
 	exp_t exponent = get_exponent(x);

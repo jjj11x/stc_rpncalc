@@ -1,7 +1,7 @@
 
 #include <string>
 #include <boost/multiprecision/mpfr.hpp>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include "decn.h"
 namespace bmp = boost::multiprecision;
 using Catch::Matchers::Equals;

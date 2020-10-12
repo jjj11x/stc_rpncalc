@@ -17,11 +17,13 @@ cmake .. -GNinja
 ninja
 
 # run tests
-src/decn/decn_tests
+ctest -j $(nproc)
 
 # get coverage
 echo "Running lcov"
 lcov --capture --directory src/decn --output-file coverage.info
+lcov --remove coverage.info "/usr/*" --output-file coverage.info
 genhtml coverage.info --output-directory lcov
 echo "Running gcov"
 gcov -b src/decn/CMakeFiles/decn_cover.dir/decn.c.gcno
+

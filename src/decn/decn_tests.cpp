@@ -23,7 +23,7 @@
 #include <string>
 #include <random>
 #include <boost/multiprecision/mpfr.hpp>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include "decn.h"
 #include "../utils.h"
 
@@ -31,7 +31,7 @@
 namespace bmp = boost::multiprecision;
 using Catch::Matchers::Equals;
 
-static const int NUM_RAND_TESTS = 1234567;
+static const int NUM_RAND_TESTS = 123456;
 
 
 TEST_CASE("build decn"){
@@ -570,10 +570,16 @@ static void log_test_near1(int lsu0_low, int lsu0_high, int exp){
 	}
 }
 
-TEST_CASE("log random near 1"){
+TEST_CASE("log random 0 to 0.99..."){
 	log_test_near1(0,  99, -1);
+}
+TEST_CASE("log random 0.8 to 0.99..."){
 	log_test_near1(80, 99, -1);
+}
+TEST_CASE("log random 1.0 to 9.9"){
 	log_test_near1(10, 99, 0);
+}
+TEST_CASE("log random 1.0 to 2.0"){
 	log_test_near1(10, 20, 0);
 }
 

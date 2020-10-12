@@ -25,5 +25,7 @@ jobs:
             ${{ github.workspace }}/build/
             ${{ github.workspace }}/build_qt/lcov/
             ${{ github.workspace }}/build_qt/decn.c.gcov
+            ${{ github.workspace }}/build_qt/Testing/
             ${{ github.workspace }}/main.hex
           if-no-files-found: error
+

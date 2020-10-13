@@ -91,7 +91,7 @@ The keys on the *original* calculator map as follows:
 	- acts as acos(x) when shifted down
 - `3    `: acts as tan(x) when shifted
 	- acts as atan(x) when shifted down
-- all trig functions are currently calculated in degrees
+- all trig functions are currently calculated in radians (TODO: change to degrees by default)
 - `-    `: acts as to radians when shifted
 	- acts as to degrees when shifted down
 - `+    `: acts as LastX when shifted
@@ -119,7 +119,7 @@ Github releases has prebuilt binaries for the calculator. Building is fairly str
 		- See https://sourceforge.net/p/sdcc/discussion/1865/thread/9589cc8d57/
 		- Luckily SDCC has few dependencies, and older versions can be installed fairly easily.
 - CMakeLists.txt is for building the Qt desktop application, and also the decimal-number-library test application.
-	- build similarly to other cmake projects:
+	- build similarly to other cmake projects, see [Dockerfile](Dockerfile) for build dependencies:
 		- `mkdir build_qt && cd build_qt`
 		- `cmake -DCMAKE_BUILD_TYPE=Debug -G "Eclipse CDT4 - Ninja" ..`
 			- (you can choose a different generator, I prefer using Ninja to build, because it's fast)
@@ -261,7 +261,7 @@ The original firmware that came with this calculator used a fixed-point format, 
 
 This replacement calculator firmware uses decimal floating point, using base-100 to store numbers and do calculations. Base-100 allows for efficient storage into 8-bit bytes, and is easier to work with than packed-BCD. Unlike straight binary representations, base-100 is still fairly easy to display as decimal. Also unlike binary representations, there is no conversion error from binary/decimal (e.g. numbers like `0.1` can be represented exactly).
 
-Each `uint8_t` stores a base-100 "`digit100`", referred to as an "`lsu`", for least significant unit. (The LSU terminology is borrowed from the decNumber library: I originally considered using the decNumber library similar to the WP-34S calculator, but just the library itself takes several times more flash than is available on this calculator. I also considered using the BigNu mber arduino library, but that library uses C++ and lots of pointers passed to functions, which are extremely expensive on the 8051 architecture.) The number format is as follows:
+Each `uint8_t` stores a base-100 "`digit100`", referred to as an "`lsu`", for least significant unit. (The LSU terminology is borrowed from the decNumber library: I originally considered using the decNumber library similar to the WP-34S calculator, but just the library itself takes several times more flash than is available on this calculator. I also considered using the BigNumber arduino library, but that library uses C++ and lots of pointers passed to functions, which are extremely expensive on the 8051 architecture.) The number format is as follows:
 
 - `lsu[0]`: contains the most significant `digit100` (the most significant 2 decimal digits)
 	- implicit decimal point between `lsu[0]/10` and `lsu[0]%10`
@@ -322,7 +322,7 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 The keyboard matrix is scanned once every 5ms. The keyboard debouncing is based on the quick draw/integrator hybrid algorithm described [here](https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/). This algorithm combines the advantages of both methods:
 
 1. It signals a key press immediately, the very first instant a keyboard matrix scan detects a key is pressed (similar to the "quick-draw" method).
-1. It has an "integrator" to determine both when a key is fully pressed and when a key is fully released. This prevents the mechanically bouncy keys from registering multiple times when pressed.
+1. It has an "integrator" (a saturating up/down counter) to determine both when a key is fully pressed and when a key is fully released. This prevents the mechanically bouncy keys from registering multiple times when pressed.
 
 In practice, the keyboard debouncing works much better than the original firmware (which would occasionally miss keystrokes).
 

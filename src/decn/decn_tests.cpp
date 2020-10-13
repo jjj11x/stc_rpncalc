@@ -583,16 +583,15 @@ TEST_CASE("log random 1.0 to 2.0"){
 	log_test_near1(10, 20, 0);
 }
 
-static void exp_test(
-	//input
-	const char* x_str, int x_exp,
-	double epsilon=6e-16,
-	bool base10=false
-)
-{
-	CAPTURE(x_str); CAPTURE(x_exp);
+static void exp_test_(bool base10, double epsilon){
+	bmp::mpfr_float::default_precision(50);
 	CAPTURE(base10);
-	build_dec80(x_str, x_exp);
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  //x
+	CAPTURE(AccDecn.exponent);
+	//build mpfr float
+	bmp::mpfr_float x_actual(Buf);
+	//calculate result
 	if (base10){
 		exp10_decn();
 	} else {
@@ -600,14 +599,9 @@ static void exp_test(
 	}
 	decn_to_str_complete(&AccDecn);
 	CAPTURE(Buf);  // exp(x)
-	CAPTURE(AccDecn.exponent);
 
 	//calculate actual result
-	bmp::mpfr_float::default_precision(50);
 	bmp::mpfr_float calculated(Buf);
-	std::string x_full_str(x_str);
-	x_full_str += "e" + std::to_string(x_exp);
-	bmp::mpfr_float x_actual(x_full_str);
 	if (base10){
 		x_actual *= log(10);
 	}
@@ -617,13 +611,60 @@ static void exp_test(
 	CHECK(rel_diff < epsilon);
 }
 
-static void exp10_test(
+static void exp_test(bool base10=false){
+	double x;
+	int exp = get_exponent(&AccDecn);
+	if (exp == 1){
+		x = AccDecn.lsu[0];
+		x += (double) AccDecn.lsu[1] / 100;
+	} else if (exp == 2){
+		x = (double) AccDecn.lsu[0] * 10;
+		x += (double) AccDecn.lsu[1] / 10;
+	}
+	CAPTURE((int) AccDecn.lsu[0]); CAPTURE((int) AccDecn.lsu[1]);
+	CAPTURE(exp);
+	CAPTURE(x);
+	double epsilon;
+	if (exp == 1 || exp == 2){
+		if        (x > 230){
+			epsilon = 8e-15;
+		} else if (x > 210){
+			epsilon = 6e-15;
+		} else if (x > 180){
+			epsilon = 5e-15;
+		} else if (x > 150){
+			epsilon = 4e-15;
+		} else if (x > 125){
+			epsilon = 3e-15;
+		} else if (x > 100){
+			epsilon = 2e-15;
+		} else if (x > 65){
+			epsilon = 1e-15;
+		}
+	} else {
+		epsilon = 6e-16;
+	}
+	CAPTURE(base10);
+	if (base10){
+		epsilon *= 20;
+	}
+	exp_test_(base10, epsilon);
+}
+
+static void exp_test(
 	//input
 	const char* x_str, int x_exp,
-	double epsilon=3e-15
+	bool base10=false
 )
 {
-	exp_test(x_str, x_exp, epsilon, true);
+	CAPTURE(x_str); CAPTURE(x_exp);
+	CAPTURE(base10);
+	build_dec80(x_str, x_exp);
+	exp_test(base10);
+}
+
+static void exp10_test(const char* x_str, int x_exp){
+	exp_test(x_str, x_exp, true);
 }
 
 TEST_CASE("exp"){
@@ -632,11 +673,14 @@ TEST_CASE("exp"){
 	exp_test("9.999", 0);
 	exp_test("10", 0);
 	exp_test("10.001", 0);
-	exp_test("2.3", 2, 6e-15);
+	exp_test("2.3", 2);//, 6e-15);
 	exp_test("2.02", -10);
 	exp_test("2.02", 0);
 	exp_test("1.5", 0);
-	exp_test("294.69999999", 0, 8e-15);
+	exp_test("99.999999", 0);
+	exp_test("230.2", 0);//, 6e-15);
+	exp_test("-230", 0);//, 6e-15);
+	exp_test("294.69999999", 0);//, 8e-15);
 
 	//do not operate on NaN
 	set_dec80_NaN(&AccDecn);
@@ -654,7 +698,38 @@ TEST_CASE("exp10"){
 	exp10_test("2.02", -10);
 	exp10_test("2.02", 0);
 	exp10_test("1.5", 0);
-	exp10_test("127", 0, 3e-14);
+	exp10_test("127", 0);//, 3e-14);
+	exp10_test("99.999999", 0);//, 2e-14);
+}
+
+static void test_exp_random(int exp_distrib_low){
+	std::default_random_engine gen;
+	std::uniform_int_distribution<int> distrib(0, 99);
+	std::uniform_int_distribution<int> lsu0_high_distrib(0, 23);
+	std::uniform_int_distribution<int> exp_distrib(exp_distrib_low, 2);
+	std::uniform_int_distribution<int> sign_distrib(0, 1);
+	for (int j = 0; j < NUM_RAND_TESTS; j++){
+		int exp = exp_distrib(gen);
+		int sign = sign_distrib(gen);
+		if (exp == 2) {
+			//limit x to approximately +/- 230
+			AccDecn.lsu[0] = lsu0_high_distrib(gen);
+		} else {
+			AccDecn.lsu[0] = distrib(gen);
+		}
+		for (int i = 1; i < DEC80_NUM_LSU; i++){
+			AccDecn.lsu[i] = distrib(gen);
+		}
+		set_exponent(&AccDecn, exp, sign);
+		exp_test();
+	}
+}
+
+TEST_CASE("exp random"){
+	test_exp_random(-99);
+}
+TEST_CASE("exp large random"){
+	test_exp_random(1);
 }
 
 static void pow_test(

@@ -732,6 +732,52 @@ TEST_CASE("exp large random"){
 	test_exp_random(1);
 }
 
+static void pow_test(){ // a^b
+	bmp::mpf_float::default_precision(50);
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  // a
+	bmp::mpfr_float a_actual(Buf);
+	decn_to_str_complete(&BDecn);
+	CAPTURE(Buf);  // b
+	bmp::mpfr_float b_actual(Buf);
+	//calculate result
+	pow_decn();
+	//calculate actual result
+	bmp::mpfr_float res_actual(pow(a_actual, b_actual));
+	//check overflow or underflow
+	if (decn_is_nan(&AccDecn)){
+		//check overflow or underflow
+		if (b_actual > 0) {
+			CHECK(log(res_actual) > 100);
+		} else {
+			CHECK(log(res_actual) < -100);
+		}
+		return;
+	}
+	//not over/underflow, get string and log calculated result
+	decn_to_str_complete(&AccDecn);
+	CAPTURE(Buf);  // a^b
+	bmp::mpfr_float calculated(Buf);
+	//check relative error
+	double rel_tol = 4.5e-14;
+	if (a_actual > 1.0 && a_actual < 1.0001){
+		rel_tol = 1e-7;
+	} else if (a_actual > 0.9 && a_actual < 2.0){
+		rel_tol = 1.5e-10;
+	} else if (log(res_actual) > 100){
+		rel_tol = 1e-12;
+	}
+	CAPTURE(a_actual);
+	CAPTURE(rel_tol);
+	if (decn_is_zero(&AccDecn)) {
+		bmp::mpfr_float diff = abs(res_actual - calculated);
+		CHECK(diff < rel_tol);
+	} else {
+		bmp::mpfr_float rel_diff = abs((res_actual - calculated)/res_actual);
+		CHECK(rel_diff < rel_tol);
+	}
+}
+
 static void pow_test(
 	//input
 	const char* a_str, int a_exp,
@@ -744,31 +790,7 @@ static void pow_test(
 	//compute power
 	build_decn_at(&BDecn,   b_str, b_exp);
 	build_dec80(a_str, a_exp);
-
-	pow_decn();
-
-	decn_to_str_complete(&AccDecn);
-	CAPTURE(Buf);  // a^b
-
-	//calculate actual result
-	bmp::mpfr_float::default_precision(50);
-	bmp::mpfr_float calculated(Buf);
-	std::string a_full_str(a_str);
-	a_full_str += "e" + std::to_string(a_exp);
-	std::string b_full_str(b_str);
-	b_full_str += "e" + std::to_string(b_exp);;
-	// 	CAPTURE(a_full_str);
-	// 	CAPTURE(b_full_str);
-	bmp::mpfr_float a_actual(a_full_str);
-	bmp::mpfr_float b_actual(b_full_str);
-	a_actual = pow(a_actual, b_actual);
-	if (decn_is_zero(&AccDecn)) {
-		bmp::mpfr_float diff = abs(a_actual - calculated);
-		CHECK(diff < 3e-14);
-	} else {
-		bmp::mpfr_float rel_diff = abs((a_actual - calculated)/a_actual);
-		CHECK(rel_diff < 3e-14);
-	}
+	pow_test();
 }
 
 TEST_CASE("power"){
@@ -801,6 +823,58 @@ TEST_CASE("power"){
 		"0", 0,
 		"0", 0
 	);
+}
+
+static void power_test(int lsu0_low, int lsu0_high, int exp_low=-99, int exp_high=99){
+	std::default_random_engine gen;
+	std::uniform_int_distribution<int> lsu0_distrib(lsu0_low, lsu0_high);
+	std::uniform_int_distribution<int> distrib(0, 99);
+	std::uniform_int_distribution<int> exp_distrib(exp_low, exp_high);
+	std::uniform_int_distribution<int> sign_distrib(0,1);
+	for (int j = 0; j < NUM_RAND_TESTS; j++){
+		AccDecn.lsu[0] = lsu0_distrib(gen);
+		for (int i = 1; i < DEC80_NUM_LSU; i++){
+			AccDecn.lsu[i] = distrib(gen);
+			BDecn.lsu[i] = distrib(gen);
+		}
+		set_exponent(&AccDecn, exp_distrib(gen), 0);
+		//generate exponent for b to minimize chance of a^b overflowing:
+		// a^b <= 1e100
+		// b*log(a) <= log(1e100) = 100
+		// b <= 100/log(a)
+		// b_exponent <= log(100/log(a)) = log(100) - log(log(a))
+		// b_exponent <= 2 - log(log(a))
+		decn_to_str_complete(&AccDecn);
+		bmp::mpfr_float acc(Buf);
+		acc = 2.0 - log(log(acc));
+		double b_exponent_high_flt = acc.convert_to<double>();
+		int b_exponent_high = b_exponent_high_flt;
+		int b_exponent_low = -99;
+		//ensure b_exponent high in range
+		if (b_exponent_high > 99){
+			b_exponent_high = 99;
+		} else if (b_exponent_high < b_exponent_low){
+			b_exponent_high = b_exponent_low;
+		}
+		CAPTURE(b_exponent_low);
+		CAPTURE(b_exponent_high);
+		std::uniform_int_distribution<int> b_exp_distrib(b_exponent_low, b_exponent_high);
+		int b_exponent = b_exp_distrib(gen);
+		CAPTURE(b_exponent);
+		int b_neg = sign_distrib(gen);
+		set_exponent(&BDecn, b_exponent, b_neg);
+		pow_test();
+	}
+}
+
+TEST_CASE("power random"){
+	power_test(0, 99);
+}
+TEST_CASE("power random 0.9 to 0.99..."){
+	power_test(90, 99, -1, -1);
+}
+TEST_CASE("power random 1.0 to 2.0..."){
+	power_test(10, 20, 0, 0);
 }
 
 TEST_CASE("u32str corner"){

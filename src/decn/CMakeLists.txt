@@ -27,6 +27,8 @@ set (BUILD_TESTING ON)
 add_executable(decn_tests
 	catch_main.cpp
 	decn_tests.cpp
+	decn_tests_div_sqrt.cpp
+	decn_tests_transcendental.cpp
 	decn_tests_trig.cpp
 	../utils.c
 )

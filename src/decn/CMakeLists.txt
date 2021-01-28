@@ -1,11 +1,3 @@
-add_library(Catch INTERFACE)
-if(EXISTS /usr/include/catch/catch.hpp)
-target_include_directories(Catch INTERFACE /usr/include/catch)
-elseif(EXISTS /usr/include/catch2/catch.hpp)
-target_include_directories(Catch INTERFACE /usr/include/catch2)
-else()
-endif()
-
 #code coverage
 add_library(coverage_config INTERFACE)
 target_compile_options(coverage_config INTERFACE -O0 -g --coverage)
@@ -18,11 +10,37 @@ add_library(decn decn.c ../utils.c)
 add_library(decn_cover decn.c)
 target_link_libraries(decn_cover PUBLIC coverage_config)
 
-add_executable(decn_test decn_test.c ../utils.c)
-target_link_libraries(decn_test decn_cover coverage_config Catch)
+# old tests (compare output with reference "golden" output file)
+add_executable(decn_test
+	decn_test.c
+	../utils.c
+)
+target_link_libraries(decn_test
+	decn_cover
+	coverage_config
+)
 
-add_executable(decn_tests catch_main.cpp decn_tests.cpp decn_tests_trig.cpp ../utils.c)
-target_link_libraries(decn_tests decn_cover coverage_config mpfr Catch)
+# catch2 unit tests
+find_package(Catch2 REQUIRED)
+enable_testing()
+set (BUILD_TESTING ON)
+add_executable(decn_tests
+	catch_main.cpp
+	decn_tests.cpp
+	decn_tests_div_sqrt.cpp
+	decn_tests_transcendental.cpp
+	decn_tests_trig.cpp
+	../utils.c
+)
+target_link_libraries(decn_tests
+	mpfr
+	decn_cover
+	coverage_config
+	Catch2::Catch2
+)
+include(CTest)
+include(Catch)
+catch_discover_tests(decn_tests)
 
 # decn prototyping
 add_subdirectory(proto)

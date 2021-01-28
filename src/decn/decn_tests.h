@@ -12,13 +12,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
- * catch_main.cpp
+ * decn_tests.h
  *
- * Unit tests using https://github.com/catchorg/Catch2
- *
- *  Created on: Nov 14, 2019
+ *  Created on: Oct 26, 2020
  */
 
 
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
-#include <catch2/catch.hpp>
+#ifndef DECN_TESTS_H_
+#define DECN_TESTS_H_
+
+
+static const int NUM_RAND_TESTS = 123456;
+
+
+#endif

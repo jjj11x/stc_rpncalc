@@ -377,3 +377,100 @@ TEST_CASE("tan random"){
 		}
 	}
 }
+
+TEST_CASE("atan random"){
+	std::default_random_engine gen;
+	std::uniform_int_distribution<int> distrib(0, 99);
+	std::uniform_int_distribution<int> exp_distrib(-1, 0); //restrict range for now
+	std::uniform_int_distribution<int> sign_distrib(0, 1);
+	for (int j = 0; j < NUM_RAND_TRIG_TESTS; j++){
+		for (int i = 0; i < DEC80_NUM_LSU; i++){
+			AccDecn.lsu[i] = distrib(gen);
+		}
+		int exp = exp_distrib(gen);
+		int sign = sign_distrib(gen);
+		set_exponent(&AccDecn, exp, sign);
+		remove_leading_zeros(&AccDecn);
+		int lsu0 = AccDecn.lsu[0];
+		exp = get_exponent(&AccDecn);
+		CAPTURE(lsu0);
+		CAPTURE(exp);
+		CAPTURE(sign);
+		if (exp <= -6){
+			//extremely small
+			atan_test(10000);
+		} else if (exp < -1 || (exp == -1 && lsu0 == 0)){
+			//very small
+			atan_test(100);
+		} else if ((exp == -1 && lsu0 < 10) || (exp == 0 && lsu0 == 0)){
+			//small
+			atan_test(3);
+		} else {
+			atan_test(0.02);
+		}
+	}
+}
+
+TEST_CASE("asin random"){
+	std::default_random_engine gen;
+	std::uniform_int_distribution<int> distrib(0, 99);
+	std::uniform_int_distribution<int> exp_distrib(-2, -1); //restrict range for now
+	std::uniform_int_distribution<int> sign_distrib(0, 1);
+	for (int j = 0; j < NUM_RAND_TRIG_TESTS; j++){
+		for (int i = 0; i < DEC80_NUM_LSU; i++){
+			AccDecn.lsu[i] = distrib(gen);
+		}
+		int exp = exp_distrib(gen);
+		int sign = sign_distrib(gen);
+		set_exponent(&AccDecn, exp, sign);
+		remove_leading_zeros(&AccDecn);
+		int lsu0 = AccDecn.lsu[0];
+		exp = get_exponent(&AccDecn);
+		CAPTURE(lsu0);
+		CAPTURE(exp);
+		CAPTURE(sign);
+		if (exp <= -7) {
+			//extremely small
+			asin_test(50000);
+		} else if (exp < -5) {
+			//very very small
+			asin_test(1000);
+		} else if (exp < -1 || (exp == -1 && lsu0 == 0)){
+			//very small
+			asin_test(100);
+		} else if ((exp == -1 && lsu0 < 10) || (exp == 0 && lsu0 == 0)){
+			//small
+			asin_test(0.5);
+		} else {
+			asin_test(0.02);
+		}
+	}
+}
+
+
+TEST_CASE("acos random"){
+	std::default_random_engine gen;
+	std::uniform_int_distribution<int> distrib(0, 99);
+	std::uniform_int_distribution<int> exp_distrib(-2, -1); //restrict range for now
+	std::uniform_int_distribution<int> sign_distrib(0, 1);
+	for (int j = 0; j < NUM_RAND_TRIG_TESTS; j++){
+		for (int i = 0; i < DEC80_NUM_LSU; i++){
+			AccDecn.lsu[i] = distrib(gen);
+		}
+		int exp = exp_distrib(gen);
+		int sign = sign_distrib(gen);
+		set_exponent(&AccDecn, exp, sign);
+		remove_leading_zeros(&AccDecn);
+		int lsu0 = AccDecn.lsu[0];
+		exp = get_exponent(&AccDecn);
+		CAPTURE(lsu0);
+		CAPTURE(exp);
+		CAPTURE(sign);
+		if ((exp == -1 && lsu0 == 99)){
+			//near 1
+			acos_test(10);
+		} else {
+			acos_test(0.02);
+		}
+	}
+}

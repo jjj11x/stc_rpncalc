@@ -85,9 +85,9 @@ const dec80 DECN_LN_10 = {
 	0, {23,  2, 58, 50, 92, 99, 40, 45, 68}
 };
 
-// 2 pi
-const dec80 DECN_2PI = {
-	0, {62, 83, 18, 53, 7, 17, 95, 86, 48}
+// pi
+const dec80 DECN_PI = {
+	0, {31, 41, 59, 26, 53, 58, 97, 93, 24}
 };
 
 // pi/2
@@ -1426,8 +1426,8 @@ void sqrt_decn(void){
 #endif //USE_POW_SQRT_IMPL
 
 
-// see W.E. Egbert, "Personal Calculator Algorithms II: Trigonometric functions"
-void project_decn_into_0_2pi(void) {
+// normal angle to between 0 and 360 degrees
+void normalize_0_360(void) {
 	const uint8_t is_negative = (AccDecn.exponent < 0);
 	exp_t exponent;
 
@@ -1436,11 +1436,14 @@ void project_decn_into_0_2pi(void) {
 		negate_decn(&AccDecn);
 	}
 	exponent = get_exponent(&AccDecn);
-	copy_decn(&BDecn, &DECN_2PI);
+	//B = 360
+	set_dec80_zero(&BDecn);
+	BDecn.lsu[0] = 36;
+	BDecn.exponent = 2;
 	if (compare_magn() > 0) {
 		do {
 			do {
-				copy_decn(&BDecn, &DECN_2PI);
+				//B = 3.6e...
 				BDecn.exponent = exponent;
 				if (compare_magn() >= 0) {
 					negate_decn(&BDecn);
@@ -1450,12 +1453,13 @@ void project_decn_into_0_2pi(void) {
 				}
 			} while (1);
 			exponent--;
-		} while (exponent >= 0);
+		} while (exponent >= 2);
 	}
 
 	if (is_negative) {
 		negate_decn(&AccDecn);
-		copy_decn(&BDecn, &DECN_2PI);
+		//B = 360
+		BDecn.exponent = 2;
 		add_decn();
 	}
 }
@@ -1467,13 +1471,14 @@ void project_decn_into_0_2pi(void) {
 #define THETA Tmp4Decn
 void sincos_decn(const uint8_t sincos_arctan) {
 	const uint8_t is_negative = AccDecn.exponent < 0;
-	if (sincos_arctan) {
+	if (sincos_arctan) { //calculate arctan
 		set_dec80_zero(&THETA);
 		if (is_negative) negate_decn(&AccDecn);
 		copy_decn(&COS, &AccDecn);
 		set_decn_one(&SIN);
-	} else {
-		project_decn_into_0_2pi();
+	} else { //calculate sin/cos
+		normalize_0_360();
+		to_radian_decn();
 		copy_decn(&THETA, &AccDecn);
 		set_decn_one(&COS);
 		set_dec80_zero(&SIN);
@@ -1482,13 +1487,13 @@ void sincos_decn(const uint8_t sincos_arctan) {
 		negate_decn(&SIN);
 	}
 	do {
-		if (sincos_arctan) {
+		if (sincos_arctan) { //calculate arctan
 			// THETA is in AccDecn from previous iteration
 			if (COS.exponent < 0) {
 				if (is_negative) negate_decn(&AccDecn);
 				break;
 			}
-		} else {
+		} else { //calculate sin/cos
 			if (THETA.exponent < 0) {
 				break;
 			}
@@ -1539,10 +1544,11 @@ void tan_decn(void) {
 
 void arctan_decn(void) {
 	sincos_decn(1);
+	to_degree_decn();
 }
 
 // see W.E. Egbert, "Personal Calculator Algorithms III: Inverse Trigonometric Functions"
-void arcsin_decn(void) {
+void arcsin_decn_rad(void) {
 	st_push_decn(&AccDecn);
 	copy_decn(&BDecn, &AccDecn);
 	mult_decn();
@@ -1553,15 +1559,20 @@ void arcsin_decn(void) {
 	recip_decn();
 	st_pop_decn(&BDecn);
 	mult_decn();
-
 	sincos_decn(1);
 }
 
+void arcsin_decn(void) {
+	arcsin_decn_rad();
+	to_degree_decn();
+}
+
 void arccos_decn(void) {
-	arcsin_decn();
+	arcsin_decn_rad();
 	negate_decn(&AccDecn);
 	copy_decn(&BDecn, &DECN_PI2);
 	add_decn();
+	to_degree_decn();
 }
 #undef SIN
 #undef COS
@@ -1579,8 +1590,7 @@ void to_radian_decn(void) {
 
 void pi_decn(void) {
 	set_dec80_zero(&BDecn);
-	BDecn.lsu[0] = 5; // 0.5 00 ..
-	copy_decn(&AccDecn, &DECN_2PI);
+	copy_decn(&AccDecn, &DECN_PI);
 	mult_decn();
 }
 

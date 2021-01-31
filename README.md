@@ -1,10 +1,30 @@
 # STC DIY Calculator Firmware
 
-This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html). The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit" (price has increased recently, currently closer to $18 shipped). You will have to solder the kit yourself (see "hardware connections" below). The calculator uses an STC IAP15W413AS microcontroller (an 8051 instruction set-compatible microcontroller) with a built-in serial-port bootloader. See the series [summary](http://www.stcmicro.com/datasheet/STC15W408AS_Features.pdf) and full english [datasheet](https://www.stcmicro.com/datasheet/STC15F2K60S2-en.pdf). This project uses [SDCC](http://sdcc.sourceforge.net/) to compile the C code and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
+This is a replacement firmware for the [diyleyuan calculator kit](http://www.diyleyuan.com/jc/L8Q.html).
+The calculator kit is available for purchase for less than $13 shipped from eBay by searching for "diy calculator kit"
+(price has increased recently, currently closer to $18 shipped).
+You will have to solder the kit yourself (see "hardware connections" below).
+The calculator uses an STC IAP15W413AS microcontroller
+(an 8051 instruction set-compatible microcontroller)
+with a built-in serial-port bootloader.
+See the series [summary](http://www.stcmicro.com/datasheet/STC15W408AS_Features.pdf)
+and full english [datasheet](https://www.stcmicro.com/datasheet/STC15F2K60S2-en.pdf).
+This project uses [SDCC](http://sdcc.sourceforge.net/) to compile the C code
+and [stcgal](https://github.com/grigorig/stcgal) to load the new firmware.
 
-The replacement firmware supports floating-point calculations (using 18 decimal digits plus exponent for arithmetic) with a 4-level RPN stack. Functions include basic arithmetic as well as log(), exp(), y^x, 1/x and sqrt(), all in floating point. (The original firmware supported only fixed-point calculations in chain mode.) I have not added in the resistor value calculator or the decimal/hexadecimal converter features from the original firmware.
+The replacement firmware supports floating-point calculations
+(using 18 decimal digits plus exponent for arithmetic)
+with a 4-level RPN stack.
+Functions include basic arithmetic as well as log(), exp(), y^x, 1/x and sqrt(),
+all in floating point.
+(The original firmware supported only fixed-point calculations in chain mode.)
+I have not added in the resistor value calculator or the decimal/hexadecimal converter features from the original firmware.
 
-Note that once you change the firmware on the calculator, there's no way to go back to the original firmware (the original firmware isn't posted for download anywhere). STC's bootloader on the microcontroller deliberately prevents readback of the microcontroller's content, and STC considers this to be a "feature".
+Note that once you change the firmware on the calculator,
+there's no way to go back to the original firmware
+(the original firmware isn't posted for download anywhere).
+STC's bootloader on the microcontroller deliberately prevents readback of the microcontroller's content,
+and STC considers this to be a "feature".
 
 Here's a picture of the assembled calculator kit running the new firmware:
 
@@ -28,9 +48,15 @@ The calculator uses RPN. Calculate (2+3)/(9^2) by pressing the following keys:
 - `*`
 - `÷`
 
-The = key is used for Enter. There is automatic stack lift so that `9`, `Enter`, `*` is equivalent to 9^2. The stack is a classic 4-level RPN stack, where the T register automatically duplicates.
+The = key is used for Enter.
+There is automatic stack lift so that
+`9`, `Enter`, `*`
+is equivalent to 9^2.
+The stack is a classic 4-level RPN stack,
+where the T register automatically duplicates.
 
-The decimal key also doubles as the enter exponent key. For example the following calculates 3E8 / 1550E-9:
+The decimal key also doubles as the enter exponent key.
+For example the following calculates 3E8 / 1550E-9:
 
 - 3
 - .
@@ -52,7 +78,11 @@ The decimal key also doubles as the enter exponent key. For example the followin
 - 9
 - `÷`
 
-There is currently no way to force the calculator to display in scientific mode. For extremely large numbers that are hard to read, taking the log base 10 of a number will give its exponent. Numbers larger than 18 digits will automatically be displayed in scientific notation, as will numbers smaller than 1E-3.
+There is currently no way to force the calculator to display in scientific mode.
+For extremely large numbers that are hard to read,
+taking the log base 10 of a number will give its exponent.
+Numbers larger than 18 digits will automatically be displayed in scientific notation,
+as will numbers smaller than 1E-3.
 
 ## Keys
 Some of the keys have slightly different functions, see the picture of the emulator Qt GUI.
@@ -100,16 +130,36 @@ The keys on the *original* calculator map as follows:
 
 ## Floating Point
 
-The calculator internally calculates with an 18 digit significand for better precision, even though at most 16 digits can be displayed. The exponent display is fixed at 2 digits (when it is displayed), but the calculator doesn't prevent you from doing certain operations (e.g. basic arithmetic) which result in numbers with larger exponents.
+The calculator internally calculates with an 18 digit significand for better precision,
+even though at most 16 digits can be displayed.
+The exponent display is fixed at 2 digits (when it is displayed),
+but the calculator doesn't prevent you from doing certain operations
+(e.g. basic arithmetic) which result in numbers with larger exponents.
 
-Internally, the calculator dedicates 15 bits for representing the signed exponent, so exponents up to +/- 16,383 can be represented (see the internals section below for more information). This is to ensure that intermediate parts of certain calculations (mainly taking the reciprocal of a number) do not prematurely cause overflow or underflow, even when the result is fully representable with just 2 digits. You can do calculations with greater than 2 digits in the exponent, but only 2 digits will be displayed. For larger exponents, a 10 in the ten's place of the exponent will be displayed as a '`:`'. (This just so happens to be the next character after '`9`' in the 1602 LCD's character map).
+Internally, the calculator dedicates 15 bits for representing the signed exponent,
+so exponents up to +/- 16,383 can be represented
+(see the internals section below for more information).
+This is to ensure that intermediate parts of certain calculations
+(mainly taking the reciprocal of a number)
+do not prematurely cause overflow or underflow,
+even when the result is fully representable with just 2 digits.
+You can do calculations with greater than 2 digits in the exponent,
+but only 2 digits will be displayed.
+For larger exponents,
+a 10 in the ten's place of the exponent will be displayed as a '`:`'.
+(This just so happens to be the next character after '`9`' in the 1602 LCD's character map).
 
 ## Turning off
-Press `Shift` (the `mode` key on the physical calculator) and then `0` to turn off. On older stc_rpncalc firmwares, or if the calculator is unresponsive, hold `Shift` (the `mode` key on the physical calculator) and `0` *at the same time* to turn off. NOTE: There is no auto power off.
+Press `Shift` (the `mode` key on the physical calculator) and then `0` to turn off.
+On older stc_rpncalc firmwares,
+or if the calculator is unresponsive,
+hold `Shift` (the `mode` key on the physical calculator) and `0` *at the same time* to turn off.
+NOTE: There is no auto power off.
 
 
 # Building
-Github releases has prebuilt binaries for the calculator. Building is fairly straigtforward though.
+Github releases has prebuilt binaries for the calculator.
+Building is fairly straigtforward though.
 
 - Use the Makefile for building a new firmware for the calculator.
 	- type `make` to build
@@ -126,7 +176,18 @@ Github releases has prebuilt binaries for the calculator. Building is fairly str
 		- `ninja`
 
 # Installing
-Note that once you change the firmware on the calculator, it isn't possible to go back to the original firmware. The STC microcontroller used has a bootloader permanently stored in ROM that allows downloading new firmware over a serial port (but not reading the existing firmware). You can re-program it using a USB-to-logic-level-serial (5V) dongle, and the stcgal program. WARNING: a lot of USB-to-logic-level-serial dongles are for 3.3V logic levels instead of the 5V needed. Also note that this is a "logic-level" serial port, and not RS232 levels, which are generally a high negative voltage. The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display. You have a couple of options:
+Note that once you change the firmware on the calculator,
+it isn't possible to go back to the original firmware.
+The STC microcontroller used has a bootloader permanently stored in ROM that allows downloading new firmware over a serial port
+(but not reading the existing firmware).
+You can re-program it using a USB-to-logic-level-serial (5V) dongle,
+and the stcgal program.
+WARNING: a lot of USB-to-logic-level-serial dongles are for 3.3V logic levels instead of the 5V needed.
+Also note that this is a "logic-level" serial port,
+and not RS232 levels,
+which are generally a high negative voltage.
+The diyleyuan calculator runs at 5V to make it easier to power/drive the LCD display.
+You have a couple of options:
 
 1. Buy a USB to logic-level serial dongle that supports 5V operation (these dongles may have a jumper you need to set to switch between 3.3V and 5V). This is the best option.
 	- Here is one that works: https://www.amazon.com/gp/product/B00N4MCS1A/
@@ -145,11 +206,20 @@ Note that once you change the firmware on the calculator, it isn't possible to g
 Connect to Tx of the USB dongle.
 - Pin 16 is Tx from the microcontroller (purple wire in the picture). Connect to Rx of the USB dongle.
 
-I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit, so that the connections are more permanent. I soldered the wires from the back side (leave space for the screw hole). Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle (i.e. Rx on the microcontroller goes to Tx on the USB dongle, and Tx on the microcontroller goes to Rx on the USB dongle).
+I recommend soldering Tx and Rx wires into the plated through holes on the PCB while soldering up the kit,
+so that the connections are more permanent.
+I soldered the wires from the back side (leave space for the screw hole).
+Note that you must "cross over" Tx/Rx going between the microcontroller and the USB dongle
+(i.e. Rx on the microcontroller goes to Tx on the USB dongle,
+and Tx on the microcontroller goes to Rx on the USB dongle).
 
 ![connections_back](./connections_back.jpg)
 
-You must also connect ground to the dongle. A good point to use is header P1. (You may optionally power the calculator with +5V from the USB dongle instead of using button-cell batteries. Header P1 is again a good location to use.) To program the calculator see the "Programming with stcgal" section below.
+You must also connect ground to the dongle.
+A good point to use is header P1.
+(You may optionally power the calculator with +5V from the USB dongle instead of using button-cell batteries.
+Header P1 is again a good location to use.)
+To program the calculator see the "Programming with stcgal" section below.
 
 Pin on calculator | Color used | Pin on usb-to-serial dongle
 ------------------|------------|-----------------------------
@@ -162,27 +232,55 @@ P1 pin 2 (Gnd)    | Black      | (Gnd)
 
 #### Voltage regulator
 
-Be careful when working on the calculator. The 7550 voltage regulator used has no short circuit protection. It does have a low quiescent current and extremely low dropout voltage though, and you must match the low dropout voltage if replacing the regulator. If you do end up damaging the regulator (like I did), a good replacement is the Microchip MCP1700-5002E/TO. (In the picture though, I just removed the 7550 voltage regulator, shorted pins 2 and 3, and added a capacitor between pin 1 and pins 2/3. I am powering the calculator externally, instead of with batteries.)
+Be careful when working on the calculator.
+The 7550 voltage regulator used has no short circuit protection.
+It does have a low quiescent current and extremely low dropout voltage though,
+and you must match the low dropout voltage if replacing the regulator.
+If you do end up damaging the regulator (like I did),
+a good replacement is the Microchip MCP1700-5002E/TO.
+(In the picture though, I just removed the 7550 voltage regulator, shorted pins 2 and 3,
+and added a capacitor between pin 1 and pins 2/3.
+I am powering the calculator externally, instead of with batteries.)
 
 #### Parasitic powering through the usb-to-serial adapter
 
-If you have the usb-to-serial adapter connected, the calculator may draw power parasitically through pin 15 (Rx) of the microcontroller. This may prevent the calculator and microcontroller from fully turning off. This may prevent the bootloader from running (which would prevent you from reprogramming the calculator), since the bootloader only runs on power on. To prevent this, use a diode on pin 15 (see image above, or consult the microcontroller datasheet). You may also optionally add a 330 ohm resistor on pin 16 (Tx) of the microcontroller to provide isolation on that pin. (I don't think it's necessary to prevent parasitic power though.)
+If you have the usb-to-serial adapter connected,
+the calculator may draw power parasitically through pin 15 (Rx) of the microcontroller.
+This may prevent the calculator and microcontroller from fully turning off.
+This may prevent the bootloader from running
+(which would prevent you from reprogramming the calculator),
+since the bootloader only runs on power on.
+To prevent this, use a diode on pin 15
+(see image above, or consult the microcontroller datasheet).
+You may also optionally add a 330 ohm resistor on pin 16 (Tx)
+of the microcontroller to provide isolation on that pin.
+(I don't think it's necessary to prevent parasitic power though.)
 
 #### Adding programming connections after the fact
 
-If you have already soldered the kit together without adding the Tx/Rx serial wires, you can still solder wires directly to the microcontroller fairly easily.
+If you have already soldered the kit together without adding the Tx/Rx serial wires,
+you can still solder wires directly to the microcontroller fairly easily.
 
 ![connections](./connections.jpg)
 
 #### Schematic
 
-Here is the schematic from the diyleyuan website. Note that the schematic symbol for the microcontroller mistakenly labels P5.4 as P0.0, and mistakenly labels P5.5 as P0.1. The net name labels are correct.
+Here is the schematic from the diyleyuan website.
+Note that the schematic symbol for the microcontroller mistakenly labels P5.4 as P0.0,
+and mistakenly labels P5.5 as P0.1.
+The net name labels are correct.
 
 ![schematic](./schematic.gif)
 
 #### Soft-latching power switch
 
-The soft-latching power switch works as follows: Initially the calculator is off. Both Q1 and Q2 are off. Pressing the On key (S4) turns on Q1 through R1 and D2. Q1 then supplies 5V to the system. Once the microcontroller has power and starts running, it turns on Q2, which keeps Q1 on through R1. To turn off, the microcontroller turns off Q2, which in turn will turn off Q1.
+The soft-latching power switch works as follows:
+Initially the calculator is off. Both Q1 and Q2 are off.
+Pressing the On key (S4) turns on Q1 through R1 and D2.
+Q1 then supplies 5V to the system.
+Once the microcontroller has power and starts running,
+it turns on Q2, which keeps Q1 on through R1.
+To turn off, the microcontroller turns off Q2, which in turn will turn off Q1.
 
 #### Component layout
 
@@ -192,21 +290,47 @@ Here is the component layout from the diyleyuan website.
 
 #### Keyswitches, LCD, and other recommended replacement components
 
-The switches used are a knockoff of the Omron B3F series. A good replacement is the B3F-5050 which requires only 130 grams force to depress. The switches included with the kit take more force to depress. (This is somewhat a matter of personal preference though.) I recommend using four 11mm M2 standoffs along with eight M2 screws instead of using the four long screws and nuts provided to hold the top and bottom together. The problem with using the long screws is that in order to tighten them tight enough that they don't become loose easily, the top plate deforms slightly and might interfere with the keys.
+The switches used are a knockoff of the Omron B3F series.
+A good replacement is the B3F-5050 which requires only 130 grams force to depress.
+The switches included with the kit take more force to depress.
+(This is somewhat a matter of personal preference though.)
+I recommend using four 11mm M2 standoffs along with eight M2 screws instead of using the four long screws and nuts provided to hold the top and bottom together.
+The problem with using the long screws is that in order to tighten them tight enough that they don't become loose easily,
+the top plate deforms slightly and might interfere with the keys.
 
-User toml_12953 has made a new keyboard template here (todo: can check into git directly?): https://www.dropbox.com/s/7xkg98ywonp4p1l/New%20DIY%20Template.jpg?dl=1
+User toml_12953 has made a new keyboard template here (todo: can check into git directly?):
+https://www.dropbox.com/s/7xkg98ywonp4p1l/New%20DIY%20Template.jpg?dl=1
 
-The LCD used is a fairly standard LCD based on a HD44780-compatible controller. The hole spacing for the screw holes on the LCD is 31mm x 75mm. There are many replacements available, including ones that don't need the backlight on to be readable. I recommend a positive transflective or reflective FSTN type, although the one included (transmissive) is very usable with the backlight on. Here is a picture of a positive FSTN display with the backlight off (shown under strong office lighting):
+The LCD used is a fairly standard LCD based on a HD44780-compatible controller.
+The hole spacing for the screw holes on the LCD is 31mm x 75mm.
+There are many replacements available,
+including ones that don't need the backlight on to be readable.
+I recommend a positive transflective or reflective FSTN type,
+although the one included (transmissive) is very usable with the backlight on.
+Here is a picture of a positive FSTN display with the backlight off
+(shown under strong office lighting):
 
 ![backlight off](./no_backlight.jpg)
 
-The included LCD is a transmissive type, and requires the backlight on to be readable.
+The included LCD is a transmissive type,
+and requires the backlight on to be readable.
 
-I sometimes use an STC15F2K60S2 for development work. This microcontroller is available in a pin-compatible DIP-28 package for less than $2 a piece in single-digit quantities, and has almost 5 times the flash (a downside is that when programming, the flash takes longer to erase). To program a blank microcontroller, you will have to add the following additional options to `stcgal`: `-l 1200 -t 12000`
+I sometimes use an STC15F2K60S2 for development work.
+This microcontroller is available in a pin-compatible DIP-28 package for less than $2 a piece in single-digit quantities,
+and has almost 5 times the flash
+(a downside is that when programming, the flash takes longer to erase).
+To program a blank microcontroller,
+you will have to add the following additional options to `stcgal`: `-l 1200 -t 12000`
 
 ## Programming with stcgal
 
-Run `stcgal` as shown below, replacing `stc_rpncalc/main.hex` with the actual path to the main.hex you built. There are also prebuilt binaries in the Releases section of github. In this example, I'm programming at a relatively high line rate of 230,400 bits/s. This works very reliably, but you may want to try at a slower speed to start (omit the `-b 230400` option), especially when using an inline resistor and diode.
+Run `stcgal` as shown below,
+replacing `stc_rpncalc/main.hex` with the actual path to the main.hex you built.
+There are also prebuilt binaries in the Releases section of github.
+In this example, I'm programming at a relatively high line rate of 230,400 bits/s.
+This works very reliably, but you may want to try at a slower speed to start
+(omit the `-b 230400` option),
+especially when using an inline resistor and diode.
 
 ~~~~
 $ ./stcgal.py -P stc15 -b 230400 stc_rpncalc/main.hex
@@ -250,18 +374,43 @@ Disconnected!
 (The name for `stcgal` is probably a play on words from the `avrdude` programming software used to program AVR microcontrollers.)
 
 # Bugs
-1. After division by 0, ln(-), over/underflow, or other operations which give an `Error`, it's possible to still do certain operations on `Error`. Many functions do check, and will not operate on `Error`, but not all of them yet. This is somewhat similar to old soviet Elektronika calculators where `Error` is just a number, and there wasn't enough ROM space to check for errors. (There are people who explore the inner-workings of these calculators by manipulating the `Error` "number".)
+1. After division by 0, ln(-), over/underflow, or other operations which give an `Error`,
+it's possible to still do certain operations on `Error`.
+Many functions do check, and will not operate on `Error`,
+but not all of them yet.
+This is somewhat similar to old soviet Elektronika calculators where `Error` is just a number,
+and there wasn't enough ROM space to check for errors.
+(There are people who explore the inner-workings of these calculators by manipulating the `Error` "number".)
 1. When shifted, keys which do not have a shifted function will instead be interpreted as if there were no shift.
 1. Trigonometric functions are extremely slow and inaccurate.
 1. There are probably more bugs waiting to be discovered.
 
 # Internals
 ## Number Format
-The original firmware that came with this calculator used a fixed-point format, which significantly limited the range of numbers usable. Additionally, the implementation doesn't actually have enough digits for all displayable results, which can cause errors (e.g. `3,162.277*3,162.28` gives `10,000,010` instead of the correct `10,000,005.31156`).
+The original firmware that came with this calculator used a fixed-point format,
+which significantly limited the range of numbers usable.
+Additionally, the implementation doesn't actually have enough digits for all displayable results,
+which can cause errors
+(e.g. `3,162.277*3,162.28` gives `10,000,010` instead of the correct `10,000,005.31156`).
 
-This replacement calculator firmware uses decimal floating point, using base-100 to store numbers and do calculations. Base-100 allows for efficient storage into 8-bit bytes, and is easier to work with than packed-BCD. Unlike straight binary representations, base-100 is still fairly easy to display as decimal. Also unlike binary representations, there is no conversion error from binary/decimal (e.g. numbers like `0.1` can be represented exactly).
+This replacement calculator firmware uses decimal floating point,
+using base-100 to store numbers and do calculations.
+Base-100 allows for efficient storage into 8-bit bytes,
+and is easier to work with than packed-BCD.
+Unlike straight binary representations,
+base-100 is still fairly easy to display as decimal.
+Also unlike binary representations, there is no conversion error from binary/decimal
+(e.g. numbers like `0.1` can be represented exactly).
 
-Each `uint8_t` stores a base-100 "`digit100`", referred to as an "`lsu`", for least significant unit. (The LSU terminology is borrowed from the decNumber library: I originally considered using the decNumber library similar to the WP-34S calculator, but just the library itself takes several times more flash than is available on this calculator. I also considered using the BigNumber arduino library, but that library uses C++ and lots of pointers passed to functions, which are extremely expensive on the 8051 architecture.) The number format is as follows:
+Each `uint8_t` stores a base-100 "`digit100`",
+referred to as an "`lsu`", for least significant unit.
+(The LSU terminology is borrowed from the decNumber library:
+I originally considered using the decNumber library similar to the WP-34S calculator,
+but just the library itself takes several times more flash than is available on this calculator.
+I also considered using the BigNumber arduino library,
+but that library uses C++ and lots of pointers passed to functions,
+which are extremely expensive on the 8051 architecture.)
+The number format is as follows:
 
 - `lsu[0]`: contains the most significant `digit100` (the most significant 2 decimal digits)
 	- implicit decimal point between `lsu[0]/10` and `lsu[0]%10`
@@ -275,16 +424,23 @@ Each `uint8_t` stores a base-100 "`digit100`", referred to as an "`lsu`", for le
 		- range of exponents only needs to be `+/-99`
 			- using 15 bits for the exponent (instead of e.g. 7 bits) prevents certain intermediate results from prematurely causing overflow
 
-For example, the number `13.5` is stored normalized (with no leading zeros in the representation) as follows:
+For example, the number `13.5` is stored normalized
+(with no leading zeros in the representation) as follows:
 
 - `lsu[0]`: 13
 - `lsu[1]`: 50
 - `lsu[2]` to `lsu[n-1]`: all 0
 - exponent: 1
 
-There is an implicit decimal point between the 1 and 3 in `lsu[0]`, so the number is 1.350 * 10^1, which is equivalent to `13.5`. Similarly, the number `1.35` would be stored the exact same way, except now the exponent is 0.
+There is an implicit decimal point between the 1 and 3 in `lsu[0]`,
+so the number is 1.350 * 10^1, which is equivalent to `13.5`.
+Similarly, the number `1.35` would be stored the exact same way, except now the exponent is 0.
 
-The number `0.135` would be stored the same way, except now the exponent is `0x7FFF` (note that the sign bit is 0, and the bottom 15 bits are the 2's complement representation of -1). The number `-13.5` would be stored the same way, except now the exponent is `0x8001` (the sign bit is now 1 which means the number as a whole is negative, but the exponent itself is positive).
+The number `0.135` would be stored the same way,
+except now the exponent is `0x7FFF`
+(note that the sign bit is 0, and the bottom 15 bits are the 2's complement representation of -1).
+The number `-13.5` would be stored the same way, except now the exponent is `0x8001`
+(the sign bit is now 1 which means the number as a whole is negative, but the exponent itself is positive).
 
 ## Arithmetic
 - Addition is done the same way as it's done by hand, although in base-100 instead of decimal.
@@ -317,19 +473,38 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 - Reciprocal/division could also be more-accurately implemented using digit-by-digit methods (the Newton-Raphson iterations currently used are quite fast though).
 
 # Key Debouncing
-The keyboard matrix is scanned once every 5ms. The keyboard debouncing is based on the quick draw/integrator hybrid algorithm described [here](https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/). This algorithm combines the advantages of both methods:
+The keyboard matrix is scanned once every 5ms.
+The keyboard debouncing is based on the quick draw/integrator hybrid algorithm described
+[here](https://summivox.wordpress.com/2016/06/03/keyboard-matrix-scanning-and-debouncing/).
+This algorithm combines the advantages of both methods:
 
 1. It signals a key press immediately, the very first instant a keyboard matrix scan detects a key is pressed (similar to the "quick-draw" method).
 1. It has an "integrator" (a saturating up/down counter) to determine both when a key is fully pressed and when a key is fully released. This prevents the mechanically bouncy keys from registering multiple times when pressed.
 
-In practice, the keyboard debouncing works much better than the original firmware (which would occasionally miss keystrokes).
+In practice, the keyboard debouncing works much better than the original firmware
+(which would occasionally miss keystrokes).
 
 # Implementation on an STC 8051 Microcontroller
-This was my 1st time using an 8051 microcontroller. The architecture is a bit limiting for programming in "high-level" languages such as C compared to more modern architectures -- even compared to other 8-bit architectures such as the AVR (used in the arduino). Most significantly, there is no stack-pointer-relative addressing, which makes C functions takes up a lot of code space, since they have to emulate stack-pointer-relative addressing. Unfortunately, the microcontroller used only has 13K of code space. The compiler used (SDCC) also does not support using a 2nd data pointer, even though STC's implementation of the 8051 has one.
+This was my 1st time using an 8051 microcontroller.
+The architecture is a bit limiting for programming in "high-level" languages such as C compared to more modern architectures
+-- even compared to other 8-bit architectures such as the AVR (used in the arduino).
+Most significantly, there is no stack-pointer-relative addressing,
+which makes C functions takes up a lot of code space,
+since they have to emulate stack-pointer-relative addressing.
+Unfortunately, the microcontroller used only has 13K of code space.
+The compiler used (SDCC) also does not support using a 2nd data pointer,
+even though STC's implementation of the 8051 has one.
 
-I've avoided relying on the functions being able to be re-entrant, so that they do not depend on having a stack. SDCC is *not* set to use `--stack-auto` to reduce code size (this means functions are not re-entrant). Some "large" local variables are declared as static in functions to save on the code space needed to emulate a stack. I used a lot more globals than what I would typically like to have used, and a lot less pointers passed to functions, since these are extremely expensive (to account for the 3 different memory types).
+I've avoided relying on the functions being able to be re-entrant,
+so that they do not depend on having a stack.
+SDCC is *not* set to use `--stack-auto` to reduce code size (this means functions are not re-entrant).
+Some "large" local variables are declared as static in functions to save on the code space needed to emulate a stack.
+I used a lot more globals than what I would typically like to have used,
+and a lot less pointers passed to functions,
+since these are extremely expensive (to account for the 3 different memory types).
 
-Another weird thing about the 8051 is that not all of the memory is addressed the same way. On this microcontroller, there are 512 bytes of ram total, of which:
+Another weird thing about the 8051 is that not all of the memory is addressed the same way.
+On this microcontroller, there are 512 bytes of ram total, of which:
 
 - only 128 bytes can be addressed directly (or indirectly)
 	- the start of this address space is also shared with general purpose registers, so you don't actually have the full 128 bytes of directly addressable memory
@@ -339,7 +514,9 @@ Another weird thing about the 8051 is that not all of the memory is addressed th
 	- on the original 8051, this memory would have actually been external, but on this microcontroller the "external" ram is built in
 	- addressing this memory is more difficult than addressing indirect memory, which is itself more difficult than addressing memory directly
 
-Thus, there are special compiler directives to tell it what address space to place variables in memory. (Even for a simple calculator, there isn't enough directly addressable memory (128 bytes) to store everything.) General-purpose pointers and operations using general-purpose pointers are relatively expensive since the pointers must encode the memory type.
+Thus, there are special compiler directives to tell it what address space to place variables in memory.
+(Even for a simple calculator, there isn't enough directly addressable memory (128 bytes) to store everything.)
+General-purpose pointers and operations using general-purpose pointers are relatively expensive since the pointers must encode the memory type.
 
 
 # Licensing

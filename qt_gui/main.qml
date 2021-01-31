@@ -168,7 +168,7 @@ ApplicationWindow
 		["Shift", "1/x", " √<span style=\"text-decoration: overline\">x</span> ",   "CL<i>x</i>"],
 		["y<sup>x</sup> ",   "ln(x)", "log(x)", "π"],
 		["R▼",      "e<sup>x</sup>",   "10<sup>x</sup>",   ""],
-		["sin(x)",      "cos(x)",      "tan(x)",       "►rad"],
+		["sin(x)",      "cos(x)",      "tan(x)",       "►deg"],
 		["off",   "STO",      "RCL",       "LAST<i>x</i>"]
 		]
 
@@ -180,7 +180,7 @@ ApplicationWindow
 		["", "", "",   ""],
 		["",   "", "", ""],
 		["R▲",      "",   "",   ""],
-		["asin(x)",      "acos(x)",   "atan(x)",       "►deg"],
+		["asin(x)",      "acos(x)",   "atan(x)",       "►rad"],
 		["",   "",      "",       ""]
 		]
 

@@ -91,9 +91,9 @@ The keys on the *original* calculator map as follows:
 	- acts as acos(x) when shifted down
 - `3    `: acts as tan(x) when shifted
 	- acts as atan(x) when shifted down
-- all trig functions are currently calculated in radians (TODO: change to degrees by default)
-- `-    `: acts as to radians when shifted
-	- acts as to degrees when shifted down
+- all trig functions are calculated in degrees
+- `-    `: acts as to degrees when shifted
+	- acts as to radians when shifted down
 - `+    `: acts as LastX when shifted
 - `0    `: acts as off button when shifted
 
@@ -206,7 +206,7 @@ I sometimes use an STC15F2K60S2 for development work. This microcontroller is av
 
 ## Programming with stcgal
 
-Run `stcgal` as shown below, replacing `stc_rpncalc/main.hex` with the actual path to the main.hex you built. There are also prebuilt binaries in the `binaries` directory. In this example, I'm programming at a relatively high line rate of 230,400 bits/s. This works very reliably, but you may want to try at a slower speed to start (omit the `-b 230400` option), especially when using an inline resistor and diode.
+Run `stcgal` as shown below, replacing `stc_rpncalc/main.hex` with the actual path to the main.hex you built. There are also prebuilt binaries in the Releases section of github. In this example, I'm programming at a relatively high line rate of 230,400 bits/s. This works very reliably, but you may want to try at a slower speed to start (omit the `-b 230400` option), especially when using an inline resistor and diode.
 
 ~~~~
 $ ./stcgal.py -P stc15 -b 230400 stc_rpncalc/main.hex
@@ -297,7 +297,7 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 ## Transcendental Functions
 - Logarithms are calculated similar to how it's described by the HP Journal article "Personal Calculator Algorithms IV: Logarithmic Functions" by William Egbert.
 	- see `src/decn/proto/ln_mfp.cpp` for initial prototyping development work
-- Exponentials are calculated similar to the HP 35 algorithm, as described [here](http://www.jacques-laporte.org/expx.htm) using the same constants as the logarithm algorithm.
+- Exponentials are calculated similar to the HP 35 algorithm, as described [here](https://archived.hpcalc.org/laporte/expx.htm) using the same constants as the logarithm algorithm.
 	- see `src/decn/proto/exp.cpp` for initial prototyping development work
 - Powers are calculated using the identity y^x = e^(x*ln(y))
 - Square roots are calculated using a fixed number of Newton-Raphson iterations to calculatie 1/sqrt(x) and then multiplying by x.
@@ -314,8 +314,6 @@ The number `0.135` would be stored the same way, except now the exponent is `0x7
 - Would be nice to have the resistor color band decoder if there is more flash space
 - Rounding: currently, to save code space, there is no rounding being done (even for intermediate steps), and numbers are instead truncated. Still, with 18 digits of precision (two guard digits, even if all 16 digits are actually displayed), the results are fairly accurate.
 - Square roots could be more-accurately implemented using digit-by-digit methods similar to those described in the HP Journal article "Personal Calculator Algorithms I: Square Roots" by William Egbert.
-	- calculating using Newton-Raphson iterations for the reciprocal square root 1/sqrt(x), and then multiplying by the original value would probably also be more accurate, and definitely much faster
-		- the iteration for the reciprocal square root is new_estimate = 0.5 * estimate * (3 - x * estimate * estimate)
 - Reciprocal/division could also be more-accurately implemented using digit-by-digit methods (the Newton-Raphson iterations currently used are quite fast though).
 
 # Key Debouncing

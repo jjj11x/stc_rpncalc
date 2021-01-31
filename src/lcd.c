@@ -117,7 +117,7 @@ static char readBusy() {
 }
 
 static void wait_busy() {
-	unsigned int i;
+	uint8_t i;
 	for (i = 0; i < 100; i++){
 		if (!readBusy()){
 			return;
@@ -129,7 +129,6 @@ static void wait_busy() {
 }
 
 static void LCD_OutChar(unsigned char c) {
-	unsigned char lower = (c & 0x0f);
 	DISABLE_INTERRUPTS();
 	wait_busy();
 	//output upper 4 bits:

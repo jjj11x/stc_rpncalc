@@ -116,9 +116,9 @@ void process_cmd(char cmd){
 		//////////
 		case '-':{
 			if (IsShiftedUp) {
-				do_unary_op(to_radian_decn);
-			} else if (IsShiftedDown) {
 				do_unary_op(to_degree_decn);
+			} else if (IsShiftedDown) {
+				do_unary_op(to_radian_decn);
 			} else {
 				negate_decn(&stack(STACK_X));
 				do_binary_op(add_decn);

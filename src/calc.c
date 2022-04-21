@@ -128,7 +128,9 @@ void process_cmd(char cmd){
 		//////////
 		case '/':{
 			if (IsShiftedUp){
-				StackPtr--;
+				if (NoLift != 1){
+				       StackPtr--;
+				}	
 				pi_decn();
 				copy_decn(&stack(STACK_X), &AccDecn);
 			} else {

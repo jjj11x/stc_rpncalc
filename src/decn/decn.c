@@ -1589,9 +1589,7 @@ void to_radian_decn(void) {
 }
 
 void pi_decn(void) {
-	set_dec80_zero(&BDecn);
 	copy_decn(&AccDecn, &DECN_PI);
-	mult_decn();
 }
 
 static void set_str_error(void){

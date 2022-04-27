@@ -16,6 +16,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
 	wget
 
 # install more up-to-date catch2
-RUN wget http://mirrors.kernel.org/ubuntu/pool/universe/c/catch2/catch2_2.13.0-1_all.deb
-RUN echo "1d501c7f817cfcd46dd1b79edc10896d catch2_2.13.0-1_all.deb" | md5sum --check --
-RUN dpkg -i catch2_2.13.0-1_all.deb
+RUN wget http://mirrors.kernel.org/ubuntu/pool/universe/c/catch2/catch2_2.13.7-1_amd64.deb
+RUN echo "3ca43a3b3347ec2e220e0cc6e9c38859  catch2_2.13.7-1_amd64.deb" | md5sum --check --
+RUN dpkg -i catch2_2.13.7-1_amd64.deb

@@ -20,12 +20,12 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: local:latest
-          run: $GITHUB_WORKSPACE/steps/compose_run.sh desktop_build_check.sh --rebuild
+          run: $GITHUB_WORKSPACE/steps/desktop_build_check.sh --rebuild
       - name: Calc build
         uses: addnab/docker-run-action@v3
         with:
           image: local:latest
-          run: $GITHUB_WORKSPACE/steps/compose_run.sh build_calc.sh
+          run: $GITHUB_WORKSPACE/steps/build_calc.sh
       - name: ls
         run: ls $GITHUB_WORKSPACE
       - name: Upload artifacts

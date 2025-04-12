@@ -7,8 +7,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Docker layer cache
-        uses: satackey/action-docker-layer-caching@v0.0.8
       - name: Docker
         run: $GITHUB_WORKSPACE/steps/compose_build.sh
       - name: Desktop build/check

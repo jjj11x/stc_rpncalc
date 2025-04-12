@@ -14,10 +14,17 @@ jobs:
           tags: local:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          push: true
+          load: true
+          push: false
       - name: Desktop build/check
+        uses: addnab/docker-run-action@v3
+        with:
+          image: local:latest
         run: $GITHUB_WORKSPACE/steps/compose_run.sh desktop_build_check.sh --rebuild
       - name: Calc build
+        uses: addnab/docker-run-action@v3
+        with:
+          image: local:latest
         run: $GITHUB_WORKSPACE/steps/compose_run.sh build_calc.sh
       - name: ls
         run: ls $GITHUB_WORKSPACE

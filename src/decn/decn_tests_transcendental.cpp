@@ -253,10 +253,13 @@ static void exp_test(bool base10=false){
 			epsilon = 2e-15;
 		} else if (x > 65){
 			epsilon = 1e-15;
+		} else {
+			epsilon = 8e-16;
 		}
 	} else {
 		epsilon = 6e-16;
 	}
+	CAPTURE(epsilon);
 	CAPTURE(base10);
 	if (base10){
 		epsilon *= 20;

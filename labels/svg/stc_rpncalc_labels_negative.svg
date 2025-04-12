@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="5cm" height="6cm" viewBox="0 0 5cm 6cm">
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="black" />
+<rect x="0.5cm" y="0.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="1.0cm" y="1.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="lightgray">Shift</text>
+<rect x="1.5cm" y="0.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="2.0cm" y="1.0cm" font-size="12" text-anchor="middle" dominant-baseline="central" fill="white">x ⇄ y</text>
+<text x="2.0cm" y="0.7142857142857143cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">⅟𝑥</text>
+<rect x="2.5cm" y="0.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="3.0cm" y="1.0cm" font-size="26" text-anchor="middle" dominant-baseline="central" fill="white">±</text>
+<text x="3.0cm" y="0.7142857142857143cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">√𝑥</text>
+<rect x="3.5cm" y="0.5cm" width="1.0cm" height="1.0cm" fill="darkred" stroke="darkgray" stroke-width="0.5" />
+<text x="4.0cm" y="1.0cm" font-size="26" text-anchor="middle" dominant-baseline="central" fill="white">←</text>
+<text x="4.0cm" y="0.7142857142857143cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">CL𝑥</text>
+<rect x="0.5cm" y="1.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="1.0cm" y="2.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">7</text>
+<text x="1.0cm" y="1.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">yˣ</text>
+<rect x="1.5cm" y="1.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="2.0cm" y="2.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">8</text>
+<text x="2.0cm" y="1.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">ln(𝑥)</text>
+<rect x="2.5cm" y="1.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="3.0cm" y="2.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">9</text>
+<text x="3.0cm" y="1.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">log(𝑥)</text>
+<rect x="3.5cm" y="1.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="4.0cm" y="2.0cm" font-size="24" text-anchor="middle" dominant-baseline="central" fill="white">÷</text>
+<text x="4.0cm" y="1.7142857142857144cm" font-size="12" text-anchor="middle" dominant-baseline="central" fill="lightgray">π</text>
+<rect x="0.5cm" y="2.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="1.0cm" y="3.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">4</text>
+<text x="1.0cm" y="2.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">R▼</text>
+<text x="1.0cm" y="3.2857142857142856cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">R▲</text>
+<rect x="1.5cm" y="2.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="2.0cm" y="3.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">5</text>
+<text x="2.0cm" y="2.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">eˣ</text>
+<rect x="2.5cm" y="2.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="3.0cm" y="3.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">6</text>
+<text x="3.0cm" y="2.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">10ˣ</text>
+<rect x="3.5cm" y="2.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="4.0cm" y="3.0cm" font-size="26" text-anchor="middle" dominant-baseline="central" fill="white">×</text>
+<rect x="0.5cm" y="3.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="1.0cm" y="4.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">1</text>
+<text x="1.0cm" y="3.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">sin(𝑥)</text>
+<text x="1.0cm" y="4.285714285714286cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">asin(𝑥)</text>
+<rect x="1.5cm" y="3.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="2.0cm" y="4.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">2</text>
+<text x="2.0cm" y="3.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">cos(𝑥)</text>
+<text x="2.0cm" y="4.285714285714286cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">acos(𝑥)</text>
+<rect x="2.5cm" y="3.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="3.0cm" y="4.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">3</text>
+<text x="3.0cm" y="3.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">tan(𝑥)</text>
+<text x="3.0cm" y="4.285714285714286cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">atan(𝑥)</text>
+<rect x="3.5cm" y="3.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="4.0cm" y="4.0cm" font-size="26" text-anchor="middle" dominant-baseline="central" fill="white">-</text>
+<text x="4.0cm" y="3.7142857142857144cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">▶deg</text>
+<text x="4.0cm" y="4.285714285714286cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">▶rad</text>
+<rect x="0.5cm" y="4.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="1.0cm" y="5.0cm" font-size="14" text-anchor="middle" dominant-baseline="central" fill="white">0</text>
+<text x="1.0cm" y="4.714285714285714cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">off</text>
+<rect x="1.5cm" y="4.5cm" width="1.0cm" height="1.0cm" fill="midnightblue" stroke="darkgray" stroke-width="0.5" />
+<text x="2.0cm" y="5.0cm" font-size="20" text-anchor="middle" dominant-baseline="central" fill="white">.</text>
+<text x="2.0cm" y="4.714285714285714cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">STO</text>
+<rect x="2.5cm" y="4.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="3.0cm" y="5.0cm" font-size="12" text-anchor="middle" dominant-baseline="central" fill="white">Enter</text>
+<text x="3.0cm" y="4.714285714285714cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">RCL</text>
+<rect x="3.5cm" y="4.5cm" width="1.0cm" height="1.0cm" fill="black" stroke="darkgray" stroke-width="0.5" />
+<text x="4.0cm" y="5.0cm" font-size="26" text-anchor="middle" dominant-baseline="central" fill="white">+</text>
+<text x="4.0cm" y="4.714285714285714cm" font-size="9" text-anchor="middle" dominant-baseline="central" fill="lightgray">LAST𝑥</text>
+</svg>

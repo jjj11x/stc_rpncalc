@@ -6,7 +6,7 @@ jobs:
     name: Test building
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Docker
         run: $GITHUB_WORKSPACE/steps/compose_build.sh
       - name: Desktop build/check
@@ -16,7 +16,7 @@ jobs:
       - name: ls
         run: ls $GITHUB_WORKSPACE
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: stc_rpncalc_artifacts
           path: |

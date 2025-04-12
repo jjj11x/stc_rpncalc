@@ -3,22 +3,35 @@ on: [push, pull_request]
 jobs:
   stc_rpncalc_ci_job:
     runs-on: ubuntu-latest
-    name: Test building
+    name: CI build
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Docker layer cache
-        uses: satackey/action-docker-layer-caching@v0.0.8
-      - name: Docker
-        run: $GITHUB_WORKSPACE/steps/compose_build.sh
+        uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: local:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+          push: false
       - name: Desktop build/check
-        run: $GITHUB_WORKSPACE/steps/compose_run.sh desktop_build_check.sh --rebuild
+        uses: addnab/docker-run-action@v3
+        with:
+          image: local:latest
+          options: -v ${{ github.workspace }}:/work
+          run: /work/steps/desktop_build_check.sh --rebuild
       - name: Calc build
-        run: $GITHUB_WORKSPACE/steps/compose_run.sh build_calc.sh
+        uses: addnab/docker-run-action@v3
+        with:
+          image: local:latest
+          options: -v ${{ github.workspace }}:/work
+          run: /work/steps/build_calc.sh
       - name: ls
         run: ls $GITHUB_WORKSPACE
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: stc_rpncalc_artifacts
           path: |

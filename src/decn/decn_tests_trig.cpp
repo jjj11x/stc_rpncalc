@@ -12,9 +12,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+#include <random>
 #include <string>
 #include <boost/multiprecision/mpfr.hpp>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_all.hpp>
 #include "decn.h"
 
 #include "decn_tests.h"

@@ -21,11 +21,10 @@ target_link_libraries(decn_test
 )
 
 # catch2 unit tests
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3 REQUIRED)
 enable_testing()
 set (BUILD_TESTING ON)
 add_executable(decn_tests
-	catch_main.cpp
 	decn_tests.cpp
 	decn_tests_div_sqrt.cpp
 	decn_tests_transcendental.cpp
@@ -36,7 +35,7 @@ target_link_libraries(decn_tests
 	mpfr
 	decn_cover
 	coverage_config
-	Catch2::Catch2
+	Catch2::Catch2WithMain
 )
 include(CTest)
 include(Catch)
@@ -44,3 +43,4 @@ catch_discover_tests(decn_tests)
 
 # decn prototyping
 add_subdirectory(proto)
+

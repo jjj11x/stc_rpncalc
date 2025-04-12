@@ -3,12 +3,18 @@ on: [push, pull_request]
 jobs:
   stc_rpncalc_ci_job:
     runs-on: ubuntu-latest
-    name: Test building
+    name: CI build
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Docker
-        run: $GITHUB_WORKSPACE/steps/compose_build.sh
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: local:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
       - name: Desktop build/check
         run: $GITHUB_WORKSPACE/steps/compose_run.sh desktop_build_check.sh --rebuild
       - name: Calc build
